@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
-
+import { GridComponent} from '@vaenthecheesegrater/grid';
 @Component({
-  imports: [NxWelcomeComponent, RouterModule],
+  imports: [GridComponent, RouterModule],
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
