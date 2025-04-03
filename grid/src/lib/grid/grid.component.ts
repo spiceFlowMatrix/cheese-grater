@@ -3,7 +3,6 @@ import {
   Component,
   EventEmitter,
   Input,
-  OnInit,
   Output,
   ViewChild,
 } from '@angular/core';
@@ -25,10 +24,19 @@ export interface GridColumnHeader {
   templateUrl: './grid.component.html',
   styleUrl: './grid.component.css',
 })
-export class GridComponent<T> implements OnInit, AfterViewInit {
+export class GridComponent<T> implements AfterViewInit {
   //#region Inputs
   @Input() displayedColumns: Array<GridColumnHeader> = [];
-  @Input() dataSource: Array<T> = [];
+  @Input() get dataSource(): Array<T> {
+    return this._dataSource ? this._dataSource.data : [];
+  }
+  set dataSource(value: Array<T>) {
+    if (!this._dataSource) {
+      this._dataSource = new MatTableDataSource(value);
+      return;
+    }
+    this._dataSource.data = value;
+  }
   @Input() sorting = false;
   //#endregion
 
@@ -37,14 +45,11 @@ export class GridComponent<T> implements OnInit, AfterViewInit {
   //#endregion
 
   //#region Internal Properties
-  _dataSource: MatTableDataSource<T> | null = null;
+  protected _dataSource: MatTableDataSource<T> | null = null;
   @ViewChild(MatSort) sort: MatSort | null = null;
   //#endregion
 
   //#region Angular Lifecycle Hooks
-  ngOnInit(): void {
-    this._dataSource = new MatTableDataSource(this.dataSource);
-  }
   ngAfterViewInit() {
     if (this._dataSource) this._dataSource.sort = this.sort;
   }
