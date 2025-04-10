@@ -15,7 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@vaenthecheesegrater/grid": ["grid/src/index.ts"]
+      "@vaenthecheesegrater/grid": ["libs/grid/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
