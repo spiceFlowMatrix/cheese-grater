@@ -5,6 +5,7 @@
     "libs/*"
   ],
   "npmClient": "yarn",
+  "conventionalCommits": true,
   "changelogPreset": {
     "types": [
       {
