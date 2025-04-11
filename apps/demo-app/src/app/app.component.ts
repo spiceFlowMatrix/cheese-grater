@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { GridColumnHeader, GridComponent } from '@vaenthecheesegrater/grid';
+// import { GridColumnHeader, GridComponent } from '@vaenthecheesegrater/grid';
 export interface PeriodicElement {
   name: string;
   position: number;
@@ -22,18 +22,18 @@ const ELEMENT_DATA: PeriodicElement[] = [
 ];
 
 @Component({
-  imports: [GridComponent, RouterModule],
+  imports: [RouterModule],
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
 export class AppComponent {
   title = 'demo-app';
-  displayedColumns: Array<GridColumnHeader> = [
-    { value: 'position', label: 'No.' },
-    { value: 'name', label: 'Name' },
-    { value: 'weight', label: 'Weight' },
-    { value: 'symbol', label: 'Symbol' },
-  ];
+  // displayedColumns: Array<GridColumnHeader> = [
+  //   { value: 'position', label: 'No.' },
+  //   { value: 'name', label: 'Name' },
+  //   { value: 'weight', label: 'Weight' },
+  //   { value: 'symbol', label: 'Symbol' },
+  // ];
   dataSource = ELEMENT_DATA;
 }
