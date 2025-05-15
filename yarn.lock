@@ -316,10 +316,25 @@
   dependencies:
     tslib "^2.3.0"
 
+"@angular/platform-server@~19.2.0":
+  version "19.2.11"
+  resolved "https://registry.yarnpkg.com/@angular/platform-server/-/platform-server-19.2.11.tgz#07b13ee95f1819e28bdb0ff4da1f4cd72d3e7727"
+  integrity sha512-RbIE99k6QRw1EDDFFpjwM1aVVZlZ6B6zXWJTcjLUTCkF2tcZd2zZH3/3qiENETlFFI4A4VE1zTTtZD3/29sJnA==
+  dependencies:
+    tslib "^2.3.0"
+    xhr2 "^0.2.0"
+
 "@angular/router@~19.2.0":
   version "19.2.4"
   resolved "https://registry.yarnpkg.com/@angular/router/-/router-19.2.4.tgz#bc5fe8af0b83ec4cd05681334dae5283efdc95ba"
   integrity sha512-pnQX6gk8Z+YQFtnuqRDPEv+d9Up2oP1ZJk9/i/vnYS53PguSEtKgCBuiy6FQmn7SdrYFJ3+ZoV6ow9jhv00eqA==
+  dependencies:
+    tslib "^2.3.0"
+
+"@angular/ssr@~19.2.0":
+  version "19.2.12"
+  resolved "https://registry.yarnpkg.com/@angular/ssr/-/ssr-19.2.12.tgz#15ab86b42f1806b2e6580a7fdffbabc5276b93be"
+  integrity sha512-RNi/u6Hbg8bJ1FYOUbjT5dmyfM+H5kok1MuRWvpSaVUpH2s/CMNQ/F9fw6vzay2Nr/qVHeq+eeYYY8QXn2ZbhA==
   dependencies:
     tslib "^2.3.0"
 
@@ -15020,6 +15035,11 @@ ws@^8.11.0, ws@^8.18.0:
   version "8.18.1"
   resolved "https://registry.yarnpkg.com/ws/-/ws-8.18.1.tgz#ea131d3784e1dfdff91adb0a4a116b127515e3cb"
   integrity sha512-RKW2aJZMXeMxVpnZ6bck+RswznaxmzdULiBr6KY7XkTnW8uvt0iT9H5DkHUChXrc+uurzwa0rVI16n/Xzjdz1w==
+
+xhr2@^0.2.0:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/xhr2/-/xhr2-0.2.1.tgz#4e73adc4f9cfec9cbd2157f73efdce3a5f108a93"
+  integrity sha512-sID0rrVCqkVNUn8t6xuv9+6FViXjUVXq8H5rWOH2rz9fDNQEd4g0EA2XlcEdJXRz5BMEn4O1pJFdT+z4YHhoWw==
 
 xml-name-validator@^4.0.0:
   version "4.0.0"
