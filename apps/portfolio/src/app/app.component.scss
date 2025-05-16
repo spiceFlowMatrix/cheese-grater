@@ -1,0 +1,127 @@
+:root {
+  --accent-color: #3498db;
+}
+
+/* Basic Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Typography */
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f9f9f9;
+}
+
+h1,
+h2,
+h3 {
+  color: #2c3e50;
+}
+
+a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  padding: 40px 0;
+  background-color: #ecf0f1;
+}
+
+hr {
+  height: 4px;
+  background-color: var(--accent-color);
+}
+
+.portrait {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  margin-bottom: 20px;
+  object-fit: cover;
+}
+
+nav {
+  text-align: center;
+  margin: 20px 0;
+}
+
+nav a {
+  margin: 0 15px;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+section {
+  margin-bottom: 40px;
+}
+
+article {
+  margin-bottom: 20px;
+}
+
+ul {
+  list-style-type: disc;
+  margin-left: 20px;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  background-color: #ecf0f1;
+}
+
+.contact-item-icon {
+  width: 15px;
+  height: 15px;
+}
+
+#line {
+  position: absolute;
+  width: 4px;
+  background-color: var(--accent-color);
+  z-index: 10;
+  transition: height 0.3s ease, opacity 0.3s ease;
+}
+
+#circle {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background-color: #2e5c89;
+  z-index: 10;
+  transition: top 0.3s ease, opacity 0.3s ease;
+}
+
+@media (max-width: 600px) {
+  nav a {
+    display: block;
+    margin: 10px 0;
+  }
+}
+
+@media (max-width: 970px) {
+  #circle {
+    opacity: 0;
+  }
+  #line {
+    opacity: 0;
+  }
+}
