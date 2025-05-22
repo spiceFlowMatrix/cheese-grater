@@ -1,9 +1,10 @@
 import { Component, Inject, PLATFORM_ID } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
+import { CircuitTreeComponent } from './circuit-tree/circuit-tree.component';
 
 @Component({
-  imports: [RouterModule],
+  imports: [RouterModule, CircuitTreeComponent],
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
