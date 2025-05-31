@@ -7,322 +7,145 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-interface CircuitNode {
-  name: string;
-  type: string;
-  children?: CircuitNode[];
-  expanded?: boolean;
-  x?: number; // Target X position
-  y?: number; // Target Y position
-  currentX?: number; // Current X position for animation
-  currentY?: number; // Current Y position for animation
-  currentOpacity?: number; // Current opacity for animation
-  targetOpacity?: number; // Target opacity
-  width?: number; // Node width for click detection
-  height?: number; // Node height for click detection
-  subtreeWidth?: number; // Width of the node's subtree
-}
-
 @Component({
   selector: 'app-circuit-tree',
   imports: [CommonModule],
   templateUrl: './circuit-tree.component.html',
   styleUrls: ['./circuit-tree.component.scss'],
 })
-export class CircuitTreeComponent implements OnInit, AfterViewInit {
-  @ViewChild('treeCanvas', { static: true })
-  canvasRef!: ElementRef<HTMLCanvasElement>;
+export class CircuitTreeComponent implements AfterViewInit {
+  @ViewChild('brainCanvas') brainCanvas!: ElementRef<HTMLCanvasElement>;
   private ctx!: CanvasRenderingContext2D;
-  private nodeHeight = 40;
-  private nodeWidth = 120;
-  private nodeSpacing = 20;
-  private levelSpacing = 70;
-  private nodes: CircuitNode[] = [];
-  private animationStartTime: number | null = null;
-  private animationDuration = 500; // Animation duration in ms
+  private animationProgress = 0;
 
-  circuitData: CircuitNode = {
-    name: 'Main Circuit',
-    type: 'node',
-    expanded: true,
-    children: [
-      {
-        name: 'R1',
-        type: 'resistor',
-        children: [
-          { name: 'C1', type: 'capacitor' },
-          { name: 'L1', type: 'inductor' },
-        ],
-      },
-      {
-        name: 'R2',
-        type: 'resistor',
-        children: [
-          { name: 'C2', type: 'capacitor' },
-          {
-            name: 'Node1',
-            type: 'node',
-            children: [{ name: 'R3', type: 'resistor' }],
-          },
-        ],
-      },
-    ],
-  };
+  // Central microchip definition
+  private microchip = { x: 300, y: 200, width: 60, height: 40, pinsPerSide: 3 };
 
-  ngOnInit() {
-    this.circuitData.expanded = true;
-    this.initializePositions(this.circuitData, 400, 30);
+  // Nodes array: approximate positions for brain silhouette and internal structure
+  private nodes = [
+    // Outer perimeter nodes (brain outline, clockwise from top-left)
+    { x: 200, y: 100 }, { x: 250, y: 80 }, { x: 300, y: 70 }, { x: 350, y: 80 }, { x: 400, y: 100 }, // Top
+    { x: 450, y: 150 }, { x: 460, y: 200 }, { x: 450, y: 250 }, { x: 400, y: 300 }, // Right
+    { x: 350, y: 320 }, { x: 300, y: 330 }, { x: 250, y: 320 }, { x: 200, y: 300 }, // Bottom
+    { x: 150, y: 250 }, { x: 140, y: 200 }, { x: 150, y: 150 }, // Left
+    // Internal nodes (near microchip and along branches)
+    { x: 270, y: 170 }, { x: 330, y: 170 }, { x: 270, y: 230 }, { x: 330, y: 230 }, // Near microchip
+    { x: 300, y: 130 }, { x: 300, y: 270 }, { x: 220, y: 200 }, { x: 380, y: 200 } // Along branches
+  ];
+
+  // Polylines array: branching from microchip pins to nodes
+  private polylines = [
+    // Top pins (3 pins from top of microchip)
+    [{ x: 290, y: 180 }, { x: 290, y: 130 }, { x: 250, y: 80 }, { x: 200, y: 100 }], // Left branch
+    [{ x: 300, y: 180 }, { x: 300, y: 130 }, { x: 300, y: 70 }], // Center branch
+    [{ x: 310, y: 180 }, { x: 310, y: 130 }, { x: 350, y: 80 }, { x: 400, y: 100 }], // Right branch
+    // Right pins (3 pins from right of microchip)
+    [{ x: 330, y: 190 }, { x: 380, y: 190 }, { x: 450, y: 150 }], // Top-right branch
+    [{ x: 330, y: 200 }, { x: 380, y: 200 }, { x: 460, y: 200 }], // Middle-right branch
+    [{ x: 330, y: 210 }, { x: 380, y: 210 }, { x: 450, y: 250 }, { x: 400, y: 300 }], // Bottom-right branch
+    // Bottom pins (3 pins from bottom of microchip)
+    [{ x: 290, y: 220 }, { x: 290, y: 270 }, { x: 250, y: 320 }, { x: 200, y: 300 }], // Left branch
+    [{ x: 300, y: 220 }, { x: 300, y: 270 }, { x: 300, y: 330 }], // Center branch
+    [{ x: 310, y: 220 }, { x: 310, y: 270 }, { x: 350, y: 320 }, { x: 400, y: 300 }], // Right branch
+    // Left pins (3 pins from left of microchip)
+    [{ x: 270, y: 190 }, { x: 220, y: 190 }, { x: 150, y: 150 }], // Top-left branch
+    [{ x: 270, y: 200 }, { x: 220, y: 200 }, { x: 140, y: 200 }], // Middle-left branch
+    [{ x: 270, y: 210 }, { x: 220, y: 210 }, { x: 150, y: 250 }, { x: 200, y: 300 }] // Bottom-left branch
+  ];
+
+  ngAfterViewInit(): void {
+    this.ctx = this.brainCanvas.nativeElement.getContext('2d')!;
+    this.animate();
   }
 
-  ngAfterViewInit() {
-    const canvas = this.canvasRef.nativeElement;
-    this.ctx = canvas.getContext('2d')!;
-    canvas.width = 800;
-    canvas.height = 600;
-    this.renderTree(true);
+  private animate(): void {
+    this.animationProgress += 0.005;
+    if (this.animationProgress > 1) this.animationProgress = 0;
+    this.draw();
+    requestAnimationFrame(() => this.animate());
   }
 
-  private initializePositions(node: CircuitNode, x: number, y: number) {
-    node.currentX = x - this.nodeWidth / 2;
-    node.currentY = y;
-    node.x = node.currentX;
-    node.y = y;
-    node.currentOpacity = 1;
-    node.targetOpacity = 1;
-    if (node.expanded && node.children) {
-      const childCount = node.children.length;
-      const totalWidth = (childCount - 1) * this.nodeSpacing;
-      const startX = x - totalWidth / 2;
-      node.children.forEach((child, i) => {
-        this.initializePositions(
-          child,
-          startX + i * this.nodeSpacing,
-          y + this.levelSpacing
-        );
-        child.currentOpacity = 1;
-        child.targetOpacity = 1;
-      });
-    } else if (node.children) {
-      // Initialize collapsed children at parent's position with opacity 0
-      node.children.forEach((child) => {
-        this.initializePositions(child, x, y);
-        child.currentOpacity = 0;
-        child.targetOpacity = 0;
-      });
-    }
-  }
+  private draw(): void {
+    this.ctx.clearRect(0, 0, 600, 400);
 
-  private calculateLayout(node: CircuitNode, level: number): number {
-    let subtreeWidth = this.nodeWidth;
-    if (node.expanded && node.children) {
-      subtreeWidth = 0;
-      for (const child of node.children) {
-        subtreeWidth +=
-          this.calculateLayout(child, level + 1) + this.nodeSpacing;
+    // Draw microchip
+    this.ctx.fillStyle = '#555';
+    this.ctx.fillRect(this.microchip.x - this.microchip.width / 2, this.microchip.y - this.microchip.height / 2, this.microchip.width, this.microchip.height);
+
+    // Draw polylines with electric animation
+    const electricColor = '#00ffcc';
+    const defaultColor = '#333';
+
+    this.polylines.forEach(polyline => {
+      const totalLength = this.calculateTotalLength(polyline);
+      const currentLength = this.animationProgress * totalLength;
+      const { filledPath, remainingPath } = this.getPartialPath(polyline, currentLength);
+
+      // Draw filled path (electric color)
+      this.ctx.beginPath();
+      this.ctx.moveTo(filledPath[0].x, filledPath[0].y);
+      for (let i = 1; i < filledPath.length; i++) {
+        this.ctx.lineTo(filledPath[i].x, filledPath[i].y);
       }
-      subtreeWidth = Math.max(subtreeWidth - this.nodeSpacing, this.nodeWidth);
-    }
-    node.subtreeWidth = subtreeWidth;
-    return subtreeWidth;
-  }
+      this.ctx.strokeStyle = electricColor;
+      this.ctx.lineWidth = 2;
+      this.ctx.stroke();
 
-  private assignTargetPositions(
-    node: CircuitNode,
-    x: number,
-    y: number,
-    handleOpacity = true
-  ) {
-    node.x = x - this.nodeWidth / 2;
-    node.y = y;
-    if (handleOpacity) node.targetOpacity = node.expanded ? 1 : 0;
-    if (node.expanded && node.children) {
-      let startX = x - (node.subtreeWidth || this.nodeWidth) / 2;
-      for (const child of node.children) {
-        const childSubtreeWidth = child.subtreeWidth || this.nodeWidth;
-        const childX = startX + childSubtreeWidth / 2;
-        const childY = y + this.levelSpacing;
-        child.targetOpacity = 1;
-        this.assignTargetPositions(child, childX, childY, false);
-        startX += childSubtreeWidth + this.nodeSpacing;
-      }
-    } else if (node.children) {
-      // Collapsed children target parent's position with opacity 0
-      node.children.forEach((child) => {
-        child.x = node.x;
-        child.y = node.y;
-        child.targetOpacity = 0;
-        this.assignTargetPositions(child, x, y);
-      });
-    }
-  }
-
-  private renderTree(animate: boolean) {
-    this.nodes = [];
-    this.calculateLayout(this.circuitData, 0);
-    this.assignTargetPositions(this.circuitData, 400, 30);
-    if (animate) {
-      this.animationStartTime = performance.now();
-      this.animate();
-    } else {
-      this.updateCurrentPositions();
-      this.drawFrame();
-    }
-  }
-
-  private updateCurrentPositions() {
-    const traverse = (node: CircuitNode) => {
-      node.currentX = node.x;
-      node.currentY = node.y;
-      node.currentOpacity = node.targetOpacity;
-      if (node.children) {
-        node.children.forEach(traverse);
-      }
-    };
-    traverse(this.circuitData);
-  }
-
-  private animate() {
-    if (!this.animationStartTime) return;
-    const elapsed = performance.now() - this.animationStartTime;
-    const progress = Math.min(elapsed / this.animationDuration, 1);
-
-    // Linear interpolation for position and opacity
-    const traverse = (node: CircuitNode) => {
-      if (node.x !== undefined && node.currentX !== undefined) {
-        node.currentX = node.currentX + (node.x - node.currentX) * progress;
-      }
-      if (node.y !== undefined && node.currentY !== undefined) {
-        node.currentY = node.currentY + (node.y - node.currentY) * progress;
-      }
-      if (
-        node.currentOpacity !== undefined &&
-        node.targetOpacity !== undefined
-      ) {
-        node.currentOpacity =
-          node.currentOpacity +
-          (node.targetOpacity - node.currentOpacity) * progress;
-      }
-      if (node.children) {
-        node.children.forEach(traverse);
-      }
-    };
-    traverse(this.circuitData);
-
-    this.drawFrame();
-
-    if (progress < 1) {
-      requestAnimationFrame(() => this.animate());
-    } else {
-      this.animationStartTime = null;
-    }
-  }
-
-  private drawFrame() {
-    this.nodes = [];
-    this.ctx.clearRect(
-      0,
-      0,
-      this.canvasRef.nativeElement.width,
-      this.canvasRef.nativeElement.height
-    );
-    this.drawNode(this.circuitData);
-  }
-
-  private drawNode(node: CircuitNode) {
-    // Skip drawing if opacity is effectively 0
-    if (node.currentOpacity === 0) return;
-
-    const x = node.currentX! + this.nodeWidth / 2; // Center of node
-    const y = node.currentY!;
-    const text = `${node.name} (${node.type})`;
-    this.ctx.font = '14px Arial';
-    const cornerRadius = 8;
-
-    // Store node for click detection (only if visible)
-    if (node.currentOpacity! > 0.1) {
-      node.width = this.nodeWidth;
-      node.height = this.nodeHeight;
-      this.nodes.push(node);
-    }
-
-    // Save context to apply opacity
-    this.ctx.save();
-    this.ctx.globalAlpha = node.currentOpacity!;
-
-    // Draw rounded square
-    this.ctx.beginPath();
-    this.ctx.roundRect(
-      node.currentX!,
-      y,
-      this.nodeWidth,
-      this.nodeHeight,
-      cornerRadius
-    );
-    this.ctx.fillStyle = '#e6f3fa';
-    this.ctx.fill();
-    this.ctx.strokeStyle = '#333';
-    this.ctx.stroke();
-
-    // Draw text
-    this.ctx.fillStyle = '#333';
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    this.ctx.fillText(
-      (node.children?.length ? (node.expanded ? '▼ ' : '▶ ') : '') + text,
-      x,
-      y + this.nodeHeight / 2
-    );
-    this.ctx.textAlign = 'start';
-
-    // Draw children if expanded and parent is visible
-    if (node.expanded && node.children) {
-      for (const child of node.children) {
-        const childX = child.currentX! + this.nodeWidth / 2;
-        const childY = child.currentY!;
-
-        // Draw connecting line with interpolated opacity
-        this.ctx.save();
-        this.ctx.globalAlpha = Math.min(
-          node.currentOpacity!,
-          child.currentOpacity!
-        );
+      // Draw remaining path (default color)
+      if (remainingPath.length > 1) {
         this.ctx.beginPath();
-        this.ctx.moveTo(x, y + this.nodeHeight);
-        this.ctx.lineTo(childX, childY);
-        this.ctx.strokeStyle = '#ccc';
+        this.ctx.moveTo(remainingPath[0].x, remainingPath[0].y);
+        for (let i = 1; i < remainingPath.length; i++) {
+          this.ctx.lineTo(remainingPath[i].x, remainingPath[i].y);
+        }
+        this.ctx.strokeStyle = defaultColor;
+        this.ctx.lineWidth = 2;
         this.ctx.stroke();
-        this.ctx.restore();
-
-        // Draw child
-        this.drawNode(child);
       }
-    }
+    });
 
-    this.ctx.restore();
+    // Draw nodes
+    this.nodes.forEach(node => {
+      this.ctx.beginPath();
+      this.ctx.arc(node.x, node.y, 5, 0, 2 * Math.PI);
+      this.ctx.fillStyle = '#fff';
+      this.ctx.fill();
+      this.ctx.strokeStyle = '#000';
+      this.ctx.stroke();
+    });
   }
 
-  onCanvasClick(event: MouseEvent) {
-    const rect = this.canvasRef.nativeElement.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+  private calculateTotalLength(polyline: { x: number, y: number }[]): number {
+    let length = 0;
+    for (let i = 0; i < polyline.length - 1; i++) {
+      const p1 = polyline[i];
+      const p2 = polyline[i + 1];
+      length += Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
+    }
+    return length;
+  }
 
-    // Find clicked node
-    for (const node of this.nodes) {
-      if (
-        node.currentX &&
-        node.currentY &&
-        node.width &&
-        node.height &&
-        x >= node.currentX &&
-        x <= node.currentX + node.width &&
-        y >= node.currentY &&
-        y <= node.currentY + node.height &&
-        node.children?.length
-      ) {
-        node.expanded = !node.expanded;
-        this.renderTree(true);
-        break;
+  private getPartialPath(polyline: { x: number, y: number }[], currentLength: number): { filledPath: { x: number, y: number }[], remainingPath: { x: number, y: number }[] } {
+    let remainingLength = currentLength;
+    const filledPath = [polyline[0]];
+
+    for (let i = 0; i < polyline.length - 1; i++) {
+      const p1 = polyline[i];
+      const p2 = polyline[i + 1];
+      const segmentLength = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
+
+      if (remainingLength >= segmentLength) {
+        filledPath.push(p2);
+        remainingLength -= segmentLength;
+      } else {
+        const t = remainingLength / segmentLength;
+        const x = p1.x + t * (p2.x - p1.x);
+        const y = p1.y + t * (p2.y - p1.y);
+        filledPath.push({ x, y });
+        const remainingPath = [{ x, y }, ...polyline.slice(i + 1)];
+        return { filledPath, remainingPath };
       }
     }
+    return { filledPath: polyline, remainingPath: [] };
   }
 }
