@@ -1,0 +1,17 @@
+{
+  "name": "apps-chat-api-chat-api",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/chat-api/chat-api",
+  "tags": [],
+  "targets": {
+    "swagger": {
+      "executor": "@nx-dotnet/core:update-swagger",
+      "outputs": ["{workspaceRoot}/libs/generated/chat-api-swagger"],
+      "options": {
+        "output": "libs/generated/chat-api-swagger"
+      },
+      "dependsOn": ["build"]
+    }
+  }
+}

@@ -1,0 +1,39 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "apps", "apps", "{1787FE1D-075E-9E68-7218-25F1BD1BBEAB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "chat-api", "chat-api", "{511F3FA5-9A5B-B8BE-4FAE-1BBFFD9BF59F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheeseGrater.ChatApi.ChatApi", "apps\chat-api\chat-api\CheeseGrater.ChatApi.ChatApi.csproj", "{697E3B5B-8F4B-DE03-0C96-C29415BCE3B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheeseGrater.ChatApi.ChatApi.Test", "apps\chat-api\chat-api-test\CheeseGrater.ChatApi.ChatApi.Test.csproj", "{9F2D16F5-2189-9D4C-F5F7-1620D3C883B6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{697E3B5B-8F4B-DE03-0C96-C29415BCE3B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{697E3B5B-8F4B-DE03-0C96-C29415BCE3B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{697E3B5B-8F4B-DE03-0C96-C29415BCE3B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{697E3B5B-8F4B-DE03-0C96-C29415BCE3B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F2D16F5-2189-9D4C-F5F7-1620D3C883B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F2D16F5-2189-9D4C-F5F7-1620D3C883B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F2D16F5-2189-9D4C-F5F7-1620D3C883B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F2D16F5-2189-9D4C-F5F7-1620D3C883B6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{511F3FA5-9A5B-B8BE-4FAE-1BBFFD9BF59F} = {1787FE1D-075E-9E68-7218-25F1BD1BBEAB}
+		{697E3B5B-8F4B-DE03-0C96-C29415BCE3B8} = {511F3FA5-9A5B-B8BE-4FAE-1BBFFD9BF59F}
+		{9F2D16F5-2189-9D4C-F5F7-1620D3C883B6} = {511F3FA5-9A5B-B8BE-4FAE-1BBFFD9BF59F}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DF6FBFEF-A848-46E2-BA3F-CF11E4DD1A0A}
+	EndGlobalSection
+EndGlobal

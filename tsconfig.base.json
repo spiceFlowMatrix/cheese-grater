@@ -15,6 +15,9 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@cheese-grater/generated-chat-api-types": [
+        "libs/generated/chat-api-types/src/index.ts"
+      ],
       "@vaenthecheesegrater/grid": ["libs/grid/src/index.ts"]
     }
   },

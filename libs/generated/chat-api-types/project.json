@@ -1,0 +1,14 @@
+{
+  "name": "generated-chat-api-types",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/generated/chat-api-types/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "nx:noop",
+      "outputs": ["{projectRoot}"]
+    }
+  },
+  "implicitDependencies": ["chat-api-swagger"]
+}

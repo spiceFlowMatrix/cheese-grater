@@ -2,7 +2,6 @@
   "name": "@cheese-grater/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
   "private": true,
   "dependencies": {
     "@angular/animations": "^19.2.5",
@@ -27,6 +26,7 @@
     "@angular/compiler-cli": "~19.2.0",
     "@angular/language-service": "~19.2.0",
     "@eslint/js": "^9.8.0",
+    "@nx-dotnet/core": "^3.0.0",
     "@nx/angular": "20.7.0",
     "@nx/cypress": "20.7.0",
     "@nx/eslint": "20.7.0",
@@ -35,6 +35,7 @@
     "@nx/js": "20.7.0",
     "@nx/web": "20.7.0",
     "@nx/workspace": "20.7.0",
+    "@openapitools/openapi-generator-cli": "^2.13.4",
     "@schematics/angular": "~19.2.0",
     "@swc-node/register": "~1.9.1",
     "@swc/core": "~1.5.7",
@@ -66,5 +67,8 @@
   },
   "nx": {
     "includedScripts": []
+  },
+  "scripts": {
+    "prepare": "nx g @nx-dotnet/core:restore"
   }
 }

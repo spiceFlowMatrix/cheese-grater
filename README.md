@@ -6,6 +6,14 @@
 
 [Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
 
+## Known issues
+
+### Infinite nx graph calculation time when serving asp.net core app for the first time
+
+Try running `nx reset` and then serving the asp.net core app again. This seemed to have solved the issue.
+
+> **Source:** https://github.com/nx-dotnet/nx-dotnet/issues/924#issuecomment-2968430323
+
 ## Finish your CI setup
 
 [Click here to finish setting up your workspace!](https://cloud.nx.app/connect/kAzSkhgQ3J)
