@@ -14,6 +14,10 @@ Try running `nx reset` and then serving the asp.net core app again. This seemed 
 
 > **Source:** https://github.com/nx-dotnet/nx-dotnet/issues/924#issuecomment-2968430323
 
+### Adding new .NET libs/apps don't get referenced in the root solution automatically
+
+Simply use the dotnet cli or the `.NET: Add Existing Project...` vscode command to link the new projects to the root solution.
+
 ## Finish your CI setup
 
 [Click here to finish setting up your workspace!](https://cloud.nx.app/connect/kAzSkhgQ3J)

@@ -1,3 +1,6 @@
+using CheeseGrater.Domain.Entities;
+using Microsoft.AspNetCore.OpenApi;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -21,6 +24,12 @@ var summaries = new[]
 
 app.MapGet("/weatherforecast", () =>
 {
+    var items = new List<TodoItem>([
+        new TodoItem { Title = "Buy groceries", Done = false },
+        new TodoItem { Title = "Walk the dog", Done = true },
+        new TodoItem { Title = "Read a book", Done = false }
+    ]);
+
     var forecast = Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
         (

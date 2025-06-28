@@ -1,4 +1,4 @@
-﻿namespace Clean.Domain.Events;
+﻿namespace CheeseGrater.Domain.Events;
 
 public class TodoItemCreatedEvent : BaseEvent
 {
