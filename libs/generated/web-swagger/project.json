@@ -1,0 +1,23 @@
+{
+  "name": "web-swagger",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "executor": "nx:noop",
+      "outputs": ["libs/generated/web-swagger"]
+    },
+    "codegen": {
+      "executor": "@nx-dotnet/core:openapi-codegen",
+      "options": {
+        "useOpenApiGenerator": true,
+        "openApiGenerator": "typescript",
+        "openapiJsonPath": "libs/generated/web-swagger",
+        "outputProject": "generated-web-types"
+      },
+      "dependsOn": ["swagger"],
+      "inputs": ["{projectRoot}/libs/generated/web-swagger"],
+      "outputs": ["{workspaceRoot}"]
+    }
+  },
+  "implicitDependencies": ["apps-dotnet-web"]
+}

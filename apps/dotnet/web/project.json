@@ -1,0 +1,17 @@
+{
+  "name": "apps-dotnet-web",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/dotnet/web",
+  "tags": [],
+  "targets": {
+    "swagger": {
+      "executor": "@nx-dotnet/core:update-swagger",
+      "outputs": ["{workspaceRoot}/libs/generated/web-swagger"],
+      "options": {
+        "output": "libs/generated/web-swagger"
+      },
+      "dependsOn": ["build"]
+    }
+  }
+}
