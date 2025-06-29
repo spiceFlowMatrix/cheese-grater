@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:16
+    image: postgres
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
@@ -15,7 +15,7 @@ services:
       - pg-network
 
   pgadmin:
-    image: dpage/pgadmin4:8
+    image: dpage/pgadmin4
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
