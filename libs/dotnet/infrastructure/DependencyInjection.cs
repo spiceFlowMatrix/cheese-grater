@@ -24,7 +24,7 @@ public static class DependencyInjection
         builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
             options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
-            options.UseSqlServer(connectionString).AddAsyncSeeding(sp);
+            options.UseNpgsql(connectionString).AddAsyncSeeding(sp);
         });
 
 
