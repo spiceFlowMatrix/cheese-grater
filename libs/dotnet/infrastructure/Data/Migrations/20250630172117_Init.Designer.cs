@@ -12,14 +12,15 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CheeseGrater.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250630074712_init")]
-    partial class init
+    [Migration("20250630172117_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("cheese_grater")
                 .HasAnnotation("ProductVersion", "9.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
@@ -82,7 +83,7 @@ namespace CheeseGrater.Infrastructure.Data.Migrations
                     b.HasIndex("ListId")
                         .HasDatabaseName("ix_todo_items_list_id");
 
-                    b.ToTable("todo_items", (string)null);
+                    b.ToTable("todo_items", "cheese_grater");
                 });
 
             modelBuilder.Entity("CheeseGrater.Domain.Entities.TodoList", b =>
@@ -119,7 +120,7 @@ namespace CheeseGrater.Infrastructure.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_todo_lists");
 
-                    b.ToTable("todo_lists", (string)null);
+                    b.ToTable("todo_lists", "cheese_grater");
                 });
 
             modelBuilder.Entity("CheeseGrater.Domain.Entities.TodoItem", b =>
@@ -149,7 +150,7 @@ namespace CheeseGrater.Infrastructure.Data.Migrations
 
                             b1.HasKey("TodoListId");
 
-                            b1.ToTable("todo_lists");
+                            b1.ToTable("todo_lists", "cheese_grater");
 
                             b1.WithOwner()
                                 .HasForeignKey("TodoListId")

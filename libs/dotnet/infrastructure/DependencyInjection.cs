@@ -18,13 +18,21 @@ public static class DependencyInjection
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
         Guard.Against.Null(connectionString, message: "Connection string 'DefaultConnection' not found.");
 
+        // Read EF Core options from config
+        var efCoreSection = builder.Configuration.GetSection("EfCore");
+        var migrationsTable = efCoreSection["MigrationHistoryTable"] ?? "__efmigrationshistory";
+        var migrationsSchema = efCoreSection["MigrationHistorySchema"] ?? "public";
+
         builder.Services.AddScoped<ISaveChangesInterceptor, AuditableEntityInterceptor>();
         builder.Services.AddScoped<ISaveChangesInterceptor, DispatchDomainEventsInterceptor>();
 
         builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
             options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(connectionString, npgsqlOptions =>
+            {
+                npgsqlOptions.MigrationsHistoryTable(migrationsTable, migrationsSchema);
+            });
             if (!IsDesignTime()) options.AddAsyncSeeding(sp);
             options.UseSnakeCaseNamingConvention();
         });

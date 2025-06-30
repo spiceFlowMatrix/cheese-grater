@@ -4,12 +4,17 @@ using CheeseGrater.Domain.Entities;
 using CheeseGrater.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace CheeseGrater.Infrastructure.Data;
 
 public class ApplicationDbContext : DbContext, IApplicationDbContext
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
+    private readonly string _defaultSchema;
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IConfiguration configuration) : base(options)
+    {
+        _defaultSchema = configuration.GetValue<string>("EfCore:DefaultSchema") ?? "public";
+    }
 
     public DbSet<TodoList> TodoLists => Set<TodoList>();
 
@@ -17,6 +22,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        builder.HasDefaultSchema(_defaultSchema);
+
         base.OnModelCreating(builder);
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
     }

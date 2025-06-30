@@ -7,13 +7,17 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CheeseGrater.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.EnsureSchema(
+                name: "cheese_grater");
+
             migrationBuilder.CreateTable(
                 name: "todo_lists",
+                schema: "cheese_grater",
                 columns: table => new
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
@@ -32,6 +36,7 @@ namespace CheeseGrater.Infrastructure.Data.Migrations
 
             migrationBuilder.CreateTable(
                 name: "todo_items",
+                schema: "cheese_grater",
                 columns: table => new
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
@@ -53,6 +58,7 @@ namespace CheeseGrater.Infrastructure.Data.Migrations
                     table.ForeignKey(
                         name: "fk_todo_items_todo_lists_list_id",
                         column: x => x.list_id,
+                        principalSchema: "cheese_grater",
                         principalTable: "todo_lists",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
@@ -60,6 +66,7 @@ namespace CheeseGrater.Infrastructure.Data.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "ix_todo_items_list_id",
+                schema: "cheese_grater",
                 table: "todo_items",
                 column: "list_id");
         }
@@ -68,10 +75,12 @@ namespace CheeseGrater.Infrastructure.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "todo_items");
+                name: "todo_items",
+                schema: "cheese_grater");
 
             migrationBuilder.DropTable(
-                name: "todo_lists");
+                name: "todo_lists",
+                schema: "cheese_grater");
         }
     }
 }
