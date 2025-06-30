@@ -15,8 +15,8 @@ public static class DependencyInjection
 {
     public static void AddInfrastructureServices(this IHostApplicationBuilder builder)
     {
-        var connectionString = builder.Configuration.GetConnectionString("CheeseGraterDb");
-        Guard.Against.Null(connectionString, message: "Connection string 'CheeseGraterDb' not found.");
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        Guard.Against.Null(connectionString, message: "Connection string 'DefaultConnection' not found.");
 
         builder.Services.AddScoped<ISaveChangesInterceptor, AuditableEntityInterceptor>();
         builder.Services.AddScoped<ISaveChangesInterceptor, DispatchDomainEventsInterceptor>();
@@ -24,7 +24,9 @@ public static class DependencyInjection
         builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
             options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
-            options.UseNpgsql(connectionString).AddAsyncSeeding(sp);
+            options.UseNpgsql(connectionString);
+            if (!IsDesignTime()) options.AddAsyncSeeding(sp);
+            options.UseSnakeCaseNamingConvention();
         });
 
 
@@ -42,5 +44,15 @@ public static class DependencyInjection
 
         builder.Services.AddAuthorization(options =>
             options.AddPolicy(Policies.CanPurge, policy => policy.RequireRole(Roles.Administrator)));
+    }
+
+    /// <summary>
+    /// Check if the application is running in a design-time context (e.g., dotnet ef)
+    /// </summary>
+    /// <returns>bool</returns>
+    private static bool IsDesignTime()
+    {
+        var args = Environment.GetCommandLineArgs();
+        return args.Any(arg => arg.Contains("ef", StringComparison.OrdinalIgnoreCase));
     }
 }
