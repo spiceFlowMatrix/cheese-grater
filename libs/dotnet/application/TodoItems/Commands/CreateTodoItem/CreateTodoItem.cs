@@ -1,6 +1,6 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
-using CheeseGrater.Domain.Entities;
-using CheeseGrater.Domain.Events;
+using CheeseGrater.Core.Domain.Entities;
+using CheeseGrater.Core.Domain.Events;
 
 namespace CheeseGrater.Application.TodoItems.Commands.CreateTodoItem;
 

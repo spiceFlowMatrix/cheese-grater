@@ -1,4 +1,4 @@
-﻿using CheeseGrater.Domain.Entities;
+﻿using CheeseGrater.Core.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

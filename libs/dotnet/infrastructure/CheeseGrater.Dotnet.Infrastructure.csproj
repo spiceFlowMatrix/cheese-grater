@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\application\CheeseGrater.Dotnet.Application.csproj" />
+    <ProjectReference Include="..\core\infrastructure\CheeseGrater.Dotnet.Core.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
-using CheeseGrater.Application.Common.Security;
-using CheeseGrater.Domain.Constants;
+using CheeseGrater.Core.Application.Common.Security;
+using CheeseGrater.Core.Domain.Constants;
 
 namespace CheeseGrater.Application.TodoLists.Commands.PurgeTodoLists;
 

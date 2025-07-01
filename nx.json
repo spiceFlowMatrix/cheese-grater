@@ -132,6 +132,8 @@
         },
         "ignorePaths": [],
         "tags": [
+          "nx-dotnet",
+          "nx-dotnet",
           "nx-dotnet"
         ]
       }

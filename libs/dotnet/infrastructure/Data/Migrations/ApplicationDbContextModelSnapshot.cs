@@ -23,7 +23,7 @@ namespace CheeseGrater.Infrastructure.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("CheeseGrater.Domain.Entities.TodoItem", b =>
+            modelBuilder.Entity("CheeseGrater.Core.Domain.Entities.TodoItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -83,7 +83,7 @@ namespace CheeseGrater.Infrastructure.Data.Migrations
                     b.ToTable("todo_items", "cheese_grater");
                 });
 
-            modelBuilder.Entity("CheeseGrater.Domain.Entities.TodoList", b =>
+            modelBuilder.Entity("CheeseGrater.Core.Domain.Entities.TodoList", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -120,9 +120,9 @@ namespace CheeseGrater.Infrastructure.Data.Migrations
                     b.ToTable("todo_lists", "cheese_grater");
                 });
 
-            modelBuilder.Entity("CheeseGrater.Domain.Entities.TodoItem", b =>
+            modelBuilder.Entity("CheeseGrater.Core.Domain.Entities.TodoItem", b =>
                 {
-                    b.HasOne("CheeseGrater.Domain.Entities.TodoList", "List")
+                    b.HasOne("CheeseGrater.Core.Domain.Entities.TodoList", "List")
                         .WithMany("Items")
                         .HasForeignKey("ListId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -132,9 +132,9 @@ namespace CheeseGrater.Infrastructure.Data.Migrations
                     b.Navigation("List");
                 });
 
-            modelBuilder.Entity("CheeseGrater.Domain.Entities.TodoList", b =>
+            modelBuilder.Entity("CheeseGrater.Core.Domain.Entities.TodoList", b =>
                 {
-                    b.OwnsOne("CheeseGrater.Domain.ValueObjects.Colour", "Colour", b1 =>
+                    b.OwnsOne("CheeseGrater.Core.Domain.ValueObjects.Colour", "Colour", b1 =>
                         {
                             b1.Property<int>("TodoListId")
                                 .HasColumnType("integer")
@@ -158,7 +158,7 @@ namespace CheeseGrater.Infrastructure.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("CheeseGrater.Domain.Entities.TodoList", b =>
+            modelBuilder.Entity("CheeseGrater.Core.Domain.Entities.TodoList", b =>
                 {
                     b.Navigation("Items");
                 });

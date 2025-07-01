@@ -1,7 +1,7 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
-using CheeseGrater.Application.Common.Models;
-using CheeseGrater.Application.Common.Security;
-using CheeseGrater.Domain.Enums;
+using CheeseGrater.Core.Application.Common.Models;
+using CheeseGrater.Core.Application.Common.Security;
+using CheeseGrater.Core.Domain.Enums;
 
 namespace CheeseGrater.Application.TodoLists.Queries.GetTodos;
 

@@ -1,6 +1,6 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
-using CheeseGrater.Application.Common.Mappings;
-using CheeseGrater.Application.Common.Models;
+using CheeseGrater.Core.Application.Common.Mappings;
+using CheeseGrater.Core.Application.Common.Models;
 
 namespace CheeseGrater.Application.TodoItems.Queries.GetTodoItemsWithPagination;
 

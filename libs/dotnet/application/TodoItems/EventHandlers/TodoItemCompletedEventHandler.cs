@@ -1,4 +1,4 @@
-﻿using CheeseGrater.Domain.Events;
+﻿using CheeseGrater.Core.Domain.Events;
 using Microsoft.Extensions.Logging;
 
 namespace CheeseGrater.Application.TodoItems.EventHandlers;

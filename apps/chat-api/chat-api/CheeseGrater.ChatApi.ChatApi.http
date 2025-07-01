@@ -1,6 +1,0 @@
-@CheeseGrater.ChatApi.ChatApi_HostAddress = http://localhost:5041
-
-GET {{CheeseGrater.ChatApi.ChatApi_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

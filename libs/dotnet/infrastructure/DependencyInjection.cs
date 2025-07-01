@@ -1,8 +1,7 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
-using CheeseGrater.Domain.Constants;
+using CheeseGrater.Core.Domain.Constants;
 using CheeseGrater.Infrastructure.Data;
-using CheeseGrater.Infrastructure.Data.Interceptors;
-using CheeseGrater.Infrastructure.Identity;
+using CheeseGrater.Core.Infrastructure.Data.Interceptors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -15,6 +14,7 @@ public static class DependencyInjection
 {
     public static void AddInfrastructureServices(this IHostApplicationBuilder builder)
     {
+        builder.AddCoreInfrastructureServices();
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
         Guard.Against.Null(connectionString, message: "Connection string 'DefaultConnection' not found.");
 
@@ -22,9 +22,6 @@ public static class DependencyInjection
         var efCoreSection = builder.Configuration.GetSection("EfCore");
         var migrationsTable = efCoreSection["MigrationHistoryTable"] ?? "__efmigrationshistory";
         var migrationsSchema = efCoreSection["MigrationHistorySchema"] ?? "public";
-
-        builder.Services.AddScoped<ISaveChangesInterceptor, AuditableEntityInterceptor>();
-        builder.Services.AddScoped<ISaveChangesInterceptor, DispatchDomainEventsInterceptor>();
 
         builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
@@ -41,17 +38,6 @@ public static class DependencyInjection
         builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
         builder.Services.AddScoped<ApplicationDbContextInitialiser>();
-
-        builder.Services
-            .AddDefaultIdentity<ApplicationUser>()
-            .AddRoles<IdentityRole>()
-            .AddEntityFrameworkStores<ApplicationDbContext>();
-
-        builder.Services.AddSingleton(TimeProvider.System);
-        builder.Services.AddTransient<IIdentityService, IdentityService>();
-
-        builder.Services.AddAuthorization(options =>
-            options.AddPolicy(Policies.CanPurge, policy => policy.RequireRole(Roles.Administrator)));
     }
 
     /// <summary>

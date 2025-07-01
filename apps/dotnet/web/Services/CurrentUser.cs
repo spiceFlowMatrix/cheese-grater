@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-using CheeseGrater.Application.Common.Interfaces;
+using CheeseGrater.Core.Application.Common.Interfaces;
 
 namespace CheeseGrater.Web.Services;
 

@@ -1,5 +1,5 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
-using CheeseGrater.Domain.Entities;
+using CheeseGrater.Core.Domain.Entities;
 
 namespace CheeseGrater.Application.TodoLists.Commands.CreateTodoList;
 

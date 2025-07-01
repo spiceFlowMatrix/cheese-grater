@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\domain\CheeseGrater.Dotnet.Domain.csproj" />
+    <ProjectReference Include="..\core\domain\CheeseGrater.Dotnet.Core.Domain.csproj" />
+    <ProjectReference Include="..\core\application\CheeseGrater.Dotnet.Core.Application.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

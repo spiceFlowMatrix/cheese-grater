@@ -1,5 +1,5 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
-using CheeseGrater.Domain.Enums;
+using CheeseGrater.Core.Domain.Enums;
 
 namespace CheeseGrater.Application.TodoItems.Commands.UpdateTodoItemDetail;
 

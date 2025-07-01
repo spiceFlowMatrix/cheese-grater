@@ -1,5 +1,5 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
-using CheeseGrater.Domain.Events;
+using CheeseGrater.Core.Domain.Events;
 
 namespace CheeseGrater.Application.TodoItems.Commands.DeleteTodoItem;
 

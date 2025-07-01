@@ -1,5 +1,5 @@
 ﻿using Azure.Identity;
-using CheeseGrater.Application.Common.Interfaces;
+using CheeseGrater.Core.Application.Common.Interfaces;
 using CheeseGrater.Infrastructure.Data;
 using CheeseGrater.Web.Services;
 using Microsoft.AspNetCore.Mvc;

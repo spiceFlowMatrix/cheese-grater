@@ -1,0 +1,9 @@
+{
+  "name": "libs-dotnet-core-infrastructure",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/dotnet/core/infrastructure",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project libs-dotnet-core-infrastructure --web",
+  "targets": {}
+}
