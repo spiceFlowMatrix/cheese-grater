@@ -27,13 +27,15 @@ public static class DependencyInjection
         builder.Services.Configure<ApiBehaviorOptions>(options =>
             options.SuppressModelStateInvalidFilter = true);
 
+        builder.Services.AddOpenApi();
+
         builder.Services.AddEndpointsApiExplorer();
 
-        // builder.Services.AddOpenApiDocument((configure, sp) =>
-        // {
-        //     configure.Title = "CheeseGrater API";
+        builder.Services.AddOpenApiDocument((configure, sp) =>
+        {
+            configure.Title = "CheeseGrater API";
 
-        // });
+        });
     }
 
     // public static void AddKeyVaultIfConfigured(this IHostApplicationBuilder builder)

@@ -5,7 +5,7 @@ using CheeseGrater.Core.Domain.Enums;
 
 namespace CheeseGrater.Application.TodoLists.Queries.GetTodos;
 
-[Authorize]
+// [Authorize]
 public record GetTodosQuery : IRequest<TodosVm>;
 
 public class GetTodosQueryHandler : IRequestHandler<GetTodosQuery, TodosVm>
