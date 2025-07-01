@@ -6,6 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>CheeseGrater.Web</RootNamespace>
     <AssemblyName>CheeseGrater.Web</AssemblyName>
+    <!-- Define WorkspaceRoot to handle cases where SolutionDir is undefined -->
+    <WorkspaceRoot Condition="'$(SolutionDir)' == ''">$(MSBuildProjectDirectory)/../../..</WorkspaceRoot>
+    <WorkspaceRoot Condition="'$(SolutionDir)' != ''">$(SolutionDir)</WorkspaceRoot>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,5 +42,22 @@
     <Message Text="$(NSwagOutput)" Condition="'$(NSwagExitCode)' == '0'" Importance="low" />
     <Error Text="$(NSwagOutput)" Condition="'$(NSwagExitCode)' != '0'" />
   </Target>
+
+  <!-- New target to copy the generated specification to multiple locations, including libs/generated/api -->
+  <Target Name="CopyNSwagOutput" AfterTargets="NSwag" Condition=" '$(Configuration)' == 'Debug' And '$(SkipNSwag)' != 'True' And '$(NSwagExitCode)' == '0' ">
+    <ItemGroup>
+      <!-- Define the source file -->
+      <NSwagOutputFile Include="wwwroot/api/specification.json" />
+      <!-- Define destination locations, including the libs folder -->
+      <NSwagOutputDestinations Include="$(MSBuildProjectDirectory)/../../../libs/generated/web-swagger/" />
+    </ItemGroup>
+
+    <!-- Create destination directories if they don't exist -->
+    <MakeDir Directories="@(NSwagOutputDestinations->'%(RootDir)%(Directory)')" />
+    <!-- Copy the file to each destination -->
+    <Copy SourceFiles="@(NSwagOutputFile)" DestinationFolder="@(NSwagOutputDestinations)" SkipUnchangedFiles="true" />
+    <Message Text="Copied OpenAPI specification to @(NSwagOutputDestinations)" Importance="normal" />
+  </Target>
+
 
 </Project>

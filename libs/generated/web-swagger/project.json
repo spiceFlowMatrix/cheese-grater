@@ -3,15 +3,14 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "build": {
-      "executor": "nx:noop",
-      "outputs": ["libs/generated/web-swagger"]
+      "executor": "nx:noop"
     },
     "codegen": {
       "executor": "@nx-dotnet/core:openapi-codegen",
       "options": {
         "useOpenApiGenerator": true,
         "openApiGenerator": "typescript",
-        "openapiJsonPath": "libs/generated/web-swagger",
+        "openapiJsonPath": "libs/generated/web-swagger/specification.json",
         "outputProject": "generated-web-types"
       },
       "dependsOn": ["swagger"],
