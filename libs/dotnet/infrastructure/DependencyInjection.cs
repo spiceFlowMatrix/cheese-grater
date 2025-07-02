@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using CheeseGrater.Infrastructure.Identity;
 using Keycloak.AuthServices.Authorization;
 using Keycloak.AuthServices.Sdk;
+using Keycloak.AuthServices.Common;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -58,7 +59,23 @@ public static class DependencyInjection
             });
         });
 
-        builder.Services.AddKeycloakProtectionHttpClient(builder.Configuration);
+        var keycloakOptions = builder.Configuration.GetKeycloakOptions<KeycloakProtectionClientOptions>("KeycloakProtection")!;
+        const string tokenClientName = "KeycloakProtectionClient";
+
+        builder.Services.AddDistributedMemoryCache();
+        builder.Services.AddClientCredentialsTokenManagement()
+            .AddClient(
+                tokenClientName,
+                client =>
+                {
+                    client.ClientId = keycloakOptions.Resource;
+                    client.ClientSecret = keycloakOptions.Credentials.Secret;
+                    client.TokenEndpoint = keycloakOptions.KeycloakTokenEndpoint;
+                }
+            );
+
+        builder.Services.AddKeycloakProtectionHttpClient(builder.Configuration.GetSection("KeycloakProtection"))
+            .AddClientCredentialsTokenHandler(tokenClientName);
     }
 
     /// <summary>

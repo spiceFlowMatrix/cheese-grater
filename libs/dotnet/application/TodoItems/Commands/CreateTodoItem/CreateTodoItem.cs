@@ -8,7 +8,7 @@ using Keycloak.AuthServices.Sdk.Protection.Models;
 
 namespace CheeseGrater.Application.TodoItems.Commands.CreateTodoItem;
 
-[AuthorizeProtectedResource("todos", "todo:write")]
+[AuthorizeProtectedResource("workspaces", "workspace:read")]
 public record CreateTodoItemCommand : IRequest<int>
 {
     public int ListId { get; init; }
@@ -47,7 +47,7 @@ public class CreateTodoItemCommandHandler : IRequestHandler<CreateTodoItemComman
 
         var userName = _identityService?.UserName ?? throw new InvalidOperationException();
         await _resourceClient.CreateResourceAsync(
-            "authz",
+            "master",
             new Resource(
                 $"workspaces/{entity.Id}",
                 ["workspaces:read", "workspaces:delete"]

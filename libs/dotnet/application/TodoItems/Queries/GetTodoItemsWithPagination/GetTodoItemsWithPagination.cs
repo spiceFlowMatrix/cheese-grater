@@ -5,7 +5,7 @@ using CheeseGrater.Core.Application.Common.Security;
 
 namespace CheeseGrater.Application.TodoItems.Queries.GetTodoItemsWithPagination;
 
-[AuthorizeProtectedResource("todos", "todo:read")]
+[AuthorizeProtectedResource("workspaces", "workspace:read")]
 public record GetTodoItemsWithPaginationQuery : IRequest<PaginatedList<TodoItemBriefDto>>
 {
     public int ListId { get; init; }
