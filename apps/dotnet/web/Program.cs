@@ -30,8 +30,6 @@ app.UseSwaggerUi(settings =>
     settings.DocumentPath = "/api/specification.json";
 });
 
-app.MapRazorPages();
-
 app.MapFallbackToFile("index.html");
 
 app.UseExceptionHandler(options => { });
