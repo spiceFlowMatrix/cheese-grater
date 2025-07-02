@@ -1,4 +1,9 @@
-﻿using CheeseGrater.Core.Infrastructure.Data.Interceptors;
+﻿using CheeseGrater.Core.Application.Common.Interfaces;
+using CheeseGrater.Core.Infrastructure.Data.Interceptors;
+using CheeseGrater.Core.Infrastructure.Identity;
+using Keycloak.AuthServices.Authorization;
+using Keycloak.AuthServices.Authorization.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Hosting;
 
@@ -12,5 +17,17 @@ public static class DependencyInjection
         builder.Services.AddScoped<ISaveChangesInterceptor, DispatchDomainEventsInterceptor>();
 
         builder.Services.AddSingleton(TimeProvider.System);
+        builder.Services.AddTransient<IIdentityService, IdentityService>();
+
+
+        builder.Services.AddAuthorization(o =>
+        {
+            o.FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
+        }).AddKeycloakAuthorization()
+        .AddAuthorizationServer(builder.Configuration);
+
+        builder.Services.AddSingleton<IAuthorizationPolicyProvider, ProtectedResourcePolicyProvider>();
     }
 }

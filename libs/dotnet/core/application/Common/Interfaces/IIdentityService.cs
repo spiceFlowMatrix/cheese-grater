@@ -1,16 +1,10 @@
-﻿using CheeseGrater.Core.Application.Common.Models;
+﻿namespace CheeseGrater.Core.Application.Common.Interfaces;
 
-namespace CheeseGrater.Core.Application.Common.Interfaces;
-
-public interface IIdentityService
+public interface IIdentityService : IUser
 {
-    Task<string?> GetUserNameAsync(string userId);
+    Task<bool> AuthorizeAsync(string policyName);
 
-    Task<bool> IsInRoleAsync(string userId, string role);
+    Task<bool> AuthorizeAsync(object resource, string policyName);
 
-    Task<bool> AuthorizeAsync(string userId, string policyName);
-
-    Task<(Result Result, string UserId)> CreateUserAsync(string userName, string password);
-
-    Task<Result> DeleteUserAsync(string userId);
+    bool IsInRoleAsync(string role);
 }

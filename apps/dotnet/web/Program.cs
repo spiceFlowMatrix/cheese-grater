@@ -34,6 +34,10 @@ app.MapFallbackToFile("index.html");
 
 app.UseExceptionHandler(options => { });
 
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapGet("/", () => "Hello World!").RequireAuthorization();
 
 app.MapEndpoints();
 

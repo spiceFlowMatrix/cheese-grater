@@ -8,27 +8,27 @@ public class LoggingBehaviour<TRequest> : IRequestPreProcessor<TRequest> where T
 {
     private readonly ILogger _logger;
     private readonly IUser _user;
-    // private readonly IIdentityService _identityService;
 
-    public LoggingBehaviour(ILogger<TRequest> logger, IUser user/*, IIdentityService identityService*/)
+    public LoggingBehaviour(ILogger<TRequest> logger, IUser user)
     {
         _logger = logger;
         _user = user;
-        // _identityService = identityService;
     }
 
-    public async Task Process(TRequest request, CancellationToken cancellationToken)
+    public Task Process(TRequest request, CancellationToken cancellationToken)
     {
         var requestName = typeof(TRequest).Name;
-        var userId = _user.Id ?? string.Empty;
+        var userId = _user.UserId ?? string.Empty;
         string? userName = string.Empty;
 
-        // if (!string.IsNullOrEmpty(userId))
-        // {
-        //     userName = await _identityService.GetUserNameAsync(userId);
-        // }
+        if (!string.IsNullOrEmpty(userId))
+        {
+            userName = _user.UserName ?? string.Empty;
+        }
 
         _logger.LogInformation("CheeseGrater Request: {Name} {@UserId} {@UserName} {@Request}",
             requestName, userId, userName, request);
+
+        return Task.CompletedTask;
     }
 }

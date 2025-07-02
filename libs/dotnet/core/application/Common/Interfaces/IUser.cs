@@ -1,6 +1,12 @@
-﻿namespace CheeseGrater.Core.Application.Common.Interfaces;
+﻿using System.Security.Claims;
+
+namespace CheeseGrater.Core.Application.Common.Interfaces;
 
 public interface IUser
 {
-    string? Id { get; }
+    string? UserId { get; }
+
+    string? UserName { get; }
+
+    ClaimsPrincipal? Principal { get; }
 }

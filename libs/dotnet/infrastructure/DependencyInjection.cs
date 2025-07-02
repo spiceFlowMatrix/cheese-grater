@@ -1,12 +1,12 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
-using CheeseGrater.Core.Domain.Constants;
 using CheeseGrater.Infrastructure.Data;
-using CheeseGrater.Core.Infrastructure.Data.Interceptors;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using CheeseGrater.Infrastructure.Identity;
+using Keycloak.AuthServices.Authorization;
+using Keycloak.AuthServices.Sdk;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -38,6 +38,27 @@ public static class DependencyInjection
         builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
         builder.Services.AddScoped<ApplicationDbContextInitialiser>();
+
+        builder.Services.AddAuthorization(o =>
+        {
+            o.AddPolicy(PolicyConstants.MyCustomPolicy, b =>
+            {
+                // b.AddRequirements(new DecisionRequirement("workspaces", "workspaces:read"));
+                b.RequireProtectedResource("workspaces", "workspaces:read");
+            });
+
+            o.AddPolicy(PolicyConstants.CanDeleteAllWorkspaces, b =>
+            {
+                b.RequireRealmRoles("SuperManager");
+            });
+
+            o.AddPolicy(PolicyConstants.AccessManagement, b =>
+            {
+                b.RequireResourceRoles("Manager");
+            });
+        });
+
+        builder.Services.AddKeycloakProtectionHttpClient(builder.Configuration);
     }
 
     /// <summary>

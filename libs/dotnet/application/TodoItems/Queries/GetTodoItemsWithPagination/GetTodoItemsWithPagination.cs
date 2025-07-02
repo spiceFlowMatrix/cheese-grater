@@ -1,9 +1,11 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
 using CheeseGrater.Core.Application.Common.Mappings;
 using CheeseGrater.Core.Application.Common.Models;
+using CheeseGrater.Core.Application.Common.Security;
 
 namespace CheeseGrater.Application.TodoItems.Queries.GetTodoItemsWithPagination;
 
+[AuthorizeProtectedResource("todos", "todo:read")]
 public record GetTodoItemsWithPaginationQuery : IRequest<PaginatedList<TodoItemBriefDto>>
 {
     public int ListId { get; init; }

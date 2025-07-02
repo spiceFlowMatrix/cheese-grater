@@ -2,6 +2,8 @@
 using CheeseGrater.Core.Application.Common.Interfaces;
 using CheeseGrater.Infrastructure.Data;
 using CheeseGrater.Web.Services;
+using Keycloak.AuthServices.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -32,6 +34,9 @@ public static class DependencyInjection
             configure.Title = "CheeseGrater API";
 
         });
+
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddKeycloakWebApi(builder.Configuration);
     }
 
     // public static void AddKeyVaultIfConfigured(this IHostApplicationBuilder builder)

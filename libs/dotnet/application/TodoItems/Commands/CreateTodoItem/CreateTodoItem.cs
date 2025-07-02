@@ -1,9 +1,14 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
+using CheeseGrater.Core.Application.Common.Interfaces;
+using CheeseGrater.Core.Application.Common.Security;
 using CheeseGrater.Core.Domain.Entities;
 using CheeseGrater.Core.Domain.Events;
+using Keycloak.AuthServices.Sdk.Protection;
+using Keycloak.AuthServices.Sdk.Protection.Models;
 
 namespace CheeseGrater.Application.TodoItems.Commands.CreateTodoItem;
 
+[AuthorizeProtectedResource("todos", "todo:write")]
 public record CreateTodoItemCommand : IRequest<int>
 {
     public int ListId { get; init; }
@@ -14,10 +19,15 @@ public record CreateTodoItemCommand : IRequest<int>
 public class CreateTodoItemCommandHandler : IRequestHandler<CreateTodoItemCommand, int>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IKeycloakProtectionClient _resourceClient;
+    private readonly IIdentityService _identityService;
 
-    public CreateTodoItemCommandHandler(IApplicationDbContext context)
+    public CreateTodoItemCommandHandler(IApplicationDbContext context, IKeycloakProtectionClient resourceClient, IIdentityService identityService)
     {
         _context = context;
+        _resourceClient = resourceClient;
+        _identityService = identityService;
+
     }
 
     public async Task<int> Handle(CreateTodoItemCommand request, CancellationToken cancellationToken)
@@ -34,6 +44,20 @@ public class CreateTodoItemCommandHandler : IRequestHandler<CreateTodoItemComman
         _context.TodoItems.Add(entity);
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        var userName = _identityService?.UserName ?? throw new InvalidOperationException();
+        await _resourceClient.CreateResourceAsync(
+            "authz",
+            new Resource(
+                $"workspaces/{entity.Id}",
+                ["workspaces:read", "workspaces:delete"]
+            )
+            {
+                Attributes = { [userName] = "Owner" },
+                Type = "urn:workspace-authz:resource:workspaces",
+            },
+            cancellationToken
+        );
 
         return entity.Id;
     }
