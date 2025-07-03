@@ -1,0 +1,12 @@
+{
+  "authenticators": [],
+  "policies": [
+    {
+      "name": "Owner Policy",
+      "fileName": "isOwnerPolicy.js",
+      "description": "Allow only resource owner access"
+    }
+  ],
+  "mappers": [],
+  "saml-mappers": []
+}
