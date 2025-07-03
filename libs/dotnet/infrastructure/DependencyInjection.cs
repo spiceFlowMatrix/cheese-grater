@@ -59,7 +59,7 @@ public static class DependencyInjection
             });
         });
 
-        var keycloakOptions = builder.Configuration.GetKeycloakOptions<KeycloakProtectionClientOptions>("KeycloakProtection")!;
+        var keycloakOptions = builder.Configuration.GetKeycloakOptions<KeycloakProtectionClientOptions>()!;
         const string tokenClientName = "KeycloakProtectionClient";
 
         builder.Services.AddDistributedMemoryCache();
@@ -74,7 +74,7 @@ public static class DependencyInjection
                 }
             );
 
-        builder.Services.AddKeycloakProtectionHttpClient(builder.Configuration.GetSection("KeycloakProtection"))
+        builder.Services.AddKeycloakProtectionHttpClient(builder.Configuration)
             .AddClientCredentialsTokenHandler(tokenClientName);
     }
 

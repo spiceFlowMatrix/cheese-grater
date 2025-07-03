@@ -45,19 +45,23 @@ public class CreateTodoItemCommandHandler : IRequestHandler<CreateTodoItemComman
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        var userName = _identityService?.UserName ?? throw new InvalidOperationException();
+        var userId = _identityService?.UserId ?? throw new InvalidOperationException();
         await _resourceClient.CreateResourceAsync(
-            "master",
+            "Test",
             new Resource(
                 $"workspaces/{entity.Id}",
                 ["workspaces:read", "workspaces:delete"]
             )
             {
-                Attributes = { [userName] = "Owner" },
+                Attributes = { [userId] = "Owner" },
                 Type = "urn:workspace-authz:resource:workspaces",
+                OwnerManagedAccess = true,
+                Owner = userId,
             },
             cancellationToken
         );
+
+
 
         return entity.Id;
     }

@@ -1,4 +1,7 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
+using CheeseGrater.Core.Application.Common.Exceptions;
+using CheeseGrater.Core.Application.Common.Interfaces;
+using Keycloak.AuthServices.Authorization;
 
 namespace CheeseGrater.Application.TodoItems.Commands.UpdateTodoItem;
 
@@ -14,16 +17,27 @@ public record UpdateTodoItemCommand : IRequest
 public class UpdateTodoItemCommandHandler : IRequestHandler<UpdateTodoItemCommand>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IIdentityService _identityService;
 
-    public UpdateTodoItemCommandHandler(IApplicationDbContext context)
+    public UpdateTodoItemCommandHandler(IApplicationDbContext context, IIdentityService identityService)
     {
         _context = context;
+        _identityService = identityService;
     }
 
     public async Task Handle(UpdateTodoItemCommand request, CancellationToken cancellationToken)
     {
+        var authorized = await _identityService.AuthorizeAsync(
+            ProtectedResourcePolicy.From("workspaces", request.Id.ToString(), "workspaces:read")
+        );
+
+        if (!authorized)
+        {
+            throw new ForbiddenAccessException();
+        }
+
         var entity = await _context.TodoItems
-            .FindAsync(new object[] { request.Id }, cancellationToken);
+            .FindAsync([request.Id], cancellationToken);
 
         Guard.Against.NotFound(request.Id, entity);
 
