@@ -93,9 +93,13 @@ public class KeycloakInitialiser
                 {
                     _logger.LogWarning("ClientCreation: {Message}", ex.Message);
                 }
-                var client = await _adminClient.Admin.Realms["Test"].Clients["TestClient"].GetAsync();
+                var clients = await _adminClient.Admin.Realms["Test"].Clients.GetAsync();
+                var selectClient = clients.FirstOrDefault(c => c.ClientId == "TestClient");
+                var client = await _adminClient.Admin.Realms["Test"].Clients[selectClient.Id].GetAsync();
+                Console.WriteLine($"Client Count: {clients.Count}");
+                client.ServiceAccountsEnabled = true;
                 client.AuthorizationServicesEnabled = true;
-                await _adminClient.Admin.Realms["Test"].Clients["TestClient"].PutAsync(client);
+                await _adminClient.Admin.Realms["Test"].Clients[client.Id].PutAsync(client);
 
                 // await _adminClient.Admin.Realms["Test"].Clients["TestClient"].Authz.ResourceServer.Resource.PostAsync(authSettings);
             }
