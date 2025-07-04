@@ -1,4 +1,5 @@
 using CheeseGrater.Infrastructure.Data;
+using CheeseGrater.Infrastructure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     await app.InitialiseDatabaseAsync();
+    await app.InitialiseKeycloakAsync();
 }
 else
 {

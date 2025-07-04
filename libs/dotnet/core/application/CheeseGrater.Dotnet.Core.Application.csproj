@@ -20,5 +20,6 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Keycloak.AuthServices.Authorization" />
     <PackageReference Include="Keycloak.AuthServices.Sdk" />
+    <PackageReference Include="Keycloak.AuthServices.Sdk.Kiota" />
   </ItemGroup>
 </Project>
