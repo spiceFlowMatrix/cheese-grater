@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Identity" />
-    <PackageReference Include="Duende.AccessTokenManagement" />
     <PackageReference Include="EFCore.NamingConventions" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />

@@ -8,6 +8,7 @@ using CheeseGrater.Infrastructure.Identity;
 using Keycloak.AuthServices.Authorization;
 using Keycloak.AuthServices.Sdk;
 using Keycloak.AuthServices.Common;
+using CheeseGrater.Application.Common.Security;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -47,35 +48,7 @@ public static class DependencyInjection
                 // b.AddRequirements(new DecisionRequirement("workspaces", "workspaces:read"));
                 b.RequireProtectedResource("workspaces", "workspaces:read");
             });
-
-            o.AddPolicy(PolicyConstants.CanDeleteAllWorkspaces, b =>
-            {
-                b.RequireRealmRoles("SuperManager");
-            });
-
-            o.AddPolicy(PolicyConstants.AccessManagement, b =>
-            {
-                b.RequireResourceRoles("Manager");
-            });
         });
-
-        var keycloakOptions = builder.Configuration.GetKeycloakOptions<KeycloakProtectionClientOptions>()!;
-        const string tokenClientName = "KeycloakProtectionClient";
-
-        builder.Services.AddDistributedMemoryCache();
-        builder.Services.AddClientCredentialsTokenManagement()
-            .AddClient(
-                tokenClientName,
-                client =>
-                {
-                    client.ClientId = keycloakOptions.Resource;
-                    client.ClientSecret = keycloakOptions.Credentials.Secret;
-                    client.TokenEndpoint = keycloakOptions.KeycloakTokenEndpoint;
-                }
-            );
-
-        builder.Services.AddKeycloakProtectionHttpClient(builder.Configuration)
-            .AddClientCredentialsTokenHandler(tokenClientName);
     }
 
     /// <summary>
