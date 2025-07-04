@@ -9,28 +9,23 @@ isOwnerPolicy(permission, context);
  * Assumes the resource has an attribute 'owner' containing the user ID.
  */
 function isOwnerPolicy(permission, context) {
-    print("Starting isOwnerPolicy evaluation");
+  var identity = context.identity;
+  var resource = permission.getResource();
 
-    var identity = context.identity;
-    var resource = permission.resource;
+  if (!identity || !resource) {
+    $evaluation.deny();
+    return;
+  }
 
-    if (!identity || !resource) {
-        print("Missing identity or resource: identity=" + identity + ", resource=" + resource);
-        $evaluation.deny();
-        return;
-    }
+  var resourceOwnerAttribute = resource.getAttribute(identity.getId());
 
-    var resourceOwnerId = resource.get('owner');
-    var requestingUserId = identity.getId();
-
-    print("Resource Owner ID: " + resourceOwnerId);
-    print("Requesting User ID: " + requestingUserId);
-
-    if (resourceOwnerId && requestingUserId && resourceOwnerId === requestingUserId) {
-        print("User is the owner, granting access");
-        $evaluation.grant();
-    } else {
-        print("User is not the owner or IDs are missing, denying access");
-        $evaluation.deny();
-    }
+  if (
+    resourceOwnerAttribute &&
+    (resourceOwnerAttribute.contains('Owner') ||
+      resourceOwnerAttribute.contains('owner'))
+  ) {
+    $evaluation.grant();
+  } else {
+    $evaluation.deny();
+  }
 }
