@@ -59,55 +59,10 @@ public class KeycloakInitialiser
 
             if (realm != null)
             {
-                var authSettings = new ResourceRepresentation
-                {
-                    Name = Resources.TodoResource,
-                    Type = $"urn:{Resources.TodoResource.ToLower()}",
-                    // Scopes =
-                    // [
-                    //     new ScopeRepresentation
-                    //     {
-                    //         Name = "view",
-                    //         DisplayName = "View Todo Resource"
-                    //     },
-                    //     new ScopeRepresentation
-                    //     {
-                    //         Name = "edit",
-                    //         DisplayName = "Edit Edit Resource"
-                    //     }
-                    // ]
-                };
-                try
-                {
-                    await _adminClient.Admin.Realms["Test"].Clients.PostAsync(new ClientRepresentation
-                    {
-                        ClientId = "TestClient",
-                        Name = "Test Client",
-                        Description = "A test client for Keycloak initialisation",
-                        Enabled = true,
-                        PublicClient = false,
-                        Protocol = "openid-connect",
-                    });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning("ClientCreation: {Message}", ex.Message);
-                }
-                var clients = await _adminClient.Admin.Realms["Test"].Clients.GetAsync();
-                var selectClient = clients.FirstOrDefault(c => c.ClientId == "TestClient");
-                var client = await _adminClient.Admin.Realms["Test"].Clients[selectClient.Id].GetAsync();
-                Console.WriteLine($"Client Count: {clients.Count}");
-                client.ServiceAccountsEnabled = true;
-                client.AuthorizationServicesEnabled = true;
-                await _adminClient.Admin.Realms["Test"].Clients[client.Id].PutAsync(client);
-
-                // await _adminClient.Admin.Realms["Test"].Clients["TestClient"].Authz.ResourceServer.Resource.PostAsync(authSettings);
+                var clientId = await SeedClientAsync();
+                if (clientId != null)
+                    await SeedResourcesAsync("Test", clientId);
             }
-
-            // realm.Clients.Where
-            // await SeedClientsAsync(_accessToken, realm);
-            // await SeedRolesAsync(_accessToken, realm);
-            // Add methods for resources and permissions as needed
         }
         catch (Exception ex)
         {
@@ -116,8 +71,98 @@ public class KeycloakInitialiser
         }
     }
 
-    private async Task SeedClientsAsync(string accessToken)
+    private async Task<string?> SeedClientAsync()
     {
+        try
+        {
+            await _adminClient.Admin.Realms["Test"].Clients.PostAsync(new ClientRepresentation
+            {
+                ClientId = "TestClient",
+                Name = "Test Client",
+                Description = "A test client for Keycloak initialisation",
+                Enabled = true,
+                PublicClient = false,
+                Protocol = "openid-connect",
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Client creation failed");
+        }
+
+        IReadOnlyList<ClientRepresentation>? clients = null;
+        try
+        {
+            clients = await _adminClient.Admin.Realms["Test"].Clients.GetAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve clients from Keycloak.");
+            throw;
+        }
+
+        if (clients == null || !clients.Any())
+        {
+            _logger.LogError("No clients found in realm 'Test'.");
+            return null;
+        }
+
+        var selectClient = clients.FirstOrDefault(c => c.ClientId == "TestClient");
+        if (selectClient == null)
+        {
+            _logger.LogError("TestClient was not found after creation attempt.");
+            return null;
+        }
+
+        ClientRepresentation? client = null;
+        try
+        {
+            client = await _adminClient.Admin.Realms["Test"].Clients[selectClient.Id].GetAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve TestClient details.");
+            return null;
+        }
+
+        if (client == null)
+        {
+            _logger.LogError("TestClient details could not be loaded.");
+            return null;
+        }
+
+        client.ServiceAccountsEnabled = true;
+        client.AuthorizationServicesEnabled = true;
+
+        try
+        {
+            await _adminClient.Admin.Realms["Test"].Clients[client.Id].PutAsync(client);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update TestClient with service account and authorization settings.");
+        }
+
+        return client.Id;
+    }
+
+    private async Task SeedResourcesAsync(string realm, string clientId)
+    {
+
+        var authSettings = new ResourceRepresentation
+        {
+            Name = Resources.TodoResource,
+            Type = $"urn:{Resources.TodoResource.ToLower()}",
+            Scopes =
+            [
+                .. Scopes.All.Select(scope => new ScopeRepresentation
+                {
+                    Name = $"{Resources.TodoResource}:{scope}",
+                    DisplayName = $"{scope} {Resources.TodoResource}"
+                })
+            ],
+        };
+        await _adminClient.Admin.Realms[realm].Clients[clientId].Authz.ResourceServer.Resource.PostAsync(authSettings);
     }
 
     // private async Task SeedRolesAsync(string accessToken)
@@ -151,23 +196,6 @@ public class KeycloakInitialiser
     //     }
     // }
 
-    // private async Task<List<object>> GetClientsAsync(HttpClient client, string realm, string clientId)
-    // {
-    //     var response = await client.GetAsync($"/admin/realms/{realm}/clients?clientId={clientId}");
-    //     response.EnsureSuccessStatusCode();
-    //     var content = await response.Content.ReadAsStringAsync();
-    //     return JsonSerializer.Deserialize<List<object>>(content);
-    // }
-
-    // private async Task<List<object>> GetRolesAsync(HttpClient client, string realm, string roleName)
-    // {
-    //     var response = await client.GetAsync($"/admin/realms/{realm}/roles/{roleName}");
-    //     if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-    //         return new List<object>();
-    //     response.EnsureSuccessStatusCode();
-    //     var content = await response.Content.ReadAsStringAsync();
-    //     return new List<object> { JsonSerializer.Deserialize<object>(content) };
-    // }
 
     private class TokenResponse
     {
