@@ -1,31 +1,15 @@
+using CheeseGrater.Core.Application.Common.Security;
+using CheeseGrater.Core.Domain.Constants;
 namespace CheeseGrater.Application.Common.Security;
-
-public enum EPolicyType
-{
-    RealmRole,
-    ClientRole,
-}
-
-public record Policy
-{
-    EPolicyType Type { get; }
-    string PolicyName { get; }
-    string TargetName { get; }
-
-    public Policy(EPolicyType type, string policyName, string targetName)
-    {
-        Type = type;
-        PolicyName = policyName;
-        TargetName = targetName;
-    }
-}
 
 public static class PolicyConstants
 {
-    public const string MyCustomPolicy = nameof(MyCustomPolicy);
+    public const string OwnershipPolicy = nameof(OwnershipPolicy);
+    public const string RequireUserRolePolicy = nameof(RequireUserRolePolicy);
 
-    public static readonly List<Policy> Policies = new List<Policy>
-    {
-        new Policy(EPolicyType.RealmRole, MyCustomPolicy, "workspaces:read"),
-    };
+    public static readonly List<Policy> Policies =
+    [
+        new Policy(EPolicyType.Owner, OwnershipPolicy, EPolicyTargetType.ResourceType, $"urn:{Resources.TodoResource}:resource:{Resources.TodoResource}"),
+        new Policy(EPolicyType.Role, RequireUserRolePolicy, EPolicyTargetType.Resource, Resources.TodoResource),
+    ];
 }
