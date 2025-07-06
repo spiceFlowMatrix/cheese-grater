@@ -44,11 +44,11 @@ public static class DependencyInjection
 
         builder.Services.AddAuthorization(o =>
         {
-            o.AddPolicy(PolicyConstants.MyCustomPolicy, b =>
-            {
-                // b.AddRequirements(new DecisionRequirement("workspaces", "workspaces:read"));
-                b.RequireProtectedResource("workspaces", "workspaces:read");
-            });
+            // o.AddPolicy(PolicyConstants.MyCustomPolicy, b =>
+            // {
+            //     // b.AddRequirements(new DecisionRequirement("workspaces", "workspaces:read"));
+            //     b.RequireProtectedResource("workspaces", "workspaces:read");
+            // });
         });
     }
 

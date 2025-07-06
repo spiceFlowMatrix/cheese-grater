@@ -1,4 +1,5 @@
-using System.Text.Json;
+using System.Linq;
+using CheeseGrater.Application.Common.Security;
 using CheeseGrater.Core.Domain.Constants;
 using Keycloak.AuthServices.Sdk.Kiota;
 using Keycloak.AuthServices.Sdk.Kiota.Admin;
@@ -7,8 +8,6 @@ using Keycloak.AuthServices.Sdk.Protection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Kiota.Abstractions.Serialization;
-using Microsoft.Kiota.Serialization;
 
 namespace CheeseGrater.Infrastructure.Identity;
 
@@ -61,7 +60,10 @@ public class KeycloakInitialiser
             {
                 var clientId = await SeedClientAsync();
                 if (clientId != null)
+                {
                     await SeedResourcesAsync("Test", clientId);
+                    await SeedRolesAsync("Test", clientId);
+                }
             }
         }
         catch (Exception ex)
@@ -162,36 +164,69 @@ public class KeycloakInitialiser
                 })
             ],
         };
-        await _adminClient.Admin.Realms[realm].Clients[clientId].Authz.ResourceServer.Resource.PostAsync(authSettings);
+        try
+        {
+            await _adminClient.Admin.Realms[realm].Clients[clientId].Authz.ResourceServer.Resource.PostAsync(authSettings);
+            _logger.LogInformation("Resource '{ResourceName}' seeded successfully for client '{ClientId}' in realm '{Realm}'.", Resources.TodoResource, clientId, realm);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to seed resource '{ResourceName}' for client '{ClientId}' in realm '{Realm}'.", Resources.TodoResource, clientId, realm);
+            throw;
+        }
     }
 
-    // private async Task SeedRolesAsync(string accessToken)
+    private async Task SeedRolesAsync(string realm, string clientId)
+    {
+        // Get existing roles
+        var existingRoles = await _adminClient.Admin.Realms[realm].Clients[clientId].Roles.GetAsync();
+
+        if (existingRoles == null) return;
+
+        // Filter roles that do not exist
+        var rolesToAdd = Roles.All
+            .Where(role => !existingRoles.Select((e) => e.Name).Contains(role))
+            .Select(role => new RoleRepresentation { Name = role });
+
+        // Add new roles
+        foreach (var role in rolesToAdd)
+        {
+            try
+            {
+                await _adminClient.Admin.Realms[realm].Clients[clientId].Roles.PostAsync(role);
+                _logger.LogInformation("Role '{RoleName}' added successfully to client '{ClientId}' in realm '{Realm}'.", role.Name, clientId, realm);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to add role '{RoleName}' to client '{ClientId}' in realm '{Realm}'.", role.Name, clientId, realm);
+            }
+        }
+    }
+
+    // private async Task SeedPoliciesAsync(string realm, string clientId)
     // {
-    //     var roles = new[]
-    //     {
-    //             new { name = "user", description = "Standard user role" },
-    //             new { name = "admin", description = "Administrator role" }
-    //             // Add more roles as needed
-    //         };
+    //     // Get existing roles
+    //     var existingPolicies = await _adminClient.Admin.Realms[realm].Clients[clientId].Authz.ResourceServer.Policy.GetAsync();
+        
 
-    //     using var client = _httpClientFactory.CreateClient();
-    //     client.BaseAddress = new Uri(_configuration["Keycloak:ServerUrl"]);
-    //     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+    //     if (existingPolicies == null) return;
 
-    //     foreach (var role in roles)
+    //     // Filter roles that do not exist
+    //     var policiesToAdd = PolicyConstants.All
+    //         .Where(policy => existingPolicies.Select((e) => e.Name).Contains(policy.PolicyName))
+    //         .Select(policy => new PolicyRepresentation { Name = policy.PolicyName, Rol });
+        
+    //     // Add new roles
+    //     foreach (var policy in policiesToAdd)
     //     {
-    //         var existingRoles = await GetRolesAsync(client, realm, role.name);
-    //         if (existingRoles.Count == 0)
+    //         try
     //         {
-    //             var json = JsonSerializer.Serialize(role);
-    //             var content = new StringContent(json, Encoding.UTF8, "application/json");
-    //             var response = await client.PostAsync($"/admin/realms/{realm}/roles", content);
-    //             response.EnsureSuccessStatusCode();
-    //             _logger.LogInformation($"Created role: {role.name}");
+    //             await _adminClient.Admin.Realms[realm].Clients[clientId].Authz.ResourceServer.Policy;
+    //             _logger.LogInformation("Role '{RoleName}' added successfully to client '{ClientId}' in realm '{Realm}'.", policy.Name, clientId, realm);
     //         }
-    //         else
+    //         catch (Exception ex)
     //         {
-    //             _logger.LogInformation($"Role {role.name} already exists.");
+    //             _logger.LogError(ex, "Failed to add role '{RoleName}' to client '{ClientId}' in realm '{Realm}'.", policy.Name, clientId, realm);
     //         }
     //     }
     // }
