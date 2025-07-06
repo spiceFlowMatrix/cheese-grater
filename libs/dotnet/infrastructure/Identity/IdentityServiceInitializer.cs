@@ -1,10 +1,12 @@
 using System.Linq;
 using CheeseGrater.Application.Common.Security;
+using CheeseGrater.Core.Application.Common.Security;
 using CheeseGrater.Core.Domain.Constants;
 using Keycloak.AuthServices.Sdk.Kiota;
 using Keycloak.AuthServices.Sdk.Kiota.Admin;
 using Keycloak.AuthServices.Sdk.Kiota.Admin.Models;
 using Keycloak.AuthServices.Sdk.Protection;
+using Keycloak.AuthServices.Sdk.Protection.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -203,33 +205,45 @@ public class KeycloakInitialiser
         }
     }
 
-    // private async Task SeedPoliciesAsync(string realm, string clientId)
-    // {
-    //     // Get existing roles
-    //     var existingPolicies = await _adminClient.Admin.Realms[realm].Clients[clientId].Authz.ResourceServer.Policy.GetAsync();
-        
+    private async Task SeedPoliciesAsync(string realm, string clientId)
+    {
+        // Get existing roles
+        var existingResources = await _adminClient.Admin.Realms[realm].Clients[clientId].Authz.ResourceServer.Policy.GetAsync();
+        var existingPolicies = await _adminClient.Admin.Realms[realm].Clients[clientId].Authz.ResourceServer.Resource.GetAsync();
+        var existingRoles = await _adminClient.Admin.Realms[realm].Clients[clientId].Roles.GetAsync();
 
-    //     if (existingPolicies == null) return;
 
-    //     // Filter roles that do not exist
-    //     var policiesToAdd = PolicyConstants.All
-    //         .Where(policy => existingPolicies.Select((e) => e.Name).Contains(policy.PolicyName))
-    //         .Select(policy => new PolicyRepresentation { Name = policy.PolicyName, Rol });
-        
-    //     // Add new roles
-    //     foreach (var policy in policiesToAdd)
-    //     {
-    //         try
-    //         {
-    //             await _adminClient.Admin.Realms[realm].Clients[clientId].Authz.ResourceServer.Policy;
-    //             _logger.LogInformation("Role '{RoleName}' added successfully to client '{ClientId}' in realm '{Realm}'.", policy.Name, clientId, realm);
-    //         }
-    //         catch (Exception ex)
-    //         {
-    //             _logger.LogError(ex, "Failed to add role '{RoleName}' to client '{ClientId}' in realm '{Realm}'.", policy.Name, clientId, realm);
-    //         }
-    //     }
-    // }
+        if (existingResources == null || existingPolicies == null || existingRoles == null) return;
+
+        // Filter roles that do not exist
+        var policiesToAdd = PolicyConstants.All
+            .Where(policy => !existingPolicies.Select((e) => e.Name).Contains(policy.PolicyName))
+            .Select(policy => new Policy
+            {
+                Name = policy.PolicyName,
+                DecisionStrategy = Keycloak.AuthServices.Sdk.Protection.Models.DecisionStrategy.AFFIRMATIVE,
+                Type = policy.Type == EPolicyType.Role ? "role" : policy.Type == EPolicyType.Owner ? "script-isOwnerPolicy.js" : "",
+                Roles = policy.Roles != null && policy.Type == EPolicyType.Role
+                    ? existingRoles
+                        .Where((r) => policy.Roles.Contains(r.Name ?? "")).Select((r) => r.Id ?? "")
+                        .ToArray()
+                    : null
+            });
+
+        // Add new roles
+        foreach (var policy in policiesToAdd)
+        {
+            try
+            {
+                // await _adminClient.Admin.Realms[realm].Clients[clientId].Authz.ResourceServer.Policy;
+                _logger.LogInformation("Role '{RoleName}' added successfully to client '{ClientId}' in realm '{Realm}'.", policy.Name, clientId, realm);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to add role '{RoleName}' to client '{ClientId}' in realm '{Realm}'.", policy.Name, clientId, realm);
+            }
+        }
+    }
 
 
     private class TokenResponse

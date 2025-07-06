@@ -6,10 +6,12 @@ public static class PolicyConstants
 {
     public const string OwnershipPolicy = nameof(OwnershipPolicy);
     public const string RequireUserRolePolicy = nameof(RequireUserRolePolicy);
+    public const string RequireAdminRolePolicy = nameof(RequireAdminRolePolicy);
 
-    public static readonly List<Policy> All =
+    public static readonly List<ApplicationPolicy> All =
     [
-        new Policy(EPolicyType.Owner, OwnershipPolicy, EPolicyTargetType.ResourceType, $"urn:{Resources.TodoResource}:resource:{Resources.TodoResource}"),
-        new Policy(EPolicyType.Role, RequireUserRolePolicy, EPolicyTargetType.Resource, Resources.TodoResource),
+        new ApplicationPolicy(EPolicyType.Owner, OwnershipPolicy, EPolicyTargetType.ResourceType, $"urn:{Resources.TodoResource}:resource:{Resources.TodoResource}"),
+        new ApplicationPolicy(EPolicyType.Role, RequireUserRolePolicy, EPolicyTargetType.Resource, Resources.TodoResource, [Roles.User]),
+        new ApplicationPolicy(EPolicyType.Role, RequireAdminRolePolicy, EPolicyTargetType.Resource, Resources.TodoResource, [Roles.Administrator]),
     ];
 }

@@ -12,18 +12,20 @@ public enum EPolicyType
     Owner
 }
 
-public record Policy
+public record ApplicationPolicy
 {
     public EPolicyType Type { get; }
     public string PolicyName { get; }
     public EPolicyTargetType TargetType { get; }
     public string TargetResource { get; }
+    public List<string>? Roles { get; }
 
-    public Policy(EPolicyType type, string policyName, EPolicyTargetType targetType, string targetResourceName)
+    public ApplicationPolicy(EPolicyType type, string policyName, EPolicyTargetType targetType, string targetResourceName, List<string>? roles = null)
     {
         Type = type;
         PolicyName = policyName;
         TargetType = targetType;
         TargetResource = targetResourceName;
+        Roles = roles;
     }
 }
