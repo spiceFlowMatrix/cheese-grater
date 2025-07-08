@@ -5,7 +5,7 @@ namespace CheeseGrater.Application.Common.Interfaces;
 
 public interface IApplicationDbContext : IBaseDbContext
 {
-    DbSet<TodoList> TodoLists { get; }
+  DbSet<TodoList> TodoLists { get; }
 
-    DbSet<TodoItem> TodoItems { get; }
+  DbSet<TodoItem> TodoItems { get; }
 }

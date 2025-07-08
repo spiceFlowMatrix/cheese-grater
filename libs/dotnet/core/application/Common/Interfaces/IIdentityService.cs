@@ -2,9 +2,9 @@
 
 public interface IIdentityService : IUser
 {
-    Task<bool> AuthorizeAsync(string policyName);
+  Task<bool> AuthorizeAsync(string policyName);
 
-    Task<bool> AuthorizeAsync(object resource, string policyName);
+  Task<bool> AuthorizeAsync(object resource, string policyName);
 
-    bool IsInRoleAsync(string role);
+  bool IsInRoleAsync(string role);
 }

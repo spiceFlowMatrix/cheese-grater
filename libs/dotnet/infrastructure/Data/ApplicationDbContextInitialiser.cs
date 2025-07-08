@@ -10,82 +10,92 @@ namespace CheeseGrater.Infrastructure.Data;
 
 public static class InitialiserExtensions
 {
-    public static void AddAsyncSeeding(this DbContextOptionsBuilder builder, IServiceProvider serviceProvider)
-    {
-        builder.UseAsyncSeeding(async (context, _, ct) =>
-        {
-            var initialiser = serviceProvider.GetRequiredService<ApplicationDbContextInitialiser>();
+  public static void AddAsyncSeeding(
+    this DbContextOptionsBuilder builder,
+    IServiceProvider serviceProvider
+  )
+  {
+    builder.UseAsyncSeeding(
+      async (context, _, ct) =>
+      {
+        var initialiser = serviceProvider.GetRequiredService<ApplicationDbContextInitialiser>();
 
-            await initialiser.SeedAsync();
-        });
-    }
+        await initialiser.SeedAsync();
+      }
+    );
+  }
 
-    public static async Task InitialiseDatabaseAsync(this WebApplication app)
-    {
-        using var scope = app.Services.CreateScope();
+  public static async Task InitialiseDatabaseAsync(this WebApplication app)
+  {
+    using var scope = app.Services.CreateScope();
 
-        var initialiser = scope.ServiceProvider.GetRequiredService<ApplicationDbContextInitialiser>();
+    var initialiser = scope.ServiceProvider.GetRequiredService<ApplicationDbContextInitialiser>();
 
-        await initialiser.InitialiseAsync();
-    }
+    await initialiser.InitialiseAsync();
+  }
 }
 
 public class ApplicationDbContextInitialiser
 {
-    private readonly ILogger<ApplicationDbContextInitialiser> _logger;
-    private readonly ApplicationDbContext _context;
+  private readonly ILogger<ApplicationDbContextInitialiser> _logger;
+  private readonly ApplicationDbContext _context;
 
-    public ApplicationDbContextInitialiser(ILogger<ApplicationDbContextInitialiser> logger, ApplicationDbContext context)
+  public ApplicationDbContextInitialiser(
+    ILogger<ApplicationDbContextInitialiser> logger,
+    ApplicationDbContext context
+  )
+  {
+    _logger = logger;
+    _context = context;
+  }
+
+  public async Task InitialiseAsync()
+  {
+    try
     {
-        _logger = logger;
-        _context = context;
+      await _context.Database.MigrateAsync();
     }
-
-    public async Task InitialiseAsync()
+    catch (Exception ex)
     {
-        try
-        {
-            await _context.Database.MigrateAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An error occurred while initialising the database.");
-            throw;
-        }
+      _logger.LogError(ex, "An error occurred while initialising the database.");
+      throw;
     }
+  }
 
-    public async Task SeedAsync()
+  public async Task SeedAsync()
+  {
+    try
     {
-        try
-        {
-            await TrySeedAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An error occurred while seeding the database.");
-            throw;
-        }
+      await TrySeedAsync();
     }
-
-    public async Task TrySeedAsync()
+    catch (Exception ex)
     {
-        // Default data
-        // Seed, if necessary
-        if (!_context.TodoLists.Any())
-        {
-            _context.TodoLists.Add(new TodoList
-            {
-                Title = "Todo List",
-                Items =
-                {
-                    new TodoItem { Title = "Make a todo list 📃" },
-                    new TodoItem { Title = "Check off the first item ✅" },
-                    new TodoItem { Title = "Realise you've already done two things on the list! 🤯"},
-                    new TodoItem { Title = "Reward yourself with a nice, long nap 🏆" },
-                }
-            });
-
-            await _context.SaveChangesAsync();
-        }
+      _logger.LogError(ex, "An error occurred while seeding the database.");
+      throw;
     }
+  }
+
+  public async Task TrySeedAsync()
+  {
+    // Default data
+    // Seed, if necessary
+    if (!_context.TodoLists.Any())
+    {
+      _context.TodoLists.Add(
+        new TodoList
+        {
+          Title = "Todo List",
+          Items =
+          {
+            new TodoItem { Title = "Make a todo list 📃" },
+            new TodoItem { Title = "Check off the first item ✅" },
+            new TodoItem { Title = "Realise you've already done two things on the list! 🤯" },
+            new TodoItem { Title = "Reward yourself with a nice, long nap 🏆" },
+          },
+        }
+      );
+
+      await _context.SaveChangesAsync();
+    }
+  }
 }

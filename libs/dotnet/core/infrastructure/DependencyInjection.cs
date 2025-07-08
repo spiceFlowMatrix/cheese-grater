@@ -12,62 +12,68 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class DependencyInjection
 {
-    public static void AddCoreInfrastructureServices(this IHostApplicationBuilder builder)
-    {
-        builder.Services.AddScoped<ISaveChangesInterceptor, AuditableEntityInterceptor>();
-        builder.Services.AddScoped<ISaveChangesInterceptor, DispatchDomainEventsInterceptor>();
+  public static void AddCoreInfrastructureServices(this IHostApplicationBuilder builder)
+  {
+    builder.Services.AddScoped<ISaveChangesInterceptor, AuditableEntityInterceptor>();
+    builder.Services.AddScoped<ISaveChangesInterceptor, DispatchDomainEventsInterceptor>();
 
-        builder.Services.AddSingleton(TimeProvider.System);
-        builder.Services.AddTransient<IIdentityService, IdentityService>();
+    builder.Services.AddSingleton(TimeProvider.System);
+    builder.Services.AddTransient<IIdentityService, IdentityService>();
 
+    builder
+      .Services.AddAuthorization(o =>
+      {
+        o.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+      })
+      .AddKeycloakAuthorization()
+      .AddAuthorizationServer(builder.Configuration);
 
-        builder.Services.AddAuthorization(o =>
+    builder.Services.AddSingleton<IAuthorizationPolicyProvider, ProtectedResourcePolicyProvider>();
+
+    var keycloakOptions =
+      builder.Configuration.GetKeycloakOptions<KeycloakProtectionClientOptions>()!;
+    const string tokenClientName = "KeycloakProtectionClient";
+
+    builder.Services.AddDistributedMemoryCache();
+    builder
+      .Services.AddClientCredentialsTokenManagement()
+      .AddClient(
+        tokenClientName,
+        client =>
         {
-            o.FallbackPolicy = new AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build();
-        }).AddKeycloakAuthorization()
-        .AddAuthorizationServer(builder.Configuration);
+          client.ClientId = keycloakOptions.Resource;
+          client.ClientSecret = keycloakOptions.Credentials.Secret;
+          client.TokenEndpoint = keycloakOptions.KeycloakTokenEndpoint;
+        }
+      );
 
-        builder.Services.AddSingleton<IAuthorizationPolicyProvider, ProtectedResourcePolicyProvider>();
+    builder
+      .Services.AddKeycloakProtectionHttpClient(builder.Configuration)
+      .AddClientCredentialsTokenHandler(tokenClientName);
 
-        var keycloakOptions = builder.Configuration.GetKeycloakOptions<KeycloakProtectionClientOptions>()!;
-        const string tokenClientName = "KeycloakProtectionClient";
+    var keycloakAdminOptions =
+      builder.Configuration.GetKeycloakOptions<Keycloak.AuthServices.Sdk.Kiota.KeycloakAdminClientOptions>(
+        "KeycloakAdmin"
+      )!;
+    const string adminTokenClientName = "KeycloakAdminClient";
 
-        builder.Services.AddDistributedMemoryCache();
-        builder.Services.AddClientCredentialsTokenManagement()
-            .AddClient(
-                tokenClientName,
-                client =>
-                {
-                    client.ClientId = keycloakOptions.Resource;
-                    client.ClientSecret = keycloakOptions.Credentials.Secret;
-                    client.TokenEndpoint = keycloakOptions.KeycloakTokenEndpoint;
-                }
-            );
+    builder
+      .Services.AddClientCredentialsTokenManagement()
+      .AddClient(
+        adminTokenClientName,
+        client =>
+        {
+          client.ClientId = keycloakAdminOptions.Resource;
+          client.ClientSecret = keycloakAdminOptions.Credentials.Secret;
+          client.TokenEndpoint = keycloakAdminOptions.KeycloakTokenEndpoint;
+        }
+      );
 
-        builder.Services.AddKeycloakProtectionHttpClient(builder.Configuration)
-            .AddClientCredentialsTokenHandler(tokenClientName);
-
-        var keycloakAdminOptions = builder.Configuration.GetKeycloakOptions<Keycloak.AuthServices.Sdk.Kiota.KeycloakAdminClientOptions>("KeycloakAdmin")!;
-        const string adminTokenClientName = "KeycloakAdminClient";
-
-        builder.Services
-            .AddClientCredentialsTokenManagement()
-            .AddClient(
-                adminTokenClientName,
-                client =>
-                {
-                    client.ClientId = keycloakAdminOptions.Resource;
-                    client.ClientSecret = keycloakAdminOptions.Credentials.Secret;
-                    client.TokenEndpoint = keycloakAdminOptions.KeycloakTokenEndpoint;
-                }
-            );
-
-        Keycloak.AuthServices.Sdk.Kiota.ServiceCollectionExtensions.AddKeycloakAdminHttpClient(
-            builder.Services,
-            builder.Configuration.GetSection("KeycloakAdmin"))
-            .AddClientCredentialsTokenHandler(adminTokenClientName);
-
-    }
+    Keycloak
+      .AuthServices.Sdk.Kiota.ServiceCollectionExtensions.AddKeycloakAdminHttpClient(
+        builder.Services,
+        builder.Configuration.GetSection("KeycloakAdmin")
+      )
+      .AddClientCredentialsTokenHandler(adminTokenClientName);
+  }
 }

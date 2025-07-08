@@ -4,16 +4,16 @@ namespace CheeseGrater.Core.Application.Common.Models;
 
 public class LookupDto
 {
-    public int Id { get; init; }
+  public int Id { get; init; }
 
-    public string? Title { get; init; }
+  public string? Title { get; init; }
 
-    private class Mapping : Profile
+  private class Mapping : Profile
+  {
+    public Mapping()
     {
-        public Mapping()
-        {
-            CreateMap<TodoList, LookupDto>();
-            CreateMap<TodoItem, LookupDto>();
-        }
+      CreateMap<TodoList, LookupDto>();
+      CreateMap<TodoItem, LookupDto>();
     }
+  }
 }

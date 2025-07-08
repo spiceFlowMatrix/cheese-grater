@@ -11,58 +11,56 @@ namespace CheeseGrater.Application.TodoItems.Commands.CreateTodoItem;
 [AuthorizeProtectedResource("workspaces", "workspace:read")]
 public record CreateTodoItemCommand : IRequest<int>
 {
-    public int ListId { get; init; }
+  public int ListId { get; init; }
 
-    public string? Title { get; init; }
+  public string? Title { get; init; }
 }
 
 public class CreateTodoItemCommandHandler : IRequestHandler<CreateTodoItemCommand, int>
 {
-    private readonly IApplicationDbContext _context;
-    private readonly IKeycloakProtectionClient _resourceClient;
-    private readonly IIdentityService _identityService;
+  private readonly IApplicationDbContext _context;
+  private readonly IKeycloakProtectionClient _resourceClient;
+  private readonly IIdentityService _identityService;
 
-    public CreateTodoItemCommandHandler(IApplicationDbContext context, IKeycloakProtectionClient resourceClient, IIdentityService identityService)
+  public CreateTodoItemCommandHandler(
+    IApplicationDbContext context,
+    IKeycloakProtectionClient resourceClient,
+    IIdentityService identityService
+  )
+  {
+    _context = context;
+    _resourceClient = resourceClient;
+    _identityService = identityService;
+  }
+
+  public async Task<int> Handle(CreateTodoItemCommand request, CancellationToken cancellationToken)
+  {
+    var entity = new TodoItem
     {
-        _context = context;
-        _resourceClient = resourceClient;
-        _identityService = identityService;
+      ListId = request.ListId,
+      Title = request.Title,
+      Done = false,
+    };
 
-    }
+    entity.AddDomainEvent(new TodoItemCreatedEvent(entity));
 
-    public async Task<int> Handle(CreateTodoItemCommand request, CancellationToken cancellationToken)
-    {
-        var entity = new TodoItem
-        {
-            ListId = request.ListId,
-            Title = request.Title,
-            Done = false
-        };
+    _context.TodoItems.Add(entity);
 
-        entity.AddDomainEvent(new TodoItemCreatedEvent(entity));
+    await _context.SaveChangesAsync(cancellationToken);
 
-        _context.TodoItems.Add(entity);
+    var userId = _identityService?.UserId ?? throw new InvalidOperationException();
+    await _resourceClient.CreateResourceAsync(
+      "Test",
+      new Resource($"workspaces/{entity.Id}", ["workspaces:read", "workspaces:delete"])
+      {
+        Attributes = { [userId] = "Owner" },
+        Type = "urn:workspace-authz:resource:workspaces",
+        OwnerManagedAccess = true,
+        Owner = userId,
+      },
+      cancellationToken
+    );
 
-        await _context.SaveChangesAsync(cancellationToken);
-
-        var userId = _identityService?.UserId ?? throw new InvalidOperationException();
-        await _resourceClient.CreateResourceAsync(
-            "Test",
-            new Resource(
-                $"workspaces/{entity.Id}",
-                ["workspaces:read", "workspaces:delete"]
-            )
-            {
-                Attributes = { [userId] = "Owner" },
-                Type = "urn:workspace-authz:resource:workspaces",
-                OwnerManagedAccess = true,
-                Owner = userId,
-            },
-            cancellationToken
-        );
-
-
-
-        return entity.Id;
-    }
+    return entity.Id;
+  }
 }

@@ -6,7 +6,6 @@
     <RootNamespace>CheeseGrater.Infrastructure</RootNamespace>
     <AssemblyName>CheeseGrater.Infrastructure</AssemblyName>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Azure.Identity" />
     <PackageReference Include="EFCore.NamingConventions" />
@@ -22,7 +21,6 @@
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\application\CheeseGrater.Dotnet.Application.csproj" />
     <ProjectReference Include="..\core\infrastructure\CheeseGrater.Dotnet.Core.Infrastructure.csproj" />
