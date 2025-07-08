@@ -25,8 +25,14 @@ public static class DependencyInjection
       {
         o.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
       })
-      .AddKeycloakAuthorization()
-      .AddAuthorizationServer(builder.Configuration);
+      .AddKeycloakAuthorization();
+    // .AddAuthorizationServer(builder.Configuration);
+
+    builder.Services.AddAuthorizationServer(options =>
+    {
+      builder.Configuration.BindKeycloakOptions(options);
+      options.UseProtectedResourcePolicyProvider = true;
+    });
 
     builder.Services.AddSingleton<IAuthorizationPolicyProvider, ProtectedResourcePolicyProvider>();
 

@@ -1,6 +1,7 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
 using CheeseGrater.Core.Application.Common.Interfaces;
 using CheeseGrater.Core.Application.Common.Security;
+using CheeseGrater.Core.Domain.Constants;
 using CheeseGrater.Core.Domain.Entities;
 using CheeseGrater.Core.Domain.Events;
 using Keycloak.AuthServices.Sdk.Protection;
@@ -8,7 +9,7 @@ using Keycloak.AuthServices.Sdk.Protection.Models;
 
 namespace CheeseGrater.Application.TodoItems.Commands.CreateTodoItem;
 
-[AuthorizeProtectedResource("workspaces", "workspace:read")]
+[AuthorizeProtectedResource(Resources.TodoResource, $"{Resources.TodoResource}:{Scopes.Create}")]
 public record CreateTodoItemCommand : IRequest<int>
 {
   public int ListId { get; init; }
@@ -51,10 +52,13 @@ public class CreateTodoItemCommandHandler : IRequestHandler<CreateTodoItemComman
     var userId = _identityService?.UserId ?? throw new InvalidOperationException();
     await _resourceClient.CreateResourceAsync(
       "Test",
-      new Resource($"workspaces/{entity.Id}", ["workspaces:read", "workspaces:delete"])
+      new Resource(
+        $"{Resources.TodoResource}/{entity.Id}",
+        [$"{Resources.TodoResource}:{Scopes.View}", $"{Resources.TodoResource}:{Scopes.Delete}"]
+      )
       {
         Attributes = { [userId] = "Owner" },
-        Type = "urn:workspace-authz:resource:workspaces",
+        Type = $"urn:{Resources.TodoResource}-authz:resource:{Resources.TodoResource}",
         OwnerManagedAccess = true,
         Owner = userId,
       },

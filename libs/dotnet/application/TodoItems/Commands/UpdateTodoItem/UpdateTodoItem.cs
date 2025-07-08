@@ -1,6 +1,7 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
 using CheeseGrater.Core.Application.Common.Exceptions;
 using CheeseGrater.Core.Application.Common.Interfaces;
+using CheeseGrater.Core.Domain.Constants;
 using Keycloak.AuthServices.Authorization;
 
 namespace CheeseGrater.Application.TodoItems.Commands.UpdateTodoItem;
@@ -31,7 +32,11 @@ public class UpdateTodoItemCommandHandler : IRequestHandler<UpdateTodoItemComman
   public async Task Handle(UpdateTodoItemCommand request, CancellationToken cancellationToken)
   {
     var authorized = await _identityService.AuthorizeAsync(
-      ProtectedResourcePolicy.From("workspaces", request.Id.ToString(), "workspaces:read")
+      ProtectedResourcePolicy.From(
+        Resources.TodoResource,
+        request.Id.ToString(),
+        $"{Resources.TodoResource}:{Scopes.View}"
+      )
     );
 
     if (!authorized)

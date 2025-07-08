@@ -1,8 +1,11 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
 using CheeseGrater.Application.Common.Security;
+using CheeseGrater.Core.Application.Common.Security;
+using CheeseGrater.Core.Domain.Constants;
 using CheeseGrater.Infrastructure.Data;
 using CheeseGrater.Infrastructure.Identity;
 using Keycloak.AuthServices.Authorization;
+using Keycloak.AuthServices.Authorization.Requirements;
 using Keycloak.AuthServices.Common;
 using Keycloak.AuthServices.Sdk;
 using Microsoft.EntityFrameworkCore;
@@ -59,6 +62,38 @@ public static class DependencyInjection
       //     // b.AddRequirements(new DecisionRequirement("workspaces", "workspaces:read"));
       //     b.RequireProtectedResource("workspaces", "workspaces:read");
       // });
+      PolicyConstants.All.ForEach(
+        (policy) =>
+        {
+          switch (policy.Type)
+          {
+            case EPolicyType.Owner:
+              o.AddPolicy(
+                policy.PolicyName,
+                b =>
+                {
+                  b.RequireProtectedResource(Resources.TodoResource, [.. Scopes.All]);
+                }
+              );
+              break;
+            case EPolicyType.Role:
+            default:
+              o.AddPolicy(
+                policy.PolicyName,
+                b =>
+                {
+                  policy.Roles?.ForEach(
+                    (role) =>
+                    {
+                      b.RequireRealmRoles(role);
+                    }
+                  );
+                }
+              );
+              break;
+          }
+        }
+      );
     });
   }
 
