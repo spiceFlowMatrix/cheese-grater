@@ -1,4 +1,3 @@
-using System.Linq;
 using CheeseGrater.Application.Common.Security;
 using CheeseGrater.Core.Application.Common.Security;
 using CheeseGrater.Core.Domain.Constants;
@@ -6,7 +5,6 @@ using Keycloak.AuthServices.Sdk.Kiota;
 using Keycloak.AuthServices.Sdk.Kiota.Admin;
 using Keycloak.AuthServices.Sdk.Kiota.Admin.Models;
 using Keycloak.AuthServices.Sdk.Protection;
-using Keycloak.AuthServices.Sdk.Protection.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -260,45 +258,7 @@ public class KeycloakInitialiser
     // Filter roles that do not exist
     var policiesToAdd = PolicyConstants
       .All.Where(policy => !existingPolicies.Select((e) => e.Name).Contains(policy.PolicyName))
-      .Select(policy => new PolicyRepresentation
-      {
-        Name = policy.PolicyName,
-        DecisionStrategy = Keycloak
-          .AuthServices
-          .Sdk
-          .Kiota
-          .Admin
-          .Models
-          .DecisionStrategy
-          .AFFIRMATIVE,
-        Type =
-          policy.Type == EPolicyType.Role ? "role"
-          : policy.Type == EPolicyType.Owner ? "script-isOwnerPolicy.js"
-          : "",
-        Logic = Logic.POSITIVE,
-        // Resources = policy.Roles != null && policy.Type == EPolicyType.Role
-        //         ? existingRoles
-        //             .Where((r) => policy.Roles.Contains(r.Name ?? ""))
-        //             .Select((r) => r.Id ?? "")
-        //             .ToList()
-        //         : [],
-        // Config = new PolicyRepresentation_config
-        // {
-        //     AdditionalData = new Dictionary<string, object>
-        //     {
-        //         ["roles"] = policy.Roles != null && policy.Type == EPolicyType.Role
-        //         ? existingRoles
-        //             .Where((r) => policy.Roles.Contains(r.Name ?? ""))
-        //             .Select((r) => new
-        //             {
-        //                 id = r.Id,
-        //                 required = false
-        //             })
-        //             .ToArray()
-        //         : Array.Empty<string>()
-        //     },
-        // }
-      });
+      .Select(GenerateKeycloakPolicy);
 
     resourceServer.Policies = policiesToAdd.ToList();
 
@@ -310,6 +270,52 @@ public class KeycloakInitialiser
         .Authz.ResourceServer.Import.PostAsync(resourceServer);
     }
     catch (Exception ex) { }
+  }
+
+  private PolicyRepresentation GenerateKeycloakPolicy(ApplicationPolicy appPolicy)
+  {
+    string policyType;
+    switch (appPolicy.Type)
+    {
+      case EPolicyType.Role:
+        policyType = "role";
+        break;
+      case EPolicyType.Owner:
+        policyType = "script-isOwnerPolicy.js";
+        break;
+      default:
+        policyType = "role";
+        break;
+    }
+    return new PolicyRepresentation
+    {
+      Name = appPolicy.PolicyName,
+      DecisionStrategy = DecisionStrategy.AFFIRMATIVE,
+      Type = policyType,
+      Logic = Logic.POSITIVE,
+      // Resources = policy.Roles != null && policy.Type == EPolicyType.Role
+      //         ? existingRoles
+      //             .Where((r) => policy.Roles.Contains(r.Name ?? ""))
+      //             .Select((r) => r.Id ?? "")
+      //             .ToList()
+      //         : [],
+      // Config = new PolicyRepresentation_config
+      // {
+      //     AdditionalData = new Dictionary<string, object>
+      //     {
+      //         ["roles"] = policy.Roles != null && policy.Type == EPolicyType.Role
+      //         ? existingRoles
+      //             .Where((r) => policy.Roles.Contains(r.Name ?? ""))
+      //             .Select((r) => new
+      //             {
+      //                 id = r.Id,
+      //                 required = false
+      //             })
+      //             .ToArray()
+      //         : Array.Empty<string>()
+      //     },
+      // }
+    };
   }
 
   private class TokenResponse
