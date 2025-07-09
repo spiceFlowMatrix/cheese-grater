@@ -6,8 +6,10 @@ using Keycloak.AuthServices.Sdk.Kiota.Admin;
 using Keycloak.AuthServices.Sdk.Kiota.Admin.Models;
 using Keycloak.AuthServices.Sdk.Protection;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using static Keycloak.AuthServices.Sdk.Kiota.Admin.Admin.Realms.Item.Clients.ClientsRequestBuilder;
 
 namespace CheeseGrater.Infrastructure.Identity;
 
@@ -59,12 +61,11 @@ public class KeycloakInitialiser
 
       if (realm != null)
       {
-        var clientId = await SeedClientAsync();
+        var clientId = await SeedClientAsync("Test", "test-client");
         if (clientId != null)
         {
           await SeedResourcesAsync("Test", clientId);
           await SeedRolesAsync("Test", clientId);
-          await SeedPoliciesAsync("Test", clientId);
         }
       }
     }
@@ -75,18 +76,41 @@ public class KeycloakInitialiser
     }
   }
 
-  private async Task<string?> SeedClientAsync()
+  private async Task<string?> SeedClientAsync(string realm, string clientNameId)
   {
     try
     {
+      var existingClients =
+        await _adminClient
+          .Admin.Realms[realm]
+          .Clients.GetAsync(config =>
+          {
+            config.QueryParameters = new ClientsRequestBuilderGetQueryParameters
+            {
+              ClientId = clientNameId,
+            };
+          }) ?? [];
+
+      var existingClientId = existingClients.Find((e) => e.ClientId == clientNameId);
+
+      if (existingClientId != null)
+        return existingClientId.Id;
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Failed to retrieve TestClient details.");
+      return null;
+    }
+
+    try
+    {
       await _adminClient
-        .Admin.Realms["Test"]
+        .Admin.Realms[realm]
         .Clients.PostAsync(
           new ClientRepresentation
           {
-            ClientId = "TestClient",
-            Name = "Test Client",
-            Description = "A test client for Keycloak initialisation",
+            ClientId = clientNameId,
+            Name = clientNameId,
             Enabled = true,
             PublicClient = false,
             Protocol = "openid-connect",
@@ -101,7 +125,7 @@ public class KeycloakInitialiser
     IReadOnlyList<ClientRepresentation>? clients = null;
     try
     {
-      clients = await _adminClient.Admin.Realms["Test"].Clients.GetAsync();
+      clients = await _adminClient.Admin.Realms[realm].Clients.GetAsync();
     }
     catch (Exception ex)
     {
@@ -114,7 +138,7 @@ public class KeycloakInitialiser
       return null;
     }
 
-    var selectClient = clients.FirstOrDefault(c => c.ClientId == "TestClient");
+    var selectClient = clients.FirstOrDefault(c => c.ClientId == clientNameId);
     if (selectClient == null)
     {
       _logger.LogError("TestClient was not found after creation attempt.");
@@ -124,7 +148,7 @@ public class KeycloakInitialiser
     ClientRepresentation? client = null;
     try
     {
-      client = await _adminClient.Admin.Realms["Test"].Clients[selectClient.Id].GetAsync();
+      client = await _adminClient.Admin.Realms[realm].Clients[selectClient.Id].GetAsync();
     }
     catch (Exception ex)
     {
@@ -143,7 +167,7 @@ public class KeycloakInitialiser
 
     try
     {
-      await _adminClient.Admin.Realms["Test"].Clients[client.Id].PutAsync(client);
+      await _adminClient.Admin.Realms[clientNameId].Clients[client.Id].PutAsync(client);
     }
     catch (Exception ex)
     {
