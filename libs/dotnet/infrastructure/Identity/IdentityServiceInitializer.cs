@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Json;
 using CheeseGrater.Application.Common.Security;
 using CheeseGrater.Core.Application.Common.Security;
 using CheeseGrater.Core.Domain.Constants;
@@ -9,6 +11,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Kiota.Abstractions;
+using Microsoft.Kiota.Serialization;
 using static Keycloak.AuthServices.Sdk.Kiota.Admin.Admin.Realms.Item.Clients.ClientsRequestBuilder;
 
 namespace CheeseGrater.Infrastructure.Identity;
@@ -66,6 +70,7 @@ public class KeycloakInitialiser
         {
           await SeedResourcesAsync("Test", clientId);
           await SeedRolesAsync("Test", clientId);
+          await SeedPoliciesAsync("Test", clientId);
         }
       }
     }
@@ -282,21 +287,33 @@ public class KeycloakInitialiser
     // Filter roles that do not exist
     var policiesToAdd = PolicyConstants
       .All.Where(policy => !existingPolicies.Select((e) => e.Name).Contains(policy.PolicyName))
-      .Select(GenerateKeycloakPolicy);
+      .Select(policy => GenerateKeycloakPolicy(policy, existingRoles));
 
-    resourceServer.Policies = policiesToAdd.ToList();
-
-    try
+    foreach (var policy in policiesToAdd)
     {
-      await _adminClient
-        .Admin.Realms[realm]
-        .Clients[clientId]
-        .Authz.ResourceServer.Import.PostAsync(resourceServer);
+      try
+      {
+        // Manually serialize the policy object to JSON
+        var serializedPolicy = await policy.SerializeAsJsonStringAsync();
+        await _adminClient
+          .Admin.Realms[realm]
+          .Clients[clientId]
+          .Authz.ResourceServer.Policy.PostAsync(
+            serializedPolicy,
+            config =>
+            {
+              config.Headers = new RequestHeaders { { "Content-Type", "application/json" } };
+            }
+          );
+      }
+      catch (Exception ex) { }
     }
-    catch (Exception ex) { }
   }
 
-  private PolicyRepresentation GenerateKeycloakPolicy(ApplicationPolicy appPolicy)
+  private PolicyRepresentation GenerateKeycloakPolicy(
+    ApplicationPolicy appPolicy,
+    List<RoleRepresentation> existingRoles
+  )
   {
     string policyType;
     switch (appPolicy.Type)
@@ -317,33 +334,19 @@ public class KeycloakInitialiser
       DecisionStrategy = DecisionStrategy.AFFIRMATIVE,
       Type = policyType,
       Logic = Logic.POSITIVE,
-      // Resources = policy.Roles != null && policy.Type == EPolicyType.Role
-      //         ? existingRoles
-      //             .Where((r) => policy.Roles.Contains(r.Name ?? ""))
-      //             .Select((r) => r.Id ?? "")
-      //             .ToList()
-      //         : [],
       // Config = new PolicyRepresentation_config
       // {
-      //     AdditionalData = new Dictionary<string, object>
-      //     {
-      //         ["roles"] = policy.Roles != null && policy.Type == EPolicyType.Role
+      //   AdditionalData = new Dictionary<string, object>
+      //   {
+      //     ["roles"] =
+      //       appPolicy.Roles != null && appPolicy.Type == EPolicyType.Role
       //         ? existingRoles
-      //             .Where((r) => policy.Roles.Contains(r.Name ?? ""))
-      //             .Select((r) => new
-      //             {
-      //                 id = r.Id,
-      //                 required = false
-      //             })
-      //             .ToArray()
-      //         : Array.Empty<string>()
-      //     },
-      // }
+      //           .Where((r) => appPolicy.Roles.Contains(r.Name ?? ""))
+      //           .Select((r) => new { id = r.Id, required = false })
+      //           .ToArray()
+      //         : Array.Empty<string>(),
+      //   },
+      // },
     };
-  }
-
-  private class TokenResponse
-  {
-    public string access_token { get; set; }
   }
 }

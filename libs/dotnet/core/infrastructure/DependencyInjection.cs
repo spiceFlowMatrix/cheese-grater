@@ -1,4 +1,6 @@
-﻿using CheeseGrater.Core.Application.Common.Interfaces;
+﻿using System.Text;
+using System.Text.Json;
+using CheeseGrater.Core.Application.Common.Interfaces;
 using CheeseGrater.Core.Infrastructure.Data.Interceptors;
 using CheeseGrater.Core.Infrastructure.Identity;
 using Keycloak.AuthServices.Authorization;
@@ -7,6 +9,7 @@ using Keycloak.AuthServices.Sdk;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -75,11 +78,18 @@ public static class DependencyInjection
         }
       );
 
+    builder.Services.AddTransient<RequestBodyFixHandler>();
     Keycloak
       .AuthServices.Sdk.Kiota.ServiceCollectionExtensions.AddKeycloakAdminHttpClient(
         builder.Services,
         builder.Configuration.GetSection("KeycloakAdmin")
       )
+      .AddHttpMessageHandler<RequestBodyFixHandler>()
       .AddClientCredentialsTokenHandler(adminTokenClientName);
+
+    builder.Logging.AddFilter(
+      "CheeseGrater.Core.Infrastructure.Identity.RequestBodyFixHandler",
+      LogLevel.Debug
+    );
   }
 }
