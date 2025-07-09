@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using CheeseGrater.Application.Common.Security;
 using CheeseGrater.Core.Application.Common.Security;
 using CheeseGrater.Core.Domain.Constants;
@@ -294,12 +295,11 @@ public class KeycloakInitialiser
       try
       {
         // Manually serialize the policy object to JSON
-        var serializedPolicy = await policy.SerializeAsJsonStringAsync();
         await _adminClient
           .Admin.Realms[realm]
           .Clients[clientId]
           .Authz.ResourceServer.Policy.PostAsync(
-            serializedPolicy,
+            policy,
             config =>
             {
               config.Headers = new RequestHeaders { { "Content-Type", "application/json" } };
@@ -310,43 +310,46 @@ public class KeycloakInitialiser
     }
   }
 
-  private PolicyRepresentation GenerateKeycloakPolicy(
+  private string GenerateKeycloakPolicy(
     ApplicationPolicy appPolicy,
     List<RoleRepresentation> existingRoles
   )
   {
-    string policyType;
-    switch (appPolicy.Type)
+    string policyType = appPolicy.Type switch
     {
-      case EPolicyType.Role:
-        policyType = "role";
-        break;
-      case EPolicyType.Owner:
-        policyType = "script-isOwnerPolicy.js";
-        break;
-      default:
-        policyType = "role";
-        break;
-    }
-    return new PolicyRepresentation
-    {
-      Name = appPolicy.PolicyName,
-      DecisionStrategy = DecisionStrategy.AFFIRMATIVE,
-      Type = policyType,
-      Logic = Logic.POSITIVE,
-      // Config = new PolicyRepresentation_config
-      // {
-      //   AdditionalData = new Dictionary<string, object>
-      //   {
-      //     ["roles"] =
-      //       appPolicy.Roles != null && appPolicy.Type == EPolicyType.Role
-      //         ? existingRoles
-      //           .Where((r) => appPolicy.Roles.Contains(r.Name ?? ""))
-      //           .Select((r) => new { id = r.Id, required = false })
-      //           .ToArray()
-      //         : Array.Empty<string>(),
-      //   },
-      // },
+      EPolicyType.Role => "role",
+      EPolicyType.Owner => "script-isOwnerPolicy.js",
+      _ => "role",
     };
+
+    // Create the policy as a dictionary
+    var policyDict = new Dictionary<string, object>
+    {
+      ["name"] = appPolicy.PolicyName,
+      ["decisionStrategy"] = "AFFIRMATIVE",
+      ["type"] = policyType,
+      ["logic"] = "POSITIVE",
+    };
+
+    // Add roles only if applicable
+    if (appPolicy.Type == EPolicyType.Role && appPolicy.Roles != null)
+    {
+      var selectedRoles = existingRoles
+        .Where(r => appPolicy.Roles.Contains(r.Name ?? ""))
+        .Select(r => new Dictionary<string, object> { ["id"] = r.Id, ["required"] = false })
+        .ToList();
+
+      policyDict["roles"] = selectedRoles;
+    }
+
+    // Serialize to JSON
+    var options = new JsonSerializerOptions
+    {
+      PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+      DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+      WriteIndented = true,
+    };
+
+    return JsonSerializer.Serialize(policyDict, options);
   }
 }
