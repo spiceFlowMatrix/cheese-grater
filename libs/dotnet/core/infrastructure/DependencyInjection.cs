@@ -65,6 +65,9 @@ public static class DependencyInjection
         "KeycloakAdmin"
       )!;
     const string adminTokenClientName = "KeycloakAdminClient";
+    builder.Services.Configure<Keycloak.AuthServices.Sdk.Kiota.KeycloakAdminClientOptions>(
+      builder.Configuration.GetSection("KeycloakAdmin")
+    );
 
     builder
       .Services.AddClientCredentialsTokenManagement()

@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using CheeseGrater.Application.Common.Security;
 using CheeseGrater.Core.Application.Common.Security;
 using CheeseGrater.Core.Domain.Constants;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Serialization;
 using static Keycloak.AuthServices.Sdk.Kiota.Admin.Admin.Realms.Item.Clients.ClientsRequestBuilder;
@@ -32,16 +34,26 @@ public class KeycloakInitialiser
   private readonly ILogger<KeycloakInitialiser> _logger;
   private readonly IKeycloakProtectionClient _protectionClient;
   private readonly KeycloakAdminApiClient _adminClient;
+  private readonly KeycloakAdminClientOptions _options;
+
+  private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+  {
+    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    WriteIndented = true,
+  };
 
   public KeycloakInitialiser(
     ILogger<KeycloakInitialiser> logger,
     IKeycloakProtectionClient protectionClient,
-    KeycloakAdminApiClient adminClient
+    KeycloakAdminApiClient adminClient,
+    IOptions<KeycloakAdminClientOptions> options
   )
   {
-    _logger = logger;
     _protectionClient = protectionClient;
-    _adminClient = adminClient;
+    _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    _adminClient = adminClient ?? throw new ArgumentNullException(nameof(adminClient));
+    _options = options.Value ?? throw new ArgumentNullException(nameof(options.Value));
   }
 
   public async Task InitialiseAsync()
@@ -264,9 +276,30 @@ public class KeycloakInitialiser
     }
   }
 
+  /// <summary>
+  /// Seeds policies into a Keycloak realm for a client, adding missing policies.
+  /// </summary>
+  /// <param name="realm">The target realm. Must not be null or empty.</param>
+  /// <param name="clientId">The target client ID. Must not be null or empty.</param>
+  /// <exception cref="ArgumentException">Thrown if realm or clientId is null/empty.</exception>
+  /// <remarks>
+  /// Custom URL is used due to auto-generated client based on an API spec not matching the server.
+  /// JSON body is serialized manually as the server expects JSON, unlike the spec's string body.
+  /// </remarks>
   private async Task SeedPoliciesAsync(string realm, string clientId)
   {
-    // Get existing roles
+    if (string.IsNullOrWhiteSpace(realm))
+      throw new ArgumentException("Realm cannot be null or empty.", nameof(realm));
+    if (string.IsNullOrWhiteSpace(clientId))
+      throw new ArgumentException("Client ID cannot be null or empty.", nameof(clientId));
+
+    _logger.LogInformation(
+      "Starting policy seeding for client {ClientId} in realm {Realm}",
+      clientId,
+      realm
+    );
+
+    // Fetch existing resources, policies, and roles
     var existingResources = await _adminClient
       .Admin.Realms[realm]
       .Clients[clientId]
@@ -276,87 +309,113 @@ public class KeycloakInitialiser
       .Clients[clientId]
       .Authz.ResourceServer.Policy.GetAsync();
     var existingRoles = await _adminClient.Admin.Realms[realm].Clients[clientId].Roles.GetAsync();
-    var resourceServer = await _adminClient
-      .Admin.Realms[realm]
-      .Clients[clientId]
-      .Authz.ResourceServer.GetAsync();
 
     if (existingResources == null || existingPolicies == null || existingRoles == null)
+    {
+      _logger.LogWarning(
+        "Existing resources, policies, or roles are null. Skipping policy seeding for client {ClientId} in realm {Realm}",
+        clientId,
+        realm
+      );
       return;
+    }
 
-    // Filter roles that do not exist
-    var policiesToAdd = PolicyConstants
-      .All.Where(policy => !existingPolicies.Select((e) => e.Name).Contains(policy.PolicyName))
-      .Select(policy => GenerateKeycloakPolicy(policy, existingRoles));
+    // Filter policies that do not exist
+    var policiesToAdd = PolicyConstants.All.Where(policy =>
+      !existingPolicies.Select(e => e.Name).Contains(policy.PolicyName)
+    );
 
     foreach (var policy in policiesToAdd)
     {
       try
       {
-        // Manually serialize the policy object to JSON
-        var serializedPolicy = await policy.SerializeAsJsonStringAsync();
+        _logger.LogInformation(
+          "Seeding policy {PolicyName} for client {ClientId} in realm {Realm}",
+          policy.PolicyName,
+          clientId,
+          realm
+        );
+
+        var serializedPolicy = GenerateKeycloakPolicy(policy, existingRoles);
+        var baseUrl =
+          $"{_options.AuthServerUrl}admin/realms/{realm}/clients/{clientId}/authz/resource-server/policy";
+        var policyUrl = policy.Type == EPolicyType.Role ? $"{baseUrl}/role" : baseUrl;
+
         await _adminClient
           .Admin.Realms[realm]
           .Clients[clientId]
-          .Authz.ResourceServer.Policy.PostAsync(
+          .Authz.ResourceServer.Policy.WithUrl(policyUrl)
+          .PostAsync(
             serializedPolicy,
-            config =>
-            {
-              config.Headers = new RequestHeaders { { "Content-Type", "application/json" } };
-            }
+            config => config.Headers = new RequestHeaders { { "Content-Type", "application/json" } }
           );
+
+        _logger.LogInformation("Successfully seeded policy {PolicyName}", policy.PolicyName);
       }
-      catch (Exception ex) { }
+      catch (Exception ex)
+      {
+        _logger.LogError(
+          ex,
+          "Error seeding policy {PolicyName} for client {ClientId} in realm {Realm}",
+          policy.PolicyName,
+          clientId,
+          realm
+        );
+      }
     }
+
+    _logger.LogInformation(
+      "Completed policy seeding for client {ClientId} in realm {Realm}",
+      clientId,
+      realm
+    );
   }
 
-  private PolicyRepresentation GenerateKeycloakPolicy(
+  /// <summary>
+  /// Generates a JSON string for a Keycloak policy from an application policy and roles.
+  /// </summary>
+  /// <param name="appPolicy">The application policy. Must not be null.</param>
+  /// <param name="existingRoles">Existing roles in Keycloak. Must not be null.</param>
+  /// <returns>JSON string of the policy.</returns>
+  /// <exception cref="ArgumentNullException">Thrown if appPolicy or existingRoles is null.</exception>
+  /// <remarks>
+  /// Manual JSON serialization is used as the server expects a JSON body, unlike the spec's string body.
+  /// </remarks>
+  private string GenerateKeycloakPolicy(
     ApplicationPolicy appPolicy,
     List<RoleRepresentation> existingRoles
   )
   {
-    string policyType;
-    switch (appPolicy.Type)
+    if (appPolicy == null)
+      throw new ArgumentNullException(nameof(appPolicy));
+    if (existingRoles == null)
+      throw new ArgumentNullException(nameof(existingRoles));
+
+    string policyType = appPolicy.Type switch
     {
-      case EPolicyType.Role:
-        policyType = "role";
-        break;
-      case EPolicyType.Owner:
-        policyType = "script-isOwnerPolicy.js";
-        break;
-      default:
-        policyType = "role";
-        break;
-    }
-    return new PolicyRepresentation
-    {
-      Name = appPolicy.PolicyName,
-      DecisionStrategy = DecisionStrategy.AFFIRMATIVE,
-      Type = policyType,
-      Logic = Logic.POSITIVE,
-      // AdditionalData = new Dictionary<string, object>
-      // {
-      //   ["roles"] =
-      //     appPolicy.Roles != null && appPolicy.Type == EPolicyType.Role
-      //       ? existingRoles
-      //         .Where((r) => appPolicy.Roles.Contains(r.Name ?? ""))
-      //         .Select((r) => new { id = r.Id, required = false })
-      //         .ToArray()
-      //       : Array.Empty<string>(),
-      // },
-      Config = new PolicyRepresentation_config
-      {
-        AdditionalData = new Dictionary<string, object>
-        {
-          ["roles"] =
-            appPolicy.Roles != null && appPolicy.Type == EPolicyType.Role
-              ? existingRoles
-                .Where((r) => appPolicy.Roles.Contains(r.Name ?? ""))
-                .Select((r) => new { id = r.Id, required = false })
-                .ToArray()
-              : Array.Empty<string>(),
-        },
-      },
+      EPolicyType.Role => "role",
+      EPolicyType.Owner => "script-isOwnerPolicy.js",
+      _ => "role",
     };
+
+    var policyDict = new Dictionary<string, object>
+    {
+      ["name"] = appPolicy.PolicyName,
+      ["decisionStrategy"] = "AFFIRMATIVE",
+      ["type"] = policyType,
+      ["logic"] = "POSITIVE",
+    };
+
+    if (appPolicy.Type == EPolicyType.Role && appPolicy.Roles != null)
+    {
+      var selectedRoles = existingRoles
+        .Where(r => appPolicy.Roles.Contains(r.Name ?? "") && !string.IsNullOrEmpty(r.Id))
+        .Select(r => new Dictionary<string, object> { ["id"] = r.Id!, ["required"] = false })
+        .ToList();
+
+      policyDict["roles"] = selectedRoles;
+    }
+
+    return JsonSerializer.Serialize(policyDict, _jsonOptions);
   }
 }
