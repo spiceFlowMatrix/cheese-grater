@@ -14,20 +14,17 @@ public static class PolicyConstants
     new ApplicationPolicy(
       EPolicyType.Owner,
       OwnershipPolicy,
-      EPolicyTargetType.ResourceType,
       $"urn:{Resources.TodoResource}:resource:{Resources.TodoResource}"
     ),
     new ApplicationPolicy(
       EPolicyType.Role,
       RequireUserRolePolicy,
-      EPolicyTargetType.Resource,
       Resources.TodoResource,
       [Roles.User]
     ),
     new ApplicationPolicy(
       EPolicyType.Role,
       RequireAdminRolePolicy,
-      EPolicyTargetType.Resource,
       Resources.TodoResource,
       [Roles.Administrator]
     ),

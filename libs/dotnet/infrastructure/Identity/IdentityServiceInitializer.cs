@@ -299,18 +299,14 @@ public class KeycloakInitialiser
       realm
     );
 
-    // Fetch existing resources, policies, and roles
-    var existingResources = await _adminClient
-      .Admin.Realms[realm]
-      .Clients[clientId]
-      .Authz.ResourceServer.Resource.GetAsync();
+    // Fetch existing policies and roles
     var existingPolicies = await _adminClient
       .Admin.Realms[realm]
       .Clients[clientId]
       .Authz.ResourceServer.Policy.GetAsync();
     var existingRoles = await _adminClient.Admin.Realms[realm].Clients[clientId].Roles.GetAsync();
 
-    if (existingResources == null || existingPolicies == null || existingRoles == null)
+    if (existingPolicies == null || existingRoles == null)
     {
       _logger.LogWarning(
         "Existing resources, policies, or roles are null. Skipping policy seeding for client {ClientId} in realm {Realm}",
@@ -371,16 +367,28 @@ public class KeycloakInitialiser
     );
   }
 
-  /// <summary>
-  /// Generates a JSON string for a Keycloak policy from an application policy and roles.
-  /// </summary>
-  /// <param name="appPolicy">The application policy. Must not be null.</param>
-  /// <param name="existingRoles">Existing roles in Keycloak. Must not be null.</param>
-  /// <returns>JSON string of the policy.</returns>
-  /// <exception cref="ArgumentNullException">Thrown if appPolicy or existingRoles is null.</exception>
-  /// <remarks>
-  /// Manual JSON serialization is used as the server expects a JSON body, unlike the spec's string body.
-  /// </remarks>
+  public async Task SeedPermissionsAsync(string realm, string clientId)
+  {
+    var existingResources = await _adminClient
+      .Admin.Realms[realm]
+      .Clients[clientId]
+      .Authz.ResourceServer.Resource.GetAsync();
+    var existingPolicies = await _adminClient
+      .Admin.Realms[realm]
+      .Clients[clientId]
+      .Authz.ResourceServer.Policy.GetAsync();
+
+    if (existingResources == null || existingPolicies == null)
+    {
+      _logger.LogWarning(
+        "Existing resources, policies, or roles are null. Skipping policy seeding for client {ClientId} in realm {Realm}",
+        clientId,
+        realm
+      );
+      return;
+    }
+  }
+
   private string GenerateKeycloakPolicy(
     ApplicationPolicy appPolicy,
     List<RoleRepresentation> existingRoles
