@@ -10,7 +10,7 @@ public static class PermissionConstants
     Name = nameof(TodoItemOwner),
     Description = "Permit only TodoItem owners to `use` them",
     DecisionStrategy = EDecisionStrategy.AFFIRMATIVE,
-    ResourceType = $"urn:{Resources.TodoResourceItem}:resource:{Resources.TodoResourceItem}",
+    ResourceType = $"urn:{Resources.TodoResourceItem}-authz:resource:{Resources.TodoResourceItem}",
     Scopes = [.. Scopes.All.Select((scope) => $"{Resources.TodoResourceItem}:{scope}")],
     Policies = [PolicyConstants.OwnershipPolicy, PolicyConstants.RequireAdminRolePolicy],
   };
@@ -27,6 +27,7 @@ public static class PermissionConstants
       $"{Resources.TodoResource}:{Scopes.Create}",
       $"{Resources.TodoResource}:{Scopes.Read}",
       $"{Resources.TodoResource}:{Scopes.Edit}",
+      $"{Resources.TodoResource}:{Scopes.List}",
     ],
   };
 

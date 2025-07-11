@@ -1,11 +1,13 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
 using CheeseGrater.Core.Application.Common.Exceptions;
 using CheeseGrater.Core.Application.Common.Interfaces;
+using CheeseGrater.Core.Application.Common.Security;
 using CheeseGrater.Core.Domain.Constants;
 using Keycloak.AuthServices.Authorization;
 
 namespace CheeseGrater.Application.TodoItems.Commands.UpdateTodoItem;
 
+[AuthorizeProtectedResource(Resources.TodoResource, $"{Resources.TodoResource}:{Scopes.Edit}")]
 public record UpdateTodoItemCommand : IRequest
 {
   public int Id { get; init; }
@@ -33,9 +35,9 @@ public class UpdateTodoItemCommandHandler : IRequestHandler<UpdateTodoItemComman
   {
     var authorized = await _identityService.AuthorizeAsync(
       ProtectedResourcePolicy.From(
-        Resources.TodoResource,
+        Resources.TodoResourceItem,
         request.Id.ToString(),
-        $"{Resources.TodoResource}:{Scopes.Read}"
+        $"{Resources.TodoResourceItem}:{Scopes.Read}"
       )
     );
 
