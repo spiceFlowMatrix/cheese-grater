@@ -54,7 +54,7 @@ public class CreateTodoItemCommandHandler : IRequestHandler<CreateTodoItemComman
       "Test",
       new Resource(
         $"{Resources.TodoResource}/{entity.Id}",
-        [$"{Resources.TodoResource}:{Scopes.View}", $"{Resources.TodoResource}:{Scopes.Delete}"]
+        [$"{Resources.TodoResource}:{Scopes.Read}", $"{Resources.TodoResource}:{Scopes.Delete}"]
       )
       {
         Attributes = { [userId] = "Owner" },

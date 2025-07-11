@@ -1,23 +1,19 @@
-namespace CheeseGrater.Core.Application.Common.Security;
+using Keycloak.AuthServices.Sdk.Protection.Models;
 
-public enum EDecisionStrategy
-{
-  Affirmative,
-  Unanimous,
-  Consensus,
-}
+namespace CheeseGrater.Core.Application.Common.Security;
 
 public record ApplicationPermission
 {
-  public string Name { get; protected set; }
-  public string? Description { get; protected set; }
-  public bool ApplyToResourceType { get; protected set; } = false;
-  public List<string>? Resources { get; protected set; }
-  public string? ResourceType { get; protected set; }
-  public List<string> Policies { get; protected set; } = [];
+  public required string Name { get; init; }
+  public string? Description { get; init; }
+  public DecisionStrategy DecisionStrategy { get; init; } = DecisionStrategy.UNANIMOUS;
+  public bool ApplyToResourceType { get; init; } = false;
+  public List<string>? Resources { get; init; }
+  public string? ResourceType { get; init; }
+  public List<ApplicationPolicy> Policies { get; init; } = [];
 }
 
 public record ScopedBasedApplicationPermission : ApplicationPermission
 {
-  public List<string> Scopes { get; protected set; } = [];
+  public List<string> Scopes { get; init; } = [];
 }

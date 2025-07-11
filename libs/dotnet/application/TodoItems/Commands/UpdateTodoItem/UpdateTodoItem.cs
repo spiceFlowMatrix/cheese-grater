@@ -35,7 +35,7 @@ public class UpdateTodoItemCommandHandler : IRequestHandler<UpdateTodoItemComman
       ProtectedResourcePolicy.From(
         Resources.TodoResource,
         request.Id.ToString(),
-        $"{Resources.TodoResource}:{Scopes.View}"
+        $"{Resources.TodoResource}:{Scopes.Read}"
       )
     );
 
