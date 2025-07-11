@@ -57,7 +57,10 @@ public class RequestBodyFixHandler : DelegatingHandler
     // Fixing double-escaped JSON body for the specific Keycloak endpoint
     if (
       request.Method == HttpMethod.Post
-      && request.RequestUri?.AbsolutePath.Contains("/authz/resource-server/policy") == true
+      && (
+        request.RequestUri?.AbsolutePath.Contains("/authz/resource-server/policy") == true
+        || request.RequestUri?.AbsolutePath.Contains("/authz/resource-server/permission") == true
+      )
       && !string.IsNullOrEmpty(content)
       && content.StartsWith("\"")
       && content.EndsWith("\"")

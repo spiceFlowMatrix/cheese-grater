@@ -6,6 +6,7 @@ using CheeseGrater.Core.Application.Common.Security;
 using CheeseGrater.Core.Domain.Constants;
 using Keycloak.AuthServices.Sdk.Kiota;
 using Keycloak.AuthServices.Sdk.Kiota.Admin;
+using Keycloak.AuthServices.Sdk.Kiota.Admin.Admin.Realms.Item.RolesById.Item.Management.Permissions;
 using Keycloak.AuthServices.Sdk.Kiota.Admin.Models;
 using Keycloak.AuthServices.Sdk.Protection;
 using Keycloak.AuthServices.Sdk.Protection.Models;
@@ -82,8 +83,10 @@ public class KeycloakInitialiser
         if (clientId != null)
         {
           await SeedResourcesAsync("Test", clientId);
+          await SeedScopesAsync("Test", clientId);
           await SeedRolesAsync("Test", clientId);
           await SeedPoliciesAsync("Test", clientId);
+          await SeedPermissionsAsync("Test", clientId);
         }
       }
     }
@@ -238,6 +241,44 @@ public class KeycloakInitialiser
     }
   }
 
+  public async Task SeedScopesAsync(string realm, string clientId)
+  {
+    var itemScopes = Scopes
+      .All.Select(scope => new ScopeRepresentation
+      {
+        Name = $"{Resources.TodoResourceItem}:{scope}",
+        DisplayName = $"{scope} {Resources.TodoResourceItem}",
+      })
+      .ToList();
+
+    foreach (var scope in itemScopes)
+    {
+      try
+      {
+        await _adminClient
+          .Admin.Realms[realm]
+          .Clients[clientId]
+          .Authz.ResourceServer.Scope.PostAsync(scope);
+        _logger.LogInformation(
+          "Scope '{ScopeName}' seeded successfully for client '{ClientId}' in realm '{Realm}'.",
+          scope.Name,
+          clientId,
+          realm
+        );
+      }
+      catch (Exception ex)
+      {
+        _logger.LogError(
+          ex,
+          "Failed to seed scope '{ScopeName}' for client '{ClientId}' in realm '{Realm}'.",
+          scope.Name,
+          clientId,
+          realm
+        );
+      }
+    }
+  }
+
   private async Task SeedRolesAsync(string realm, string clientId)
   {
     // Get existing roles
@@ -378,8 +419,12 @@ public class KeycloakInitialiser
       .Admin.Realms[realm]
       .Clients[clientId]
       .Authz.ResourceServer.Policy.GetAsync();
+    var existingScopes = await _adminClient
+      .Admin.Realms[realm]
+      .Clients[clientId]
+      .Authz.ResourceServer.Scope.GetAsync();
 
-    if (existingResources == null || existingPolicies == null)
+    if (existingResources == null || existingPolicies == null || existingScopes == null)
     {
       _logger.LogWarning(
         "Existing resources, policies, or roles are null. Skipping policy seeding for client {ClientId} in realm {Realm}",
@@ -387,6 +432,45 @@ public class KeycloakInitialiser
         realm
       );
       return;
+    }
+
+    foreach (var permission in PermissionConstants.All)
+    {
+      try
+      {
+        bool scopeType = permission.GetType() == typeof(ScopedBasedApplicationPermission);
+        var baseUrl =
+          $"{_options.AuthServerUrl}admin/realms/{realm}/clients/{clientId}/authz/resource-server/permission";
+        var permissionUrl = scopeType ? $"{baseUrl}/scope" : $"{baseUrl}/resource";
+        await _adminClient
+          .Admin.Realms[realm]
+          .Clients[clientId]
+          .Authz.ResourceServer.Permission.WithUrl(permissionUrl)
+          .PostAsync(
+            GenerateKeycloakPermission(
+              permission,
+              existingResources,
+              existingPolicies,
+              existingScopes
+            )
+          );
+        _logger.LogInformation(
+          "Permission '{PermissionName}' seeded successfully for client '{ClientId}' in realm '{Realm}'.",
+          permission.Name,
+          clientId,
+          realm
+        );
+      }
+      catch (Exception ex)
+      {
+        _logger.LogError(
+          ex,
+          "Failed to seed permission '{PermissionName}' for client '{ClientId}' in realm '{Realm}'.",
+          permission.Name,
+          clientId,
+          realm
+        );
+      }
     }
   }
 
@@ -426,5 +510,67 @@ public class KeycloakInitialiser
     }
 
     return JsonSerializer.Serialize(policyDict, _jsonOptions);
+  }
+
+  private string GenerateKeycloakPermission(
+    ApplicationPermission appPermission,
+    List<ResourceRepresentation> existingResources,
+    List<AbstractPolicyRepresentation> existingPolicies,
+    List<ScopeRepresentation> existingScopes
+  )
+  {
+    string decisionStrategy = appPermission.DecisionStrategy switch
+    {
+      EDecisionStrategy.AFFIRMATIVE => "AFFIRMATIVE",
+      EDecisionStrategy.UNANIMOUS => "UNANIMOUS",
+      EDecisionStrategy.CONSENSUS => "CONSENSUS",
+      _ => "AFFIRMATIVE",
+    };
+
+    bool scopeType = appPermission.GetType() == typeof(ScopedBasedApplicationPermission);
+
+    var permissionDict = new Dictionary<string, object>
+    {
+      ["name"] = appPermission.Name,
+      ["decisionStrategy"] = decisionStrategy,
+      ["type"] = scopeType ? "scope" : "resource",
+      ["policies"] = existingPolicies
+        .Where(
+          (r) =>
+            r.Name != null
+            && appPermission.Policies.Select((p) => p.PolicyName).Contains(r.Name) == true
+        )
+        .Select((e) => e.Id ?? "")
+        .ToList(),
+    };
+
+    if (appPermission.ResourceType != null)
+      permissionDict["resourceType"] = appPermission.ResourceType;
+
+    if (appPermission.Resources != null && appPermission.Resources.Count > 0)
+    {
+      var resourceIds = existingResources
+        .Where((r) => r.Name != null && appPermission.Resources.Contains(r.Name) == true)
+        .Select((e) => e.Id ?? "")
+        .ToList();
+
+      permissionDict["resources"] = resourceIds;
+    }
+
+    if (scopeType)
+    {
+      var scopedPermission = appPermission as ScopedBasedApplicationPermission;
+      var scopeIds =
+        scopedPermission != null
+          ? existingScopes
+            .Where((r) => r.Name != null && scopedPermission.Scopes.Contains(r.Name))
+            .Select((e) => e.Id ?? "")
+            .ToList()
+          : [];
+
+      permissionDict["scopes"] = scopeIds;
+    }
+
+    return JsonSerializer.Serialize(permissionDict, _jsonOptions);
   }
 }

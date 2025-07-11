@@ -5,18 +5,21 @@ namespace CheeseGrater.Application.Common.Security;
 
 public static class PolicyConstants
 {
+  public const string Ownership = nameof(Ownership);
+  public const string RequireUserRole = nameof(RequireUserRole);
+  public const string RequireAdminRole = nameof(RequireAdminRole);
   public static readonly ApplicationPolicy OwnershipPolicy = new ApplicationPolicy(
     EPolicyType.Owner,
-    nameof(OwnershipPolicy)
+    Ownership
   );
   public static readonly ApplicationPolicy RequireUserRolePolicy = new ApplicationPolicy(
     EPolicyType.Role,
-    nameof(RequireUserRolePolicy),
+    RequireUserRole,
     [Roles.User]
   );
   public static readonly ApplicationPolicy RequireAdminRolePolicy = new ApplicationPolicy(
     EPolicyType.Role,
-    nameof(RequireAdminRolePolicy),
+    RequireAdminRole,
     [Roles.Administrator]
   );
 

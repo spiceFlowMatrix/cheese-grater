@@ -53,12 +53,12 @@ public class CreateTodoItemCommandHandler : IRequestHandler<CreateTodoItemComman
     await _resourceClient.CreateResourceAsync(
       "Test",
       new Resource(
-        $"{Resources.TodoResource}/{entity.Id}",
-        [$"{Resources.TodoResource}:{Scopes.Read}", $"{Resources.TodoResource}:{Scopes.Delete}"]
+        $"{Resources.TodoResourceItem}/{entity.Id}",
+        [.. Scopes.All.Select((scope) => $"{Resources.TodoResourceItem}:{scope}")]
       )
       {
         Attributes = { [userId] = "Owner" },
-        Type = $"urn:{Resources.TodoResource}-authz:resource:{Resources.TodoResource}",
+        Type = $"urn:{Resources.TodoResourceItem}-authz:resource:{Resources.TodoResourceItem}",
         OwnerManagedAccess = true,
         Owner = userId,
       },
