@@ -1,11 +1,11 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
+using CheeseGrater.Core.Application.Common.Exceptions;
 using CheeseGrater.Core.Application.Common.Interfaces;
 using CheeseGrater.Core.Application.Common.Security;
 using CheeseGrater.Core.Domain.Constants;
 using CheeseGrater.Core.Domain.Entities;
 using CheeseGrater.Core.Domain.Events;
-using Keycloak.AuthServices.Sdk.Protection;
-using Keycloak.AuthServices.Sdk.Protection.Models;
+using Keycloak.AuthServices.Authorization;
 
 namespace CheeseGrater.Application.TodoItems.Commands.CreateTodoItem;
 
@@ -20,22 +20,32 @@ public record CreateTodoItemCommand : IRequest<int>
 public class CreateTodoItemCommandHandler : IRequestHandler<CreateTodoItemCommand, int>
 {
   private readonly IApplicationDbContext _context;
-  private readonly IKeycloakProtectionClient _resourceClient;
   private readonly IIdentityService _identityService;
 
   public CreateTodoItemCommandHandler(
     IApplicationDbContext context,
-    IKeycloakProtectionClient resourceClient,
     IIdentityService identityService
   )
   {
     _context = context;
-    _resourceClient = resourceClient;
     _identityService = identityService;
   }
 
   public async Task<int> Handle(CreateTodoItemCommand request, CancellationToken cancellationToken)
   {
+    var authorized = await _identityService.AuthorizeAsync(
+      ProtectedResourcePolicy.From(
+        Resources.TodoResourceItem,
+        request.ListId.ToString(),
+        $"{Resources.TodoResourceItem}:{Scopes.Read}"
+      )
+    );
+
+    if (!authorized)
+    {
+      throw new ForbiddenAccessException();
+    }
+
     var entity = new TodoItem
     {
       ListId = request.ListId,
@@ -48,22 +58,6 @@ public class CreateTodoItemCommandHandler : IRequestHandler<CreateTodoItemComman
     _context.TodoItems.Add(entity);
 
     await _context.SaveChangesAsync(cancellationToken);
-
-    var userId = _identityService?.UserId ?? throw new InvalidOperationException();
-    await _resourceClient.CreateResourceAsync(
-      "Test",
-      new Resource(
-        $"{Resources.TodoResourceItem}/{entity.Id}",
-        [.. Scopes.All.Select((scope) => $"{Resources.TodoResourceItem}:{scope}")]
-      )
-      {
-        Attributes = { [userId] = "Owner" },
-        Type = $"urn:{Resources.TodoResourceItem}-authz:resource:{Resources.TodoResourceItem}",
-        OwnerManagedAccess = true,
-        Owner = userId,
-      },
-      cancellationToken
-    );
 
     return entity.Id;
   }
