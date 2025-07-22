@@ -33,10 +33,14 @@ public class UpdateTodoItemCommandHandler : IRequestHandler<UpdateTodoItemComman
 
   public async Task Handle(UpdateTodoItemCommand request, CancellationToken cancellationToken)
   {
+    var entity = await _context.TodoItems.FindAsync([request.Id], cancellationToken);
+
+    Guard.Against.NotFound(request.Id, entity);
+
     var authorized = await _identityService.AuthorizeAsync(
       ProtectedResourcePolicy.From(
         Resources.TodoResourceItem,
-        request.Id.ToString(),
+        entity.ListId.ToString(),
         $"{Resources.TodoResourceItem}:{Scopes.Read}"
       )
     );
@@ -45,10 +49,6 @@ public class UpdateTodoItemCommandHandler : IRequestHandler<UpdateTodoItemComman
     {
       throw new ForbiddenAccessException();
     }
-
-    var entity = await _context.TodoItems.FindAsync([request.Id], cancellationToken);
-
-    Guard.Against.NotFound(request.Id, entity);
 
     entity.Title = request.Title;
     entity.Done = request.Done;
