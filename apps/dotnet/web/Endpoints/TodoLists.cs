@@ -2,6 +2,7 @@
 using CheeseGrater.Application.TodoLists.Commands.DeleteTodoList;
 using CheeseGrater.Application.TodoLists.Commands.UpdateTodoList;
 using CheeseGrater.Application.TodoLists.Queries.GetTodos;
+using CheeseGrater.Application.TodoLists.Queries.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace CheeseGrater.Web.Endpoints;
@@ -25,7 +26,10 @@ public class TodoLists : EndpointGroupBase
     return TypedResults.Ok(vm);
   }
 
-  public async Task<Created<int>> CreateTodoList(ISender sender, CreateTodoListCommand command)
+  public async Task<Created<TodoListDto>> CreateTodoList(
+    ISender sender,
+    CreateTodoListCommand command
+  )
   {
     var id = await sender.Send(command);
 

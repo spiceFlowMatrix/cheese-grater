@@ -1,4 +1,5 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
+using CheeseGrater.Application.TodoLists.Queries.Models;
 using CheeseGrater.Core.Application.Common.Interfaces;
 using CheeseGrater.Core.Application.Common.Security;
 using CheeseGrater.Core.Domain.Constants;
@@ -9,29 +10,35 @@ using Keycloak.AuthServices.Sdk.Protection.Models;
 namespace CheeseGrater.Application.TodoLists.Commands.CreateTodoList;
 
 [AuthorizeProtectedResource(Resources.TodoResource, $"{Resources.TodoResource}:{Scopes.Create}")]
-public record CreateTodoListCommand : IRequest<int>
+public record CreateTodoListCommand : IRequest<TodoListDto>
 {
   public string? Title { get; init; }
 }
 
-public class CreateTodoListCommandHandler : IRequestHandler<CreateTodoListCommand, int>
+public class CreateTodoListCommandHandler : IRequestHandler<CreateTodoListCommand, TodoListDto>
 {
   private readonly IApplicationDbContext _context;
   private readonly IKeycloakProtectionClient _resourceClient;
   private readonly IIdentityService _identityService;
+  private readonly IMapper _mapper;
 
   public CreateTodoListCommandHandler(
     IApplicationDbContext context,
     IKeycloakProtectionClient resourceClient,
-    IIdentityService identityService
+    IIdentityService identityService,
+    IMapper mapper
   )
   {
     _context = context;
     _resourceClient = resourceClient;
     _identityService = identityService;
+    _mapper = mapper;
   }
 
-  public async Task<int> Handle(CreateTodoListCommand request, CancellationToken cancellationToken)
+  public async Task<TodoListDto> Handle(
+    CreateTodoListCommand request,
+    CancellationToken cancellationToken
+  )
   {
     var entity = new TodoList();
 
@@ -57,6 +64,6 @@ public class CreateTodoListCommandHandler : IRequestHandler<CreateTodoListComman
       cancellationToken
     );
 
-    return entity.Id;
+    return _mapper.Map<TodoListDto>(entity);
   }
 }

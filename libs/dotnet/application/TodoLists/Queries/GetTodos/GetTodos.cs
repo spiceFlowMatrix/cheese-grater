@@ -1,4 +1,5 @@
 ﻿using CheeseGrater.Application.Common.Interfaces;
+using CheeseGrater.Application.TodoLists.Queries.Models;
 using CheeseGrater.Core.Application.Common.Interfaces;
 using CheeseGrater.Core.Application.Common.Models;
 using CheeseGrater.Core.Application.Common.Security;

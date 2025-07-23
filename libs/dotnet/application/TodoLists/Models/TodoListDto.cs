@@ -1,6 +1,6 @@
 ﻿using CheeseGrater.Core.Domain.Entities;
 
-namespace CheeseGrater.Application.TodoLists.Queries.GetTodos;
+namespace CheeseGrater.Application.TodoLists.Queries.Models;
 
 public class TodoListDto
 {
