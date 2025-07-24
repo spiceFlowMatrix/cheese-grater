@@ -45,6 +45,8 @@ public class CreateTodoListCommandHandler : IRequestHandler<CreateTodoListComman
 
     entity.Title = request.Title;
 
+    _context.TodoLists.Add(entity);
+
     await _context.SaveChangesAsync(cancellationToken);
 
     try
