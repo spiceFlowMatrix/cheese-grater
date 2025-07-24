@@ -31,12 +31,12 @@ public class TodoLists : EndpointGroupBase
     CreateTodoListCommand command
   )
   {
-    var id = await sender.Send(command);
+    var dto = await sender.Send(command);
 
-    return TypedResults.Created($"/{nameof(TodoLists)}/{id}", id);
+    return TypedResults.Created($"/{nameof(TodoLists)}/{dto.Id}", dto);
   }
 
-  public async Task<Results<NoContent, BadRequest>> UpdateTodoList(
+  public async Task<Results<Ok<TodoListDto>, BadRequest>> UpdateTodoList(
     ISender sender,
     int id,
     UpdateTodoListCommand command
@@ -45,9 +45,9 @@ public class TodoLists : EndpointGroupBase
     if (id != command.Id)
       return TypedResults.BadRequest();
 
-    await sender.Send(command);
+    var dto = await sender.Send(command);
 
-    return TypedResults.NoContent();
+    return TypedResults.Ok(dto);
   }
 
   public async Task<NoContent> DeleteTodoList(ISender sender, int id)
