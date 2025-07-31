@@ -252,10 +252,14 @@ export class TodoListsApiResponseProcessor {
      * @params response Response returned by the server for a request to updateTodoList
      * @throws ApiException if the response code was not in [200, 299]
      */
-     public async updateTodoListWithHttpInfo(response: ResponseContext): Promise<HttpInfo<void >> {
+     public async updateTodoListWithHttpInfo(response: ResponseContext): Promise<HttpInfo<TodoListDto >> {
         const contentType = ObjectSerializer.normalizeMediaType(response.headers["content-type"]);
-        if (isCodeInRange("204", response.httpStatusCode)) {
-            return new HttpInfo(response.httpStatusCode, response.headers, response.body, undefined);
+        if (isCodeInRange("200", response.httpStatusCode)) {
+            const body: TodoListDto = ObjectSerializer.deserialize(
+                ObjectSerializer.parse(await response.body.text(), contentType),
+                "TodoListDto", ""
+            ) as TodoListDto;
+            return new HttpInfo(response.httpStatusCode, response.headers, response.body, body);
         }
         if (isCodeInRange("400", response.httpStatusCode)) {
             throw new ApiException<undefined>(response.httpStatusCode, "", undefined, response.headers);
@@ -263,10 +267,10 @@ export class TodoListsApiResponseProcessor {
 
         // Work around for missing responses in specification, e.g. for petstore.yaml
         if (response.httpStatusCode >= 200 && response.httpStatusCode <= 299) {
-            const body: void = ObjectSerializer.deserialize(
+            const body: TodoListDto = ObjectSerializer.deserialize(
                 ObjectSerializer.parse(await response.body.text(), contentType),
-                "void", ""
-            ) as void;
+                "TodoListDto", ""
+            ) as TodoListDto;
             return new HttpInfo(response.httpStatusCode, response.headers, response.body, body);
         }
 

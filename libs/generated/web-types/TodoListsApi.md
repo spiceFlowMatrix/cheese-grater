@@ -162,7 +162,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](README.md#documentation-for-api-endpoints) [[Back to Model list]](README.md#documentation-for-models) [[Back to README]](README.md)
 
 # **updateTodoList**
-> void updateTodoList(updateTodoListCommand)
+> TodoListDto updateTodoList(updateTodoListCommand)
 
 
 ### Example
@@ -200,7 +200,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**void**
+**TodoListDto**
 
 ### Authorization
 
@@ -209,13 +209,13 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: application/json
- - **Accept**: Not defined
+ - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-**204** |  |  -  |
+**200** |  |  -  |
 **400** |  |  -  |
 
 [[Back to top]](#) [[Back to API list]](README.md#documentation-for-api-endpoints) [[Back to Model list]](README.md#documentation-for-models) [[Back to README]](README.md)
