@@ -1,22 +1,18 @@
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using CheeseGrater.Application.Common.Security;
 using CheeseGrater.Core.Application.Common.Security;
 using CheeseGrater.Core.Domain.Constants;
+using Keycloak.AuthServices.Sdk;
 using Keycloak.AuthServices.Sdk.Kiota;
 using Keycloak.AuthServices.Sdk.Kiota.Admin;
-using Keycloak.AuthServices.Sdk.Kiota.Admin.Admin.Realms.Item.RolesById.Item.Management.Permissions;
 using Keycloak.AuthServices.Sdk.Kiota.Admin.Models;
 using Keycloak.AuthServices.Sdk.Protection;
-using Keycloak.AuthServices.Sdk.Protection.Models;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Kiota.Abstractions;
-using Microsoft.Kiota.Serialization;
 using static Keycloak.AuthServices.Sdk.Kiota.Admin.Admin.Realms.Item.Clients.ClientsRequestBuilder;
 
 namespace CheeseGrater.Infrastructure.Identity;
@@ -36,7 +32,8 @@ public class KeycloakInitialiser
   private readonly ILogger<KeycloakInitialiser> _logger;
   private readonly IKeycloakProtectionClient _protectionClient;
   private readonly KeycloakAdminApiClient _adminClient;
-  private readonly KeycloakAdminClientOptions _options;
+  private readonly Keycloak.AuthServices.Sdk.Kiota.KeycloakAdminClientOptions _options;
+  private readonly KeycloakProtectionClientOptions _protectionOptions;
 
   private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
   {
@@ -49,13 +46,16 @@ public class KeycloakInitialiser
     ILogger<KeycloakInitialiser> logger,
     IKeycloakProtectionClient protectionClient,
     KeycloakAdminApiClient adminClient,
-    IOptions<KeycloakAdminClientOptions> options
+    IOptions<Keycloak.AuthServices.Sdk.Kiota.KeycloakAdminClientOptions> options,
+    IOptions<KeycloakProtectionClientOptions> protectionOptions
   )
   {
     _protectionClient = protectionClient;
     _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     _adminClient = adminClient ?? throw new ArgumentNullException(nameof(adminClient));
     _options = options.Value ?? throw new ArgumentNullException(nameof(options.Value));
+    _protectionOptions =
+      protectionOptions.Value ?? throw new ArgumentNullException(nameof(protectionOptions.Value));
   }
 
   public async Task InitialiseAsync()
@@ -75,18 +75,20 @@ public class KeycloakInitialiser
   {
     try
     {
-      var realm = await _adminClient.Admin.Realms["Test"].GetAsync();
+      var realmName = _protectionOptions.Realm;
+      var clientName = _protectionOptions.Resource;
+      var realm = await _adminClient.Admin.Realms[realmName].GetAsync();
 
       if (realm != null)
       {
-        var clientId = await SeedClientAsync("Test", "test-client");
+        var clientId = await SeedClientAsync(realmName, clientName);
         if (clientId != null)
         {
-          await SeedResourcesAsync("Test", clientId);
-          await SeedScopesAsync("Test", clientId);
-          await SeedRolesAsync("Test", clientId);
-          await SeedPoliciesAsync("Test", clientId);
-          await SeedPermissionsAsync("Test", clientId);
+          await SeedResourcesAsync(realmName, clientId);
+          await SeedScopesAsync(realmName, clientId);
+          await SeedRolesAsync(realmName, clientId);
+          await SeedPoliciesAsync(realmName, clientId);
+          await SeedPermissionsAsync(realmName, clientId);
         }
       }
     }
