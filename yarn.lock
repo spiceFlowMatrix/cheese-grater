@@ -10481,6 +10481,18 @@ karma-source-map-support@1.4.0:
   dependencies:
     source-map-support "^0.5.5"
 
+keycloak-angular@^20.0.0:
+  version "20.0.0"
+  resolved "https://registry.yarnpkg.com/keycloak-angular/-/keycloak-angular-20.0.0.tgz#3f70e22c08e15afb695da3b08781f2068bc1531c"
+  integrity sha512-p9ThVUN8TNz15M2dd11VRDdHzgEDRSSxvyRGtK4N45lTbfs52DeNK+YXcpgt8ZX0/YN27GjU9GjiB4odI4/A2Q==
+  dependencies:
+    tslib "^2.3.1"
+
+keycloak-js@^26.2.0:
+  version "26.2.0"
+  resolved "https://registry.yarnpkg.com/keycloak-js/-/keycloak-js-26.2.0.tgz#0924feec13a014563b2e041e255657c24c145714"
+  integrity sha512-CrFcXTN+d6J0V/1v3Zpioys6qHNWE6yUzVVIsCUAmFn9H14GZ0vuYod+lt+SSpMgWGPuneDZBSGBAeLBFuqjsw==
+
 keygrip@~1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/keygrip/-/keygrip-1.1.0.tgz#871b1681d5e159c62a445b0c74b615e0917e7226"
@@ -14998,7 +15010,7 @@ tsconfig-paths@^4.0.0, tsconfig-paths@^4.1.2:
     minimist "^1.2.6"
     strip-bom "^3.0.0"
 
-tslib@2.8.1, tslib@^2.0.0, tslib@^2.0.1, tslib@^2.1.0, tslib@^2.3.0, tslib@^2.4.0, tslib@^2.5.0, tslib@^2.6.2, tslib@^2.6.3, tslib@^2.8.0:
+tslib@2.8.1, tslib@^2.0.0, tslib@^2.0.1, tslib@^2.1.0, tslib@^2.3.0, tslib@^2.3.1, tslib@^2.4.0, tslib@^2.5.0, tslib@^2.6.2, tslib@^2.6.3, tslib@^2.8.0:
   version "2.8.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.8.1.tgz#612efe4ed235d567e8aba5f2a5fab70280ade83f"
   integrity sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==

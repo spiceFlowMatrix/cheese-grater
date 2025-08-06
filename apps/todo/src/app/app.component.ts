@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import Keycloak from 'keycloak-js';
 
 @Component({
   imports: [RouterModule],
@@ -8,5 +9,10 @@ import { RouterModule } from '@angular/router';
   styleUrl: './app.component.scss',
 })
 export class AppComponent {
+  private readonly keycloak = inject(Keycloak);
   title = 'todo';
+
+  login() {
+    this.keycloak.login();
+  }
 }
