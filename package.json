@@ -4,10 +4,6 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
-    "@angular/ssr": "~19.2.0",
-    "express": "^4.21.2",
-    "keycloak-angular": "^20.0.0",
-    "keycloak-js": "^26.2.0",
     "@angular/animations": "20.1.6",
     "@angular/cdk": "20.1.5",
     "@angular/common": "20.1.6",
@@ -17,7 +13,12 @@
     "@angular/material": "20.1.5",
     "@angular/platform-browser": "20.1.6",
     "@angular/platform-browser-dynamic": "20.1.6",
+    "@angular/platform-server": "20.1.6",
     "@angular/router": "20.1.6",
+    "@angular/ssr": "20.1.5",
+    "express": "^4.21.2",
+    "keycloak-angular": "^20.0.0",
+    "keycloak-js": "^26.2.0",
     "lerna": "^8.2.2",
     "rxjs": "~7.8.0",
     "zone.js": "~0.15.0"
@@ -57,6 +58,7 @@
     "jest": "30.0.5",
     "jest-environment-jsdom": "30.0.5",
     "jest-preset-angular": "15.0.0",
+    "jest-util": "30.0.5",
     "jsonc-eslint-parser": "^2.1.0",
     "ng-packagr": "20.1.0",
     "nx": "21.3.11",
@@ -68,8 +70,7 @@
     "tslib": "^2.3.0",
     "typescript": "5.8.3",
     "typescript-eslint": "^8.33.1",
-    "verdaccio": "^6.0.5",
-    "jest-util": "30.0.5"
+    "verdaccio": "^6.0.5"
   },
   "nx": {
     "includedScripts": []

@@ -428,10 +428,25 @@
   dependencies:
     tslib "^2.3.0"
 
+"@angular/platform-server@20.1.6":
+  version "20.1.6"
+  resolved "https://registry.yarnpkg.com/@angular/platform-server/-/platform-server-20.1.6.tgz#a2212fa08f8c64f5c5f811f7d1fc00334d9d2f8a"
+  integrity sha512-DAwa+vmqZAjuRdXSJKCkzowQguL5kfQNRd8RRIpW2iLtX3sNSh9iLPDieJApH/tch1dWj0vY7JltXQzRpWNCxA==
+  dependencies:
+    tslib "^2.3.0"
+    xhr2 "^0.2.0"
+
 "@angular/router@20.1.6":
   version "20.1.6"
   resolved "https://registry.yarnpkg.com/@angular/router/-/router-20.1.6.tgz#6c717c2d8caff97883a9c171579cd36b3f507723"
   integrity sha512-42eB6UB/uZt5LqBK7sIGV+fnWPWgwlhZDCl7aujv0Tlwx1HgdLW7EbqMYs+2SIrezn4uj0hg+74oy1PL46V7MA==
+  dependencies:
+    tslib "^2.3.0"
+
+"@angular/ssr@20.1.6":
+  version "20.1.5"
+  resolved "https://registry.yarnpkg.com/@angular/ssr/-/ssr-20.1.5.tgz#00ea05f2b000f69a8514100308eedf4660544648"
+  integrity sha512-z9YawZzZAMx6HQUZxSYnSo3HMoilZlB8VK6xxVyWr8Cxcxay3Htelmu4YNNnM8btVklHsLymLPN3XZvzGeBZkA==
   dependencies:
     tslib "^2.3.0"
 
@@ -10725,6 +10740,18 @@ karma-source-map-support@1.4.0:
   dependencies:
     source-map-support "^0.5.5"
 
+keycloak-angular@^20.0.0:
+  version "20.0.0"
+  resolved "https://registry.yarnpkg.com/keycloak-angular/-/keycloak-angular-20.0.0.tgz#3f70e22c08e15afb695da3b08781f2068bc1531c"
+  integrity sha512-p9ThVUN8TNz15M2dd11VRDdHzgEDRSSxvyRGtK4N45lTbfs52DeNK+YXcpgt8ZX0/YN27GjU9GjiB4odI4/A2Q==
+  dependencies:
+    tslib "^2.3.1"
+
+keycloak-js@^26.2.0:
+  version "26.2.0"
+  resolved "https://registry.yarnpkg.com/keycloak-js/-/keycloak-js-26.2.0.tgz#0924feec13a014563b2e041e255657c24c145714"
+  integrity sha512-CrFcXTN+d6J0V/1v3Zpioys6qHNWE6yUzVVIsCUAmFn9H14GZ0vuYod+lt+SSpMgWGPuneDZBSGBAeLBFuqjsw==
+
 keygrip@~1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/keygrip/-/keygrip-1.1.0.tgz#871b1681d5e159c62a445b0c74b615e0917e7226"
@@ -15283,7 +15310,7 @@ tsconfig-paths@^4.0.0, tsconfig-paths@^4.1.2:
     minimist "^1.2.6"
     strip-bom "^3.0.0"
 
-tslib@2.8.1, tslib@^2.0.0, tslib@^2.0.1, tslib@^2.1.0, tslib@^2.3.0, tslib@^2.4.0, tslib@^2.5.0, tslib@^2.6.2, tslib@^2.6.3, tslib@^2.8.0:
+tslib@2.8.1, tslib@^2.0.0, tslib@^2.0.1, tslib@^2.1.0, tslib@^2.3.0, tslib@^2.3.1, tslib@^2.4.0, tslib@^2.5.0, tslib@^2.6.2, tslib@^2.6.3, tslib@^2.8.0:
   version "2.8.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.8.1.tgz#612efe4ed235d567e8aba5f2a5fab70280ade83f"
   integrity sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==
@@ -16137,6 +16164,11 @@ wsl-utils@^0.1.0:
   integrity sha512-h3Fbisa2nKGPxCpm89Hk33lBLsnaGBvctQopaBSOW/uIs6FTe1ATyAnKFJrzVs9vpGdsTe73WF3V4lIsk4Gacw==
   dependencies:
     is-wsl "^3.1.0"
+
+xhr2@^0.2.0:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/xhr2/-/xhr2-0.2.1.tgz#4e73adc4f9cfec9cbd2157f73efdce3a5f108a93"
+  integrity sha512-sID0rrVCqkVNUn8t6xuv9+6FViXjUVXq8H5rWOH2rz9fDNQEd4g0EA2XlcEdJXRz5BMEn4O1pJFdT+z4YHhoWw==
 
 xml-name-validator@^5.0.0:
   version "5.0.0"
