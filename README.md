@@ -18,6 +18,10 @@ Try running `nx reset` and then serving the asp.net core app again. This seemed 
 
 Simply use the dotnet cli or the `.NET: Add Existing Project...` vscode command to link the new projects to the root solution.
 
+### Infinite nx graph calculation when running `nx migrate --run-migrations`
+
+This is somehow due to the `@nx-dotnet/core` plugin in `nx.json`. By temporarily removing that plugin, you can run migrations successfully.
+
 ## Finish your CI setup
 
 [Click here to finish setting up your workspace!](https://cloud.nx.app/connect/kAzSkhgQ3J)

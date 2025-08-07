@@ -6,7 +6,7 @@ import {
   Output,
   ViewChild,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatSort } from '@angular/material/sort';
@@ -20,7 +20,7 @@ export interface GridColumnHeader {
 
 @Component({
   selector: 'lib-grid',
-  imports: [CommonModule, MatTableModule, MatSortModule],
+  imports: [MatTableModule, MatSortModule],
   templateUrl: './grid.component.html',
   styleUrl: './grid.component.css',
 })
