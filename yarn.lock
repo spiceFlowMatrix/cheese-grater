@@ -443,7 +443,7 @@
   dependencies:
     tslib "^2.3.0"
 
-"@angular/ssr@20.1.6":
+"@angular/ssr@20.1.5":
   version "20.1.5"
   resolved "https://registry.yarnpkg.com/@angular/ssr/-/ssr-20.1.5.tgz#00ea05f2b000f69a8514100308eedf4660544648"
   integrity sha512-z9YawZzZAMx6HQUZxSYnSo3HMoilZlB8VK6xxVyWr8Cxcxay3Htelmu4YNNnM8btVklHsLymLPN3XZvzGeBZkA==
