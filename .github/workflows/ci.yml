@@ -1,418 +1,243 @@
-name: CI/CD Pipeline for Nx Monorepo
+name: CI Pipeline
 
 on:
   push:
     branches:
       - master
+      - main
+      - feature/*
+      - bugfix/*
   pull_request:
     branches:
       - master
-  workflow_dispatch: # Allows manual triggering of the workflow
-
-permissions:
-  contents: read
-  security-events: write
-  pull-requests: write
-  checks: write
-  actions: read
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+      - main
 
 jobs:
-  # This job prepares the list of affected projects, correctly separating them by project type.
-  prepare-affected:
+  setup:
     runs-on: ubuntu-latest
-    outputs:
-      affected-js-projects: ${{ steps.filter-js.outputs.AFFECTED_PROJECTS }}
-      has-affected-js: ${{ steps.filter-js.outputs.HAS_AFFECTED }}
-      affected-dotnet-projects: ${{ steps.filter-dotnet.outputs.AFFECTED_PROJECTS }}
-      has-affected-dotnet: ${{ steps.filter-dotnet.outputs.HAS_AFFECTED }}
-      affected-e2e-projects: ${{ steps.affected-e2e.outputs.AFFECTED_PROJECTS }}
-      has-affected-e2e: ${{ steps.affected-e2e.outputs.HAS_AFFECTED }}
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Setup Node.js 22
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '20'
           cache: 'yarn'
 
-      - name: Setup.NET 9.0
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
+          dotnet-quality: 'ga'
 
-      - name: Install Yarn Dependencies
-        run: yarn install --immutable --check-file
+      - name: Install Yarn
+        run: npm install -g yarn
 
-      - name: Get Base and Head SHAs for Nx Affected Calculation
-        id: get-base-head
-        run: |
-          BASE_SHA=${{ github.event.before }}
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          fi
-          echo "BASE_SHA=$BASE_SHA" >> $GITHUB_OUTPUT
-          echo "HEAD_SHA=${{ github.sha }}" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Get All Projects with Tags (for filtering)
-        id: all-projects
-        run: |
-          # Get the full project graph with tags. This is a reliable source for project metadata.
-          ALL_PROJECTS=$(npx nx show projects --json --with-tags)
-          echo "ALL_PROJECTS=$ALL_PROJECTS" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Get Affected Project Names
-        id: affected-names
-        run: |
-          # Get a simple list of affected project names.
-          AFFECTED_NAMES=$(npx nx show projects --affected --base=${{ steps.get-base-head.outputs.BASE_SHA }} --head=${{ steps.get-base-head.outputs.HEAD_SHA }} --json)
-          echo "AFFECTED_NAMES=$AFFECTED_NAMES" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Filter for Affected JS/TS Projects
-        id: filter-js
-        run: |
-          # Filter the full project list by both the affected names and the 'type:js' tag.
-          AFFECTED_PROJECTS=$(echo '${{ steps.all-projects.outputs.ALL_PROJECTS }}' | jq -r --argjson affectedNames '${{ steps.affected-names.outputs.AFFECTED_NAMES }}' 'to_entries | map(select((.key | IN($affectedNames[])) and (.value.tags | contains(["type:js"])))) | map(.key) | @json')
-          echo "AFFECTED_PROJECTS=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
-          echo "HAS_AFFECTED=$(echo "$AFFECTED_PROJECTS" | jq 'length > 0')" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Filter for Affected .NET Projects
-        id: filter-dotnet
-        run: |
-          # Filter the full project list by both the affected names and the 'type:dotnet' tag.
-          AFFECTED_PROJECTS=$(echo '${{ steps.all-projects.outputs.ALL_PROJECTS }}' | jq -r --argjson affectedNames '${{ steps.affected-names.outputs.AFFECTED_NAMES }}' 'to_entries | map(select((.key | IN($affectedNames[])) and (.value.tags | contains(["type:dotnet"])))) | map(.key) | @json')
-          echo "AFFECTED_PROJECTS=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
-          echo "HAS_AFFECTED=$(echo "$AFFECTED_PROJECTS" | jq 'length > 0')" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Get Affected E2E Projects
-        id: affected-e2e
-        run: |
-          # This step correctly uses --withTarget and should not be affected by the previous issue.
-          AFFECTED_PROJECTS=$(npx nx show projects --affected --base=${{ steps.get-base-head.outputs.BASE_SHA }} --head=${{ github.sha }} --withTarget=e2e-ci --json)
-          echo "AFFECTED_PROJECTS=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
-          echo "HAS_AFFECTED=$(echo "$AFFECTED_PROJECTS" | jq 'length > 0')" >> $GITHUB_OUTPUT
-        shell: bash
-
-  # This job runs linting for affected Angular/TypeScript projects in parallel using a matrix strategy.
-  run-affected-lint-js:
-    needs: prepare-affected
-    if: needs.prepare-affected.outputs.has-affected-js == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        project: ${{ fromJson(needs.prepare-affected.outputs.affected-js-projects) }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'yarn'
-
-      - name: Install Yarn Dependencies
-        run: yarn install --immutable --check-file
-
-      - name: Run Lint for ${{ matrix.project }} and Generate SARIF
-        run: |
-          npx nx lint ${{ matrix.project }} --output-file=lint-results-${{ matrix.project }}.sarif --format=@microsoft/eslint-formatter-sarif --no-fix
-        continue-on-error: true
-
-      - name: Upload ESLint SARIF results for ${{ matrix.project }} to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: lint-results-${{ matrix.project }}.sarif
-          wait-for-processing: true
-
-  # This job runs dotnet format --verify-no-changes for C# projects.
-  run-dotnet-lint:
-    needs: prepare-affected
-    if: needs.prepare-affected.outputs.has-affected-dotnet == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        project: ${{ fromJson(needs.prepare-affected.outputs.affected-dotnet-projects) }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup.NET 9.0
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
-      - name: Run dotnet format check for ${{ matrix.project }}
-        run: dotnet format --verify-no-changes --folder --include. --exclude "**/node_modules/**"
-        # This command checks for formatting violations without applying fixes and exits with a non-zero code if violations are found
-        # continue-on-error: true can be added if you want the workflow to continue even if formatting fails,
-        # but typically, you want to enforce formatting and fail the build.
-
-  run-affected-tests-js:
-    needs: prepare-affected
-    if: needs.prepare-affected.outputs.has-affected-js == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        project: ${{ fromJson(needs.prepare-affected.outputs.affected-js-projects) }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'yarn'
-
-      - name: Install Yarn Dependencies
-        run: yarn install --immutable --check-file
-
-      - name: Run Jest Tests for ${{ matrix.project }}
-        run: npx nx test ${{ matrix.project }} --ci --json --outputFile=test-results/jest/${{ matrix.project }}-results.json --testResultsProcessor="jest-junit" --testLocationInResults --skipNxCache --skipRemoteCache
-        continue-on-error: true
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
         env:
-          NX_SKIP_NX_CACHE: true
-          NX_SKIP_REMOTE_CACHE: true
+          DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
-      - name: Upload Jest Test Results Artifact for ${{ matrix.project }}
-        uses: actions/upload-artifact@v4
-        if: always()
+      - name: Cache Nx
+        uses: actions/cache@v4
         with:
-          name: jest-test-results-${{ matrix.project }}
-          path: test-results/jest/${{ matrix.project }}-results.json
-          retention-days: 5
+          path: |
+            .nx/cache
+            .nx/runners
+          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
+          restore-keys: |
+            nx-cache-
 
-  run-dotnet-tests:
-    needs: prepare-affected
-    if: needs.prepare-affected.outputs.has-affected-dotnet == 'true'
+      - name: Cache .NET build
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/obj
+            **/bin
+          key: dotnet-cache-${{ hashFiles('**/*.csproj', '**/project.json', '*.sln') }}
+          restore-keys: |
+            dotnet-cache-
+
+  lint:
+    needs: setup
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        project: ${{ fromJson(needs.prepare-affected.outputs.affected-dotnet-projects) }}
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Setup.NET 9.0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .nx/cache
+            .nx/runners
+          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
+          restore-keys: |
+            nx-cache-
+
+      - name: Run ESLint
+        run: yarn nx run-many -t lint --all --parallel=4
+
+  test:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
+          dotnet-quality: 'ga'
 
-      - name: Restore.NET Dependencies
-        run: dotnet restore
+      - name: Install Yarn
+        run: npm install -g yarn
 
-      - name: Run.NET Tests for ${{ matrix.project }}
-        run: npx nx test ${{ matrix.project }} --no-build --logger "trx;LogFileName=test-results/${{ matrix.project }}-results.trx" --results-directory "test-results/dotnet"
-        continue-on-error: true
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
-      - name: Upload.NET Test Results Artifact for ${{ matrix.project }}
-        uses: actions/upload-artifact@v4
-        if: always()
+      - name: Restore Nx cache
+        uses: actions/cache@v4
         with:
-          name: dotnet-test-results-${{ matrix.project }}
-          path: test-results/dotnet/${{ matrix.project }}-results.trx
-          retention-days: 5
+          path: |
+            .nx/cache
+            .nx/runners
+          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
+          restore-keys: |
+            nx-cache-
 
-  run-affected-e2e-tests:
-    needs: prepare-affected
-    if: needs.prepare-affected.outputs.has-affected-e2e == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        project: ${{ fromJson(needs.prepare-affected.outputs.affected-e2e-projects) }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Restore .NET cache
+        uses: actions/cache@v4
         with:
-          fetch-depth: 0
+          path: |
+            **/obj
+            **/bin
+          key: dotnet-cache-${{ hashFiles('**/*.csproj', '**/project.json', '*.sln') }}
+          restore-keys: |
+            dotnet-cache-
 
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'yarn'
-
-      - name: Install Yarn Dependencies
-        run: yarn install --immutable --check-file
-
-      - name: Run E2E Tests for ${{ matrix.project }} with Cypress
-        run: npx nx e2e-ci ${{ matrix.project }} --skipNxCache --skipRemoteCache
-        continue-on-error: true
-
-      - name: Upload E2E Test Results Artifact for ${{ matrix.project }}
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: e2e-test-results-${{ matrix.project }}
-          path: test-results/e2e/**/*.xml
-          retention-days: 5
-
-  security-scan-js:
-    needs: prepare-affected
-    if: needs.prepare-affected.outputs.has-affected-js == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'yarn'
-
-      - name: Install Yarn Dependencies
-        run: yarn install --immutable --check-file
-
-      - name: Run Yarn Audit
-        id: yarn-audit
-        run: |
-          yarn audit --level high --json > yarn-audit-results.json || true
-          echo "VULNERABILITY_REPORT=$(cat yarn-audit-results.json)" >> $GITHUB_OUTPUT
-        continue-on-error: true
-
-      - name: Install GitHub CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gh
-
-      - name: Publish Yarn Audit Results to PR comment
-        if: github.event_name == 'pull_request' && github.event.pull_request.number > 0 && steps.yarn-audit.outputs.VULNERABILITY_REPORT != '[]'
-        run: |
-          VULNERABILITY_REPORT=$(echo '${{ steps.yarn-audit.outputs.VULNERABILITY_REPORT }}' | jq -r '
-            .vulnerabilities |
-            to_entries |
-            map(
-              "### \(.key | ascii_upcase) Vulnerabilities\n" +
-              (
-                .value |
-                map(
-                  "- **Package:** \(.name) (\(.severity))\n" +
-                  "  - **Path:** `\(.via | join(" -> "))`\n" +
-                  "  - **Description:** \(.title)\n" +
-                  "  - **More Info:** \(.url)"
-                ) |
-                join("\n")
-              )
-            ) |
-            join("\n")
-          ')
-          if [ -n "$VULNERABILITY_REPORT" ]; then
-            echo -e "### Yarn Security Audit Report\n\n$VULNERABILITY_REPORT" | gh pr comment ${{ github.event.pull_request.number }} --body-file -
-          else
-            echo "Yarn audit found no vulnerabilities."
-          fi
+      - name: Run all tests
+        run: yarn nx run-many -t test --all --parallel=4 --configuration=ci
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
-  security-scan-dotnet:
-    needs: prepare-affected
-    if: needs.prepare-affected.outputs.has-affected-dotnet == 'true'
+      - name: Upload test coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-coverage
+          path: |
+            coverage/
+            **/TestResults/**
+
+  build:
+    needs: [lint, test]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Setup.NET 9.0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
+          dotnet-quality: 'ga'
 
-      - name: Restore.NET Dependencies
-        run: dotnet restore
+      - name: Install Yarn
+        run: npm install -g yarn
 
-      - name: Run Dotnet Vulnerability Scan
-        id: dotnet-audit
-        run: |
-          dotnet list package --vulnerable --include-transitive --format json > dotnet-audit-results.json || true
-          echo "VULNERABILITY_REPORT=$(cat dotnet-audit-results.json)" >> $GITHUB_OUTPUT
-        continue-on-error: true
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
-      - name: Install GitHub CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gh
+      - name: Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .nx/cache
+            .nx/runners
+          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
+          restore-keys: |
+            nx-cache-
 
-      - name: Publish Dotnet Vulnerability Results to PR comment
-        if: github.event_name == 'pull_request' && github.event.pull_request.number > 0 && steps.dotnet-audit.outputs.VULNERABILITY_REPORT != '[]'
-        run: |
-          VULNERABILITY_REPORT=$(echo '${{ steps.dotnet-audit.outputs.VULNERABILITY_REPORT }}' | jq -r '
-            .projects |
-            map(
-              "### Project: \(.projectUrl)\n" +
-              (
-                .vulnerabilities |
-                map(
-                  "- **ID:** `\(.vulnerabilityUrl | split("/") | last)`\n" +
-                  "  - **Package:** \(.packageUrl | split("/") | last) (\(.severity))\n" +
-                  "  - **Description:** \(.advisory?.title)\n" +
-                  "  - **More Info:** \(.vulnerabilityUrl)"
-                ) |
-                join("\n")
-              )
-            ) |
-            join("\n\n")
-          ')
-          if [ -n "$VULNERABILITY_REPORT" ]; then
-            echo -e "### .NET Security Audit Report\n\n$VULNERABILITY_REPORT" | gh pr comment ${{ github.event.pull_request.number }} --body-file -
-          else
-            echo "Dotnet list package found no vulnerabilities."
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Restore .NET cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/obj
+            **/bin
+          key: dotnet-cache-${{ hashFiles('**/*.csproj', '**/project.json', '*.sln') }}
+          restore-keys: |
+            dotnet-cache-
 
-  report-results:
-    needs: [run-affected-tests-js, run-dotnet-tests, run-affected-e2e-tests]
+      - name: Run codegen
+        run: yarn nx run-many -t codegen --all --parallel=4
+
+      - name: Build all projects
+        run: yarn nx run-many -t build --all --parallel=4
+
+  e2e:
+    needs: build
     runs-on: ubuntu-latest
-    if: always()
     steps:
-      - name: Download All Jest Test Results
-        uses: actions/download-artifact@v4
-        with:
-          pattern: jest-test-results-*
-          path: all-jest-test-results
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Download All.NET Test Results
-        uses: actions/download-artifact@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          pattern: dotnet-test-results-*
-          path: all-dotnet-test-results
+          node-version: '20'
+          cache: 'yarn'
 
-      - name: Download All E2E Test Results
-        uses: actions/download-artifact@v4
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Restore Nx cache
+        uses: actions/cache@v4
         with:
-          pattern: e2e-test-results-*
-          path: all-e2e-test-results
+          path: |
+            .nx/cache
+            .nx/runners
+          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
+          restore-keys: |
+            nx-cache-
 
-      - name: Publish Unit and E2E Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
+      - name: Run Cypress E2E tests
+        run: yarn nx run-many -t e2e-ci --all --parallel=2
+
+      - name: Upload Cypress artifacts
         if: always()
+        uses: actions/upload-artifact@v4
         with:
-          files: |
-            all-jest-test-results/**/*.json
-            all-dotnet-test-results/**/*.trx
-            all-e2e-test-results/**/*.xml
-          check_name: 'Comprehensive Test Report'
-          job_summary: true
+          name: cypress-artifacts
+          path: |
+            **/cypress/videos/**
+            **/cypress/screenshots/**
