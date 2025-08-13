@@ -76,6 +76,6 @@
     "includedScripts": []
   },
   "scripts": {
-    "prepare": "nx g @nx-dotnet/core:restore"
+    "prepare": ""
   }
 }

@@ -178,7 +178,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-          cache: true
+          # cache: true
 
       - name: Run dotnet format check for C# projects
         # This command checks for formatting violations without applying fixes and exits with a non-zero code if violations are found [32, 33]
@@ -204,7 +204,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-          cache: true
+          # cache: true
 
       - name: Restore.NET Dependencies
         run: dotnet restore
@@ -317,7 +317,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-          cache: true
+          # cache: true
 
       - name: Restore.NET Dependencies
         run: dotnet restore
