@@ -4,13 +4,11 @@ on:
   push:
     branches:
       - master
-      - main
       - feature/*
       - bugfix/*
   pull_request:
     branches:
       - master
-      - main
 
 jobs:
   setup:
