@@ -42,6 +42,13 @@ jobs:
           node-version: '22'
           cache: 'yarn' # Automatically configures caching for Yarn dependencies [8]
 
+      # Moved Setup.NET before yarn install to ensure dotnet tools are available
+      - name: Setup.NET 9.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x' # Installs the latest patch version for.NET 9.0 [10, 11]
+          cache: true # Enables NuGet package caching [12, 10]
+
       - name: Install Yarn Dependencies
         run: yarn install --immutable --check-file # Use --immutable for CI to ensure lockfile consistency
 
@@ -64,12 +71,6 @@ jobs:
           echo "AFFECTED_PROJECTS=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
           echo "HAS_AFFECTED=$(echo "$AFFECTED_PROJECTS" | jq 'length > 0')" >> $GITHUB_OUTPUT
         shell: bash
-
-      - name: Setup.NET 9.0
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x' # Installs the latest patch version for.NET 9.0 [10, 11]
-          cache: true # Enables NuGet package caching [12, 10]
 
       - name: Get Affected.NET Projects (with 'build', 'test', or 'lint' targets)
         id: affected-dotnet
