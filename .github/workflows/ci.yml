@@ -41,115 +41,11 @@ jobs:
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
-      - name: Cache Nx
-        uses: actions/cache@v4
-        with:
-          path: |
-            .nx/cache
-            .nx/runners
-          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
-          restore-keys: |
-            nx-cache-
-
-      - name: Cache .NET build
-        uses: actions/cache@v4
-        with:
-          path: |
-            **/obj
-            **/bin
-          key: dotnet-cache-${{ hashFiles('**/*.csproj', '**/project.json', '*.sln') }}
-          restore-keys: |
-            dotnet-cache-
-
-  lint:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'yarn'
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-          dotnet-quality: 'ga'
-
-      - name: Install Yarn
-        run: npm install -g yarn
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Restore Nx cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            .nx/cache
-            .nx/runners
-          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
-          restore-keys: |
-            nx-cache-
-
-      - name: Run ESLint on affected projects
-        run: yarn nx affected:lint --parallel=4
-
-  test:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'yarn'
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-          dotnet-quality: 'ga'
-
-      - name: Install Yarn
-        run: npm install -g yarn
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Restore Nx cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            .nx/cache
-            .nx/runners
-          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
-          restore-keys: |
-            nx-cache-
-
-      - name: Restore .NET cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            **/obj
-            **/bin
-          key: dotnet-cache-${{ hashFiles('**/*.csproj', '**/project.json', '*.sln') }}
-          restore-keys: |
-            dotnet-cache-
+      - name: Lint
+        run: yarn nx affected:lint
 
       - name: Run tests on affected projects
-        run: yarn nx affected:test --parallel=4 --configuration=ci --passWithNoTests
+        run: yarn nx affected:test --configuration=ci --passWithNoTests
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
@@ -162,92 +58,8 @@ jobs:
             coverage/
             **/TestResults/**
 
-  build:
-    needs: [lint, test]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'yarn'
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-          dotnet-quality: 'ga'
-
-      - name: Install Yarn
-        run: npm install -g yarn
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Restore Nx cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            .nx/cache
-            .nx/runners
-          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
-          restore-keys: |
-            nx-cache-
-
-      - name: Restore .NET cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            **/obj
-            **/bin
-          key: dotnet-cache-${{ hashFiles('**/*.csproj', '**/project.json', '*.sln') }}
-          restore-keys: |
-            dotnet-cache-
-
-      - name: Run codegen on affected projects
-        run: yarn nx affected:codegen --parallel=4
-
-      - name: Build affected projects
-        run: yarn nx affected:build --parallel=4
-
-  e2e:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'yarn'
-
-      - name: Install Yarn
-        run: npm install -g yarn
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Restore Nx cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            .nx/cache
-            .nx/runners
-          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
-          restore-keys: |
-            nx-cache-
-
       - name: Run Cypress E2E tests on affected projects
-        run: yarn nx affected:e2e-ci --parallel=2
+        run: yarn nx affected:e2e-ci
 
       - name: Upload Cypress artifacts
         if: always()
@@ -257,3 +69,9 @@ jobs:
           path: |
             **/cypress/videos/**
             **/cypress/screenshots/**
+
+      - name: Run codegen on affected projects
+        run: yarn nx affected:codegen
+
+      - name: Build affected projects
+        run: yarn nx affected:build
