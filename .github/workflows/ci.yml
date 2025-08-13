@@ -1,41 +1,255 @@
-name: CI
+name: CI Pipeline
 
 on:
   push:
     branches:
       - master
+      - feature/*
+      - bugfix/*
   pull_request:
-
-permissions:
-  actions: read
-  contents: read
+    branches:
+      - master
+      - main
 
 jobs:
-  main:
+  setup:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Uncomment this line to enable task distribution
-      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
-
-      # Cache node_modules
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'
           cache: 'yarn'
 
-      - run: yarn install --frozen-lockfile
-      - run: yarn cypress install
-      - uses: nrwl/nx-set-shas@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
 
-      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: yarn nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      # When you enable task distribution, run the e2e-ci task instead of e2e
-      - run: yarn nx affected -t lint test build e2e
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Cache Nx
+        uses: actions/cache@v4
+        with:
+          path: |
+            .nx/cache
+            .nx/runners
+          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
+          restore-keys: |
+            nx-cache-
+
+      - name: Cache .NET build
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/obj
+            **/bin
+          key: dotnet-cache-${{ hashFiles('**/*.csproj', '**/project.json', '*.sln') }}
+          restore-keys: |
+            dotnet-cache-
+
+  lint:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .nx/cache
+            .nx/runners
+          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
+          restore-keys: |
+            nx-cache-
+
+      - name: Run ESLint
+        run: yarn nx run-many -t lint --all --parallel=4
+
+  test-typescript:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .nx/cache
+            .nx/runners
+          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
+          restore-keys: |
+            nx-cache-
+
+      - name: Run TypeScript Jest tests
+        run: yarn nx run-many -t test --all --parallel=4 --configuration=ci
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-typescript
+          path: coverage/
+
+  test-dotnet:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore .NET cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/obj
+            **/bin
+          key: dotnet-cache-${{ hashFiles('**/*.csproj', '**/project.json', '*.sln') }}
+          restore-keys: |
+            dotnet-cache-
+
+      - name: Restore .NET dependencies
+        run: dotnet restore @cheese-grater.sln
+
+      - name: Run .NET tests
+        run: yarn nx run-many -t test --all --parallel=4 --configuration=ci
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+      - name: Upload .NET test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-test-results
+          path: |
+            **/TestResults/**
+
+  build:
+    needs: [lint, test-typescript, test-dotnet]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .nx/cache
+            .nx/runners
+          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
+          restore-keys: |
+            nx-cache-
+
+      - name: Restore .NET cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/obj
+            **/bin
+          key: dotnet-cache-${{ hashFiles('**/*.csproj', '**/project.json', '*.sln') }}
+          restore-keys: |
+            dotnet-cache-
+
+      - name: Run codegen
+        run: yarn nx run-many -t codegen --all --parallel=4
+
+      - name: Build all projects
+        run: yarn nx run-many -t build --all --parallel=4
+
+  e2e:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Restore Nx cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .nx/cache
+            .nx/runners
+          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
+          restore-keys: |
+            nx-cache-
+
+      - name: Run Cypress E2E tests
+        run: yarn nx run-many -t e2e-ci --all --parallel=2
+
+      - name: Upload Cypress artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-artifacts
+          path: |
+            **/cypress/videos/**
+            **/cypress/screenshots/**
