@@ -47,7 +47,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x' # Installs the latest patch version for.NET 9.0 [10, 11]
-          cache: true # Enables NuGet package caching [12, 10]
+          # cache: true # Enables NuGet package caching [12, 10]
 
       - name: Install Yarn Dependencies
         run: yarn install --immutable --check-file # Use --immutable for CI to ensure lockfile consistency
