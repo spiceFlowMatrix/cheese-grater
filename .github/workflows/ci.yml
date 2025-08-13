@@ -25,10 +25,10 @@ jobs:
   prepare-affected:
     runs-on: ubuntu-latest
     outputs:
-      affected-js-projects: ${{ steps.affected-js.outputs.AFFECTED_PROJECTS }}
-      has-affected-js: ${{ steps.affected-js.outputs.HAS_AFFECTED }}
-      affected-dotnet-projects: ${{ steps.affected-dotnet.outputs.AFFECTED_PROJECTS }}
-      has-affected-dotnet: ${{ steps.affected-dotnet.outputs.HAS_AFFECTED }}
+      affected-js-projects: ${{ steps.filter-js.outputs.AFFECTED_PROJECTS }}
+      has-affected-js: ${{ steps.filter-js.outputs.HAS_AFFECTED }}
+      affected-dotnet-projects: ${{ steps.filter-dotnet.outputs.AFFECTED_PROJECTS }}
+      has-affected-dotnet: ${{ steps.filter-dotnet.outputs.HAS_AFFECTED }}
       affected-e2e-projects: ${{ steps.affected-e2e.outputs.AFFECTED_PROJECTS }}
       has-affected-e2e: ${{ steps.affected-e2e.outputs.HAS_AFFECTED }}
     steps:
@@ -62,27 +62,36 @@ jobs:
           echo "HEAD_SHA=${{ github.sha }}" >> $GITHUB_OUTPUT
         shell: bash
 
-      - name: Get All Affected Projects (with tags for filtering)
-        id: get-all-affected
+      - name: Get All Projects with Tags (for filtering)
+        id: all-projects
         run: |
-          # The 'nx show projects' command doesn't have a built-in way to filter by tags
-          # so we get all affected projects with their tags and then use 'jq' to filter them.
-          AFFECTED_PROJECTS_WITH_TAGS=$(npx nx show projects --affected --base=${{ steps.get-base-head.outputs.BASE_SHA }} --head=${{ steps.get-base-head.outputs.HEAD_SHA }} --json --with-tags)
-          echo "AFFECTED_PROJECTS_WITH_TAGS=$AFFECTED_PROJECTS_WITH_TAGS" >> $GITHUB_OUTPUT
+          # Get the full project graph with tags. This is a reliable source for project metadata.
+          ALL_PROJECTS=$(npx nx show projects --json --with-tags)
+          echo "ALL_PROJECTS=$ALL_PROJECTS" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Get Affected Project Names
+        id: affected-names
+        run: |
+          # Get a simple list of affected project names.
+          AFFECTED_NAMES=$(npx nx show projects --affected --base=${{ steps.get-base-head.outputs.BASE_SHA }} --head=${{ steps.get-base-head.outputs.HEAD_SHA }} --json)
+          echo "AFFECTED_NAMES=$AFFECTED_NAMES" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Filter for Affected JS/TS Projects
-        id: affected-js
+        id: filter-js
         run: |
-          AFFECTED_PROJECTS=$(echo '${{ steps.get-all-affected.outputs.AFFECTED_PROJECTS_WITH_TAGS }}' | jq -r 'to_entries | map(select(.value | contains({ "tags": ["type:js"] }))) | map(.key) | @json')
+          # Filter the full project list by both the affected names and the 'type:js' tag.
+          AFFECTED_PROJECTS=$(echo '${{ steps.all-projects.outputs.ALL_PROJECTS }}' | jq -r --argjson affectedNames '${{ steps.affected-names.outputs.AFFECTED_NAMES }}' 'to_entries | map(select((.key | IN($affectedNames[])) and (.value.tags | contains(["type:js"])))) | map(.key) | @json')
           echo "AFFECTED_PROJECTS=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
           echo "HAS_AFFECTED=$(echo "$AFFECTED_PROJECTS" | jq 'length > 0')" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Filter for Affected .NET Projects
-        id: affected-dotnet
+        id: filter-dotnet
         run: |
-          AFFECTED_PROJECTS=$(echo '${{ steps.get-all-affected.outputs.AFFECTED_PROJECTS_WITH_TAGS }}' | jq -r 'to_entries | map(select(.value | contains({ "tags": ["type:dotnet"] }))) | map(.key) | @json')
+          # Filter the full project list by both the affected names and the 'type:dotnet' tag.
+          AFFECTED_PROJECTS=$(echo '${{ steps.all-projects.outputs.ALL_PROJECTS }}' | jq -r --argjson affectedNames '${{ steps.affected-names.outputs.AFFECTED_NAMES }}' 'to_entries | map(select((.key | IN($affectedNames[])) and (.value.tags | contains(["type:dotnet"])))) | map(.key) | @json')
           echo "AFFECTED_PROJECTS=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
           echo "HAS_AFFECTED=$(echo "$AFFECTED_PROJECTS" | jq 'length > 0')" >> $GITHUB_OUTPUT
         shell: bash
@@ -90,6 +99,7 @@ jobs:
       - name: Get Affected E2E Projects
         id: affected-e2e
         run: |
+          # This step correctly uses --withTarget and should not be affected by the previous issue.
           AFFECTED_PROJECTS=$(npx nx show projects --affected --base=${{ steps.get-base-head.outputs.BASE_SHA }} --head=${{ github.sha }} --withTarget=e2e-ci --json)
           echo "AFFECTED_PROJECTS=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
           echo "HAS_AFFECTED=$(echo "$AFFECTED_PROJECTS" | jq 'length > 0')" >> $GITHUB_OUTPUT
@@ -287,7 +297,7 @@ jobs:
           sudo apt-get install -y gh
 
       - name: Publish Yarn Audit Results to PR comment
-        if: github.event_name == 'pull_request' && github.event.pull_request.number > 0
+        if: github.event_name == 'pull_request' && github.event.pull_request.number > 0 && steps.yarn-audit.outputs.VULNERABILITY_REPORT != '[]'
         run: |
           VULNERABILITY_REPORT=$(echo '${{ steps.yarn-audit.outputs.VULNERABILITY_REPORT }}' | jq -r '
             .vulnerabilities |
@@ -307,7 +317,7 @@ jobs:
             ) |
             join("\n")
           ')
-          if [ "$(echo "$VULNERABILITY_REPORT" | wc -c)" -gt 0 ]; then
+          if [ -n "$VULNERABILITY_REPORT" ]; then
             echo -e "### Yarn Security Audit Report\n\n$VULNERABILITY_REPORT" | gh pr comment ${{ github.event.pull_request.number }} --body-file -
           else
             echo "Yarn audit found no vulnerabilities."
@@ -346,7 +356,7 @@ jobs:
           sudo apt-get install -y gh
 
       - name: Publish Dotnet Vulnerability Results to PR comment
-        if: github.event_name == 'pull_request' && github.event.pull_request.number > 0 && fromJson(steps.dotnet-audit.outputs.VULNERABILITY_REPORT).projects && fromJson(steps.dotnet-audit.outputs.VULNERABILITY_REPORT).projects != '' && (fromJson(steps.dotnet-audit.outputs.VULNERABILITY_REPORT).projects && fromJson(steps.dotnet-audit.outputs.VULNERABILITY_REPORT).projects != '' && fromJson(steps.dotnet-audit.outputs.VULNERABILITY_REPORT).projects != null && fromJson(steps.dotnet-audit.outputs.VULNERABILITY_REPORT).projects != 'null' && fromJson(steps.dotnet-audit.outputs.VULNERABILITY_REPORT).projects != '[]')
+        if: github.event_name == 'pull_request' && github.event.pull_request.number > 0 && steps.dotnet-audit.outputs.VULNERABILITY_REPORT != '[]'
         run: |
           VULNERABILITY_REPORT=$(echo '${{ steps.dotnet-audit.outputs.VULNERABILITY_REPORT }}' | jq -r '
             .projects |
