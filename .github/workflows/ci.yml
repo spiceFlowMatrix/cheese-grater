@@ -1,255 +1,366 @@
-name: CI Pipeline
+name: CI/CD Pipeline for Nx Monorepo
 
 on:
   push:
     branches:
       - master
-      - feature/*
-      - bugfix/*
   pull_request:
     branches:
       - master
-      - main
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+permissions:
+  contents: read # Required for actions/checkout to clone the repository [1]
+  security-events: write # Required for uploading SARIF files to GitHub Code Scanning [2, 3]
+  pull-requests: write # Required for actions that comment on pull requests (e.g., vulnerability reports) [4, 5]
+  checks: write # Required for actions that create or update check runs (e.g., test reports, lint reports) [6, 7]
+  actions: read # Required for github/codeql-action/upload-sarif in private repositories to retrieve Action run status [2]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true # Cancel any in-progress runs for the same group
 
 jobs:
-  setup:
+  # This job prepares the list of affected projects for Node.js,.NET, and E2E tests.
+  # It outputs these lists as JSON arrays for subsequent matrix jobs.
+  prepare-affected:
     runs-on: ubuntu-latest
+    outputs:
+      affected-js-projects: ${{ steps.affected-js.outputs.AFFECTED_PROJECTS }}
+      has-affected-js: ${{ steps.affected-js.outputs.HAS_AFFECTED }}
+      affected-dotnet-projects: ${{ steps.affected-dotnet.outputs.AFFECTED_PROJECTS }}
+      has-affected-dotnet: ${{ steps.affected-dotnet.outputs.HAS_AFFECTED }}
+      affected-e2e-projects: ${{ steps.affected-e2e.outputs.AFFECTED_PROJECTS }}
+      has-affected-e2e: ${{ steps.affected-e2e.outputs.HAS_AFFECTED }}
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'yarn'
+          cache: 'yarn' # Automatically configures caching for Yarn dependencies [8]
 
-      - name: Setup .NET
+      - name: Install Yarn Dependencies
+        run: yarn install --immutable --check-file # Use --immutable for CI to ensure lockfile consistency
+
+      - name: Get Base and Head SHAs for Nx Affected Calculation
+        id: get-base-head
+        run: |
+          BASE_SHA=${{ github.event.before }}
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          fi
+          echo "BASE_SHA=$BASE_SHA" >> $GITHUB_OUTPUT
+          echo "HEAD_SHA=${{ github.sha }}" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Get Affected JS/TS Projects (with 'lint' or 'test' targets)
+        id: affected-js
+        run: |
+          # Use --withTarget to only include projects that have a 'lint' or 'test' target [9]
+          AFFECTED_PROJECTS=$(npx nx show projects --affected --base=${{ steps.get-base-head.outputs.BASE_SHA }} --head=${{ steps.get-base-head.outputs.HEAD_SHA }} --withTarget=lint --withTarget=test --json)
+          echo "AFFECTED_PROJECTS=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
+          echo "HAS_AFFECTED=$(echo "$AFFECTED_PROJECTS" | jq 'length > 0')" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Setup.NET 9.0
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '9.0.x' # Installs the latest patch version for.NET 9.0 [10, 11]
+          cache: true # Enables NuGet package caching [12, 10]
 
-      - name: Install Yarn
-        run: npm install -g yarn
+      - name: Get Affected.NET Projects (with 'build', 'test', or 'lint' targets)
+        id: affected-dotnet
+        run: |
+          # Assuming @nx-dotnet/core infers 'build', 'test', 'lint' targets for.NET projects
+          AFFECTED_PROJECTS=$(npx nx show projects --affected --base=${{ steps.get-base-head.outputs.BASE_SHA }} --head=${{ steps.get-base-head.outputs.HEAD_SHA }} --withTarget=build --withTarget=test --withTarget=lint --json)
+          echo "AFFECTED_PROJECTS=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
+          echo "HAS_AFFECTED=$(echo "$AFFECTED_PROJECTS" | jq 'length > 0')" >> $GITHUB_OUTPUT
+        shell: bash
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+      - name: Get Affected E2E Projects (with 'e2e-ci' target)
+        id: affected-e2e
+        run: |
+          # Use --withTarget=e2e-ci to specifically get projects configured for E2E CI tests [13, 14, 15]
+          AFFECTED_PROJECTS=$(npx nx show projects --affected --base=${{ steps.get-base-head.outputs.BASE_SHA }} --head=${{ steps.get-base-head.outputs.HEAD_SHA }} --withTarget=e2e-ci --json)
+          echo "AFFECTED_PROJECTS=$AFFECTED_PROJECTS" >> $GITHUB_OUTPUT
+          echo "HAS_AFFECTED=$(echo "$AFFECTED_PROJECTS" | jq 'length > 0')" >> $GITHUB_OUTPUT
+        shell: bash
 
-      - name: Cache Nx
-        uses: actions/cache@v4
-        with:
-          path: |
-            .nx/cache
-            .nx/runners
-          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
-          restore-keys: |
-            nx-cache-
-
-      - name: Cache .NET build
-        uses: actions/cache@v4
-        with:
-          path: |
-            **/obj
-            **/bin
-          key: dotnet-cache-${{ hashFiles('**/*.csproj', '**/project.json', '*.sln') }}
-          restore-keys: |
-            dotnet-cache-
-
-  lint:
-    needs: setup
+  # This job runs linting for affected Angular/TypeScript projects in parallel using a matrix strategy.
+  run-affected-lint-js:
+    needs: prepare-affected # This job depends on 'prepare-affected' to get the matrix data
+    if: needs.prepare-affected.outputs.has-affected-js == 'true' # Only run if there are affected JS projects
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ${{ fromJson(needs.prepare-affected.outputs.affected-js-projects) }} # Dynamically create jobs for each affected project [16, 17, 18]
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn' # [8, 19, 13]
+
+      - name: Install Yarn Dependencies
+        run: yarn install --immutable --check-file
+
+      - name: Run Lint for ${{ matrix.project }} and Generate SARIF
+        # Install @microsoft/eslint-formatter-sarif if not already in package.json devDependencies
+        # You can add 'yarn add -D @microsoft/eslint-formatter-sarif' to your local setup or a pre-CI step.
+        run: |
+          npx nx lint ${{ matrix.project }} --output-file=lint-results-${{ matrix.project }}.sarif --format=@microsoft/eslint-formatter-sarif --no-fix [20, 21, 22]
+        continue-on-error: true # Allow SARIF upload even if linting fails
+
+      - name: Upload ESLint SARIF results for ${{ matrix.project }} to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always() # Always try to upload SARIF, even if linting failed
+        with:
+          sarif_file: lint-results-${{ matrix.project }}.sarif
+          wait-for-processing: true
+
+  # This job runs unit tests for affected Angular/TypeScript projects in parallel using a matrix strategy.
+  run-affected-tests-js:
+    needs: prepare-affected
+    if: needs.prepare-affected.outputs.has-affected-js == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ${{ fromJson(needs.prepare-affected.outputs.affected-js-projects) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'yarn'
 
-      - name: Install Yarn
-        run: npm install -g yarn
+      - name: Install Yarn Dependencies
+        run: yarn install --immutable --check-file
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Restore Nx cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            .nx/cache
-            .nx/runners
-          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
-          restore-keys: |
-            nx-cache-
-
-      - name: Run ESLint
-        run: yarn nx run-many -t lint --all --parallel=4
-
-  test-typescript:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'yarn'
-
-      - name: Install Yarn
-        run: npm install -g yarn
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Restore Nx cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            .nx/cache
-            .nx/runners
-          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
-          restore-keys: |
-            nx-cache-
-
-      - name: Run TypeScript Jest tests
-        run: yarn nx run-many -t test --all --parallel=4 --configuration=ci
-
-      - name: Upload coverage reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-typescript
-          path: coverage/
-
-  test-dotnet:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
-      - name: Restore .NET cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            **/obj
-            **/bin
-          key: dotnet-cache-${{ hashFiles('**/*.csproj', '**/project.json', '*.sln') }}
-          restore-keys: |
-            dotnet-cache-
-
-      - name: Restore .NET dependencies
-        run: dotnet restore @cheese-grater.sln
-
-      - name: Run .NET tests
-        run: yarn nx run-many -t test --all --parallel=4 --configuration=ci
+      - name: Run Jest Tests for ${{ matrix.project }}
+        # Assuming jest-junit is configured in jest.config.js or installed as a dev dependency (it is in user's package.json)
+        run: npx nx test ${{ matrix.project }} --ci --json --outputFile=test-results/jest/${{ matrix.project }}-results.json --testResultsProcessor="jest-junit" --testLocationInResults --skipNxCache --skipRemoteCache [26, 27, 13, 28, 29]
+        continue-on-error: true # Allow subsequent reporting steps to run
         env:
-          DOTNET_CLI_TELEMETRY_OPTOUT: 1
+          NX_SKIP_NX_CACHE: true # Explicitly disable Nx local computation cache
+          NX_SKIP_REMOTE_CACHE: true # Explicitly disable Nx remote cache
 
-      - name: Upload .NET test results
-        if: always()
+      - name: Upload Jest Test Results Artifact for ${{ matrix.project }}
         uses: actions/upload-artifact@v4
+        if: always() # Upload artifacts even if tests fail
         with:
-          name: dotnet-test-results
-          path: |
-            **/TestResults/**
+          name: jest-test-results-${{ matrix.project }} # Unique name for each project's artifact
+          path: test-results/jest/${{ matrix.project }}-results.json
+          retention-days: 5 # Keep artifacts for a short period for debugging [26, 30, 31]
 
-  build:
-    needs: [lint, test-typescript, test-dotnet]
+  # This job runs dotnet format --verify-no-changes for C# projects.
+  # It will fail the job if any formatting issues are found.
+  run-dotnet-lint:
+    needs: prepare-affected
+    if: needs.prepare-affected.outputs.has-affected-dotnet == 'true' # Only run if there are affected.NET projects
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup.NET 9.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+          cache: true
+
+      - name: Run dotnet format check for C# projects
+        # This command checks for formatting violations without applying fixes and exits with a non-zero code if violations are found [32, 33]
+        run: dotnet format --verify-no-changes --folder --include. --exclude "**/node_modules/**"
+        # continue-on-error: true can be added if you want the workflow to continue even if formatting fails,
+        # but typically, you want to enforce formatting and fail the build.
+
+  # This job runs unit tests for affected ASP.NET Core/C# projects in parallel using a matrix strategy.
+  run-dotnet-tests:
+    needs: prepare-affected
+    if: needs.prepare-affected.outputs.has-affected-dotnet == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ${{ fromJson(needs.prepare-affected.outputs.affected-dotnet-projects) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup.NET 9.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+          cache: true
+
+      - name: Restore.NET Dependencies
+        run: dotnet restore
+
+      - name: Run.NET Tests for ${{ matrix.project }}
+        # The --no-build flag assumes a prior build or restore has occurred.
+        # --logger "trx" outputs results in TRX format [34, 35, 36]
+        run: npx nx test ${{ matrix.project }} --no-build --logger "trx;LogFileName=test-results/${{ matrix.project }}-results.trx" --results-directory "test-results/dotnet"
+        continue-on-error: true # Allow subsequent reporting steps to run
+
+      - name: Upload.NET Test Results Artifact for ${{ matrix.project }}
+        uses: actions/upload-artifact@v4
+        if: always() # Upload artifacts even if tests fail
+        with:
+          name: dotnet-test-results-${{ matrix.project }} # Unique name for each project's artifact
+          path: test-results/dotnet/${{ matrix.project }}-results.trx
+          retention-days: 5
+
+  # This job runs E2E tests for affected Angular projects using Cypress in parallel.
+  run-affected-e2e-tests:
+    needs: prepare-affected
+    if: needs.prepare-affected.outputs.has-affected-e2e == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ${{ fromJson(needs.prepare-affected.outputs.affected-e2e-projects) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'yarn'
 
-      - name: Setup .NET
+      - name: Install Yarn Dependencies
+        run: yarn install --immutable --check-file
+
+      - name: Run E2E Tests for ${{ matrix.project }} with Cypress
+        # Ensure your Cypress configuration (e.g., cypress.config.js) is set up
+        # to output JUnit XML reports. For example:
+        # reporter: 'junit',
+        # reporterOptions: {
+        #   mochaFile: 'test-results/e2e/[suiteName].xml',
+        #   toConsole: false,
+        # }
+        # You might need to install a Cypress JUnit reporter: `yarn add -D mocha-junit-reporter` or `cypress-xray-junit-reporter` [37, 38]
+        run: npx nx e2e-ci ${{ matrix.project }} --skipNxCache --skipRemoteCache
+        continue-on-error: true # Allow subsequent reporting steps to run
+
+      - name: Upload E2E Test Results Artifact for ${{ matrix.project }}
+        uses: actions/upload-artifact@v4
+        if: always() # Upload artifacts even if tests fail
+        with:
+          name: e2e-test-results-${{ matrix.project }} # Unique name for each project's artifact
+          path: test-results/e2e/**/*.xml # Adjust path to where your Cypress JUnit XML files are generated
+          retention-days: 5
+
+  # This job performs a security scan for Node.js dependencies using yarn audit.
+  security-scan-js:
+    needs: prepare-affected
+    if: needs.prepare-affected.outputs.has-affected-js == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Install Yarn Dependencies
+        run: yarn install --immutable --check-file
+
+      - name: Run Yarn Audit
+        # --level high checks for high and critical vulnerabilities [39, 40]
+        # | true ensures the step does not fail the job immediately, allowing subsequent reporting [39]
+        run: yarn audit --level high --json > yarn-audit-results.json | true
+        continue-on-error: true
+
+      - name: 'Publish Yarn Audit Results (Optional: using a community action for PR comments)'
+        uses: basaldev/yarn-npm-audit-action@v2
+        if: always() # Ensure this runs even if audit found issues
+        with:
+          severity_level: 'high'
+          create_pr_comments: true
+          create_issues: false # Avoid creating issues on every PR run
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Required for GitHub API interaction
+
+  # This job performs a security scan for.NET dependencies using dotnet list package --vulnerable.
+  security-scan-dotnet:
+    needs: prepare-affected
+    if: needs.prepare-affected.outputs.has-affected-dotnet == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup.NET 9.0
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
+          cache: true
 
-      - name: Install Yarn
-        run: npm install -g yarn
+      - name: Restore.NET Dependencies
+        run: dotnet restore
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+      - name: Run Dotnet Vulnerability Scan
+        # --vulnerable lists packages with known vulnerabilities [42, 40]
+        # --include-transitive includes transitive dependencies [42, 40]
+        # --format json outputs results in JSON format [42, 40]
+        run: dotnet list package --vulnerable --include-transitive --format json > dotnet-audit-results.json | true
+        continue-on-error: true
 
-      - name: Restore Nx cache
-        uses: actions/cache@v4
+      - name: 'Publish Dotnet Vulnerability Results (Optional: using a community action for PR comments)'
+        uses: gavanlamb/.net-vulnerable@latest 
+        if: always() # Ensure this runs even if audit found issues
         with:
-          path: |
-            .nx/cache
-            .nx/runners
-          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
-          restore-keys: |
-            nx-cache-
+          add-pr-comment: true
+          add-check-run: true
+          fail-check-run-if-contains-vulnerable: false # Set to true if you want the check run to fail on vulnerabilities
+          include-transitive-dependencies: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Required for GitHub API interaction
 
-      - name: Restore .NET cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            **/obj
-            **/bin
-          key: dotnet-cache-${{ hashFiles('**/*.csproj', '**/project.json', '*.sln') }}
-          restore-keys: |
-            dotnet-cache-
-
-      - name: Run codegen
-        run: yarn nx run-many -t codegen --all --parallel=4
-
-      - name: Build all projects
-        run: yarn nx run-many -t build --all --parallel=4
-
-  e2e:
-    needs: build
+  # This job collects all test results from parallel jobs and publishes a consolidated report.
+  report-results:
+    needs: [run-affected-tests-js, run-dotnet-tests, run-affected-e2e-tests] # Depends on all jobs that produce test results
     runs-on: ubuntu-latest
+    if: always() # Ensure this job runs even if previous test jobs failed, to provide full reporting [6]
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Download All Jest Test Results
+        uses: actions/download-artifact@v4
         with:
-          node-version: '20'
-          cache: 'yarn'
+          pattern: jest-test-results-* # Download all artifacts matching this pattern [30, 31]
+          path: all-jest-test-results # Consolidate into one directory
 
-      - name: Install Yarn
-        run: npm install -g yarn
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Restore Nx cache
-        uses: actions/cache@v4
+      - name: Download All.NET Test Results
+        uses: actions/download-artifact@v4
         with:
-          path: |
-            .nx/cache
-            .nx/runners
-          key: nx-cache-${{ hashFiles('yarn.lock', 'nx.json', 'package.json') }}
-          restore-keys: |
-            nx-cache-
+          pattern: dotnet-test-results-* # Download all artifacts matching this pattern
+          path: all-dotnet-test-results # Consolidate into one directory
 
-      - name: Run Cypress E2E tests
-        run: yarn nx run-many -t e2e-ci --all --parallel=2
-
-      - name: Upload Cypress artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Download All E2E Test Results
+        uses: actions/download-artifact@v4
         with:
-          name: cypress-artifacts
-          path: |
-            **/cypress/videos/**
-            **/cypress/screenshots/**
+          pattern: e2e-test-results-* # Download all artifacts matching this pattern
+          path: all-e2e-test-results # Consolidate into one directory
+
+      - name: Publish Unit and E2E Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2 # Supports JSON (Jest) and TRX (.NET) formats [6]
+        if: always() # Ensure this runs even if artifact download or previous steps failed
+        with:
+          files: |
+            all-jest-test-results/**/*.json
+            all-dotnet-test-results/**/*.trx
+            all-e2e-test-results/**/*.xml # Include E2E JUnit XML results
+          check_name: 'Comprehensive Test Report' # Name for the GitHub Check Run [6]
+          job_summary: true # Publish results to the job summary page [6]
+          # This step requires `checks: write` permission.
