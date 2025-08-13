@@ -3,10 +3,10 @@ name: CI/CD Pipeline for Nx Monorepo
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
     branches:
-      - main
+      - master
   workflow_dispatch: # Allows manual triggering of the workflow
 
 permissions:
