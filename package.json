@@ -16,6 +16,8 @@
     "@angular/platform-server": "20.1.6",
     "@angular/router": "20.1.6",
     "@angular/ssr": "20.1.5",
+    "@babel/preset-env": "^7.28.0",
+    "babel-jest": "^30.0.5",
     "express": "^4.21.2",
     "keycloak-angular": "^20.0.0",
     "keycloak-js": "^26.2.0",
