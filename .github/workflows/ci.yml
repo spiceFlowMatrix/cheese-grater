@@ -94,16 +94,6 @@ jobs:
           cache: true
           cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
       
-      - name: Clean NuGet Cache
-        # This is a critical step to resolve the package versioning issues.
-        # It forces a fresh restore of all NuGet packages.
-        run: dotnet nuget locals all --clear
-
-      - name: Get fresh .NET packages
-        # This is a critical step to resolve the package versioning issues.
-        # It forces a fresh restore of all NuGet packages.
-        run: dotnet restore
-
       - name: Restore Node Modules
         uses: actions/cache@v4
         with:
