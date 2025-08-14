@@ -43,6 +43,7 @@ jobs:
           dotnet-quality: 'ga'
           cache: true
           cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
+      - run: cp libs/dotnet-packages-aggregate/packages.lock.json packages.lock.json
       - run: dotnet restore --locked-mode
 
       - name: Install dependencies
