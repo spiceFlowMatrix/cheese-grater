@@ -994,7 +994,6 @@
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "[9.0.0, )",
           "Microsoft.AspNetCore.Identity.UI": "[9.0.0, )",
           "Microsoft.EntityFrameworkCore": "[9.0.1, )",
-          "Microsoft.EntityFrameworkCore.Design": "[9.0.1, )",
           "Microsoft.EntityFrameworkCore.Relational": "[9.0.1, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "[9.0.1, )"
         }
