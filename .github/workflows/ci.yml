@@ -179,7 +179,7 @@ jobs:
       - name: Setup Node.js and restore yarn dependencies
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'yarn'
 
       - name: Restore NX computation cache
