@@ -1,4 +1,4 @@
-﻿using CheeseGrater.Application.Common.Interfaces;
+using CheeseGrater.Application.Common.Interfaces;
 using CheeseGrater.Core.Application.Common.Security;
 using CheeseGrater.Core.Domain.Constants;
 

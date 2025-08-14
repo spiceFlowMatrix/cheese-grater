@@ -1,4 +1,4 @@
-﻿using CheeseGrater.Core.Application.Common.Interfaces;
+using CheeseGrater.Core.Application.Common.Interfaces;
 using MediatR.Pipeline;
 using Microsoft.Extensions.Logging;
 

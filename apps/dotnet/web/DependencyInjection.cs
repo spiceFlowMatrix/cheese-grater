@@ -1,4 +1,4 @@
-﻿using Azure.Identity;
+using Azure.Identity;
 using CheeseGrater.Core.Application.Common.Interfaces;
 using CheeseGrater.Infrastructure.Data;
 using CheeseGrater.Web.Services;

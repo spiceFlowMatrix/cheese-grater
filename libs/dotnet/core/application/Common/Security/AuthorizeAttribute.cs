@@ -1,4 +1,4 @@
-﻿namespace CheeseGrater.Core.Application.Common.Security;
+namespace CheeseGrater.Core.Application.Common.Security;
 
 /// <summary>
 /// Specifies the class this attribute is applied to requires authorization.

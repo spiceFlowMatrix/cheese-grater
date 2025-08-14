@@ -1,4 +1,4 @@
-﻿global using CheeseGrater.Core.Domain.Common;
+global using CheeseGrater.Core.Domain.Common;
 global using CheeseGrater.Core.Domain.Entities;
 global using CheeseGrater.Core.Domain.Enums;
 global using CheeseGrater.Core.Domain.Events;

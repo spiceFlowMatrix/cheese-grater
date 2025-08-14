@@ -1,4 +1,4 @@
-﻿using CheeseGrater.Core.Domain.Entities;
+using CheeseGrater.Core.Domain.Entities;
 
 namespace CheeseGrater.Application.TodoItems.Queries.GetTodoItemsWithPagination;
 

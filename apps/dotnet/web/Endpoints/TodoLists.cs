@@ -1,4 +1,4 @@
-﻿using CheeseGrater.Application.TodoLists.Commands.CreateTodoList;
+using CheeseGrater.Application.TodoLists.Commands.CreateTodoList;
 using CheeseGrater.Application.TodoLists.Commands.DeleteTodoList;
 using CheeseGrater.Application.TodoLists.Commands.UpdateTodoList;
 using CheeseGrater.Application.TodoLists.Queries.GetTodos;

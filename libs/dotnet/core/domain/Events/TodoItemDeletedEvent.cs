@@ -1,4 +1,4 @@
-﻿public class TodoItemDeletedEvent : BaseEvent
+public class TodoItemDeletedEvent : BaseEvent
 {
   public TodoItemDeletedEvent(TodoItem item)
   {

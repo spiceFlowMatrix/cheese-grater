@@ -1,4 +1,4 @@
-﻿using CheeseGrater.Application.Common.Interfaces;
+using CheeseGrater.Application.Common.Interfaces;
 using CheeseGrater.Application.TodoLists.Queries.Models;
 using CheeseGrater.Core.Application.Common.Exceptions;
 using CheeseGrater.Core.Application.Common.Interfaces;

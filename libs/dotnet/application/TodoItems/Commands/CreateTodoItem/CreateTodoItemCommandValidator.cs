@@ -1,4 +1,4 @@
-﻿namespace CheeseGrater.Application.TodoItems.Commands.CreateTodoItem;
+namespace CheeseGrater.Application.TodoItems.Commands.CreateTodoItem;
 
 public class CreateTodoItemCommandValidator : AbstractValidator<CreateTodoItemCommand>
 {

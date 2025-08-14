@@ -1,4 +1,4 @@
-﻿using CheeseGrater.Application.TodoLists.Queries.Models;
+using CheeseGrater.Application.TodoLists.Queries.Models;
 using CheeseGrater.Core.Application.Common.Models;
 
 namespace CheeseGrater.Application.TodoLists.Queries.GetTodos;
