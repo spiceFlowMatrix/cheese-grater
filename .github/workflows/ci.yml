@@ -119,6 +119,7 @@ jobs:
         run: yarn nx affected --target=test --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --configuration=ci --passWithNoTests -- -- /p:SkipNSwag=True
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: 1
+          SkipNSwag: 'True' # This ensures that the NSwag post-build event is skipped during tests.
 
       - name: Upload test coverage reports
         if: always()
