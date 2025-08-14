@@ -49,6 +49,16 @@ jobs:
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
+      - name: Cache Node Modules
+        # This step caches the `node_modules` folder. Subsequent jobs will
+        # restore this cache, which is much faster than running `yarn install` again.
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
       - name: Cache NX computation results
         # This step caches the results of previously run NX commands,
         # ensuring that subsequent commands for unchanged projects are skipped.
@@ -84,6 +94,14 @@ jobs:
           cache: true
           cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
 
+      - name: Restore Node Modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
       - name: Restore NX computation cache
         uses: actions/cache@v4
         with:
@@ -117,6 +135,14 @@ jobs:
           dotnet-quality: 'ga'
           cache: true
           cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
+
+      - name: Restore Node Modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
       - name: Restore NX computation cache
         uses: actions/cache@v4
@@ -164,6 +190,14 @@ jobs:
           cache: true
           cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
 
+      - name: Restore Node Modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
       - name: Restore NX computation cache
         uses: actions/cache@v4
         with:
@@ -193,6 +227,22 @@ jobs:
         with:
           node-version: '22'
           cache: 'yarn'
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+          dotnet-quality: 'ga'
+          cache: true
+          cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
+
+      - name: Restore Node Modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
       - name: Restore NX computation cache
         uses: actions/cache@v4
