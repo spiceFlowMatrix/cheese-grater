@@ -116,7 +116,7 @@ jobs:
 
       - name: Run tests on affected projects
         # We now explicitly set the configuration to 'ci' to ensure predictable behavior.
-        run: yarn nx affected --target=test --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --configuration=ci --passWithNoTests
+        run: yarn nx affected --target=test --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --configuration=ci
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: 1
           SkipNSwag: 'True' # This ensures that the NSwag post-build event is skipped during tests.
@@ -223,6 +223,9 @@ jobs:
         # This command is the one that was previously failing. We now pass a flag
         # to explicitly skip the NSwag post-build event.
         run: yarn nx affected --target=build --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }}
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: 1
+          SkipNSwag: 'True' # This ensures that the NSwag post-build event is skipped during builds.
 
   # The E2E job runs after the build job has completed successfully.
   e2e:
