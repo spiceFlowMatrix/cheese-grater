@@ -11,7 +11,7 @@ on:
       - master
 
 permissions:
-  contents: read 
+  contents: read
 
 env:
   # The base and head SHAs are dynamically set to ensure NX affected
@@ -116,7 +116,7 @@ jobs:
 
       - name: Run tests on affected projects
         # We now explicitly set the configuration to 'ci' to ensure predictable behavior.
-        run: yarn nx affected --target=test --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --configuration=ci --passWithNoTests -- -- /p:SkipNSwag=True
+        run: yarn nx affected --target=test --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --configuration=ci --passWithNoTests
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: 1
           SkipNSwag: 'True' # This ensures that the NSwag post-build event is skipped during tests.
@@ -172,7 +172,7 @@ jobs:
 
       - name: Lint affected projects
         # We now explicitly set the configuration to 'ci' for consistency.
-        run: yarn nx affected --target=lint --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --configuration=ci -- -- /p:SkipNSwag=True
+        run: yarn nx affected --target=lint --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --configuration=ci
 
   # The build job runs after both lint and test jobs have completed successfully.
   build:
@@ -197,7 +197,7 @@ jobs:
           dotnet-quality: 'ga'
           cache: true
           cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
-      
+
       - name: Restore Node Modules
         uses: actions/cache@v4
         with:
@@ -222,7 +222,7 @@ jobs:
       - name: Build affected projects
         # This command is the one that was previously failing. We now pass a flag
         # to explicitly skip the NSwag post-build event.
-        run: yarn nx affected --target=build --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} -- -- /p:SkipNSwag=True
+        run: yarn nx affected --target=build --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }}
 
   # The E2E job runs after the build job has completed successfully.
   e2e:
