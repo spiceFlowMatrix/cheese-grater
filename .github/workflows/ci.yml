@@ -41,6 +41,8 @@ jobs:
         with:
           dotnet-version: '9.0.x'
           dotnet-quality: 'ga'
+          cache: true
+          cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -80,6 +82,7 @@ jobs:
           dotnet-version: '9.0.x'
           dotnet-quality: 'ga'
           cache: true
+          cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
 
       - name: Restore NX computation cache
         uses: actions/cache@v4
@@ -113,6 +116,7 @@ jobs:
           dotnet-version: '9.0.x'
           dotnet-quality: 'ga'
           cache: true
+          cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
 
       - name: Restore NX computation cache
         uses: actions/cache@v4
@@ -158,6 +162,7 @@ jobs:
           dotnet-version: '9.0.x'
           dotnet-quality: 'ga'
           cache: true
+          cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
 
       - name: Restore NX computation cache
         uses: actions/cache@v4
