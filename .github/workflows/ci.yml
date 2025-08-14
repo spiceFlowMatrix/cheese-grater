@@ -10,6 +10,9 @@ on:
     branches:
       - master
 
+permissions:
+  contents: read 
+
 env:
   # The base and head SHAs are dynamically set to ensure NX affected
   # correctly determines the changed files. This is particularly important
@@ -43,8 +46,6 @@ jobs:
           dotnet-quality: 'ga'
           cache: true
           cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
-      - run: cp libs/dotnet-packages-aggregate/packages.lock.json packages.lock.json
-      - run: dotnet restore
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -95,7 +96,7 @@ jobs:
           dotnet-quality: 'ga'
           cache: true
           cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
-      
+
       - name: Restore Node Modules
         uses: actions/cache@v4
         with:
@@ -150,6 +151,8 @@ jobs:
           dotnet-quality: 'ga'
           cache: true
           cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
+
+      - run: dotnet --version
 
       - name: Restore Node Modules
         uses: actions/cache@v4
