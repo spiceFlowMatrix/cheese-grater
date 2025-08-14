@@ -10,20 +10,29 @@ on:
     branches:
       - master
 
+env:
+  NX_BRANCH_BASE: ${{ github.event.pull_request.base.sha || 'master' }}
+  NX_BRANCH_HEAD: ${{ github.sha }}
+
 jobs:
-  setup:
+  # The setup job is responsible for installing dependencies and caching them.
+  # Other jobs will depend on this one and will restore the cache.
+  setup_and_cache:
     runs-on: ubuntu-latest
+    outputs:
+      # This output is used to pass the cache key to subsequent jobs.
+      cache_key: ${{ steps.cache_key_step.outputs.cache_key }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Required for nx affected to compute Git diff
+          fetch-depth: 0 # Essential for nx affected to compute Git diff correctly
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'yarn'
+          node-version: '22'
+          cache: 'yarn' # This caches the yarn installation
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -31,19 +40,69 @@ jobs:
           dotnet-version: '9.0.x'
           dotnet-quality: 'ga'
 
-      - name: Install Yarn
-        run: npm install -g yarn
+      - name: Get Yarn Cache Directory
+        id: yarn-cache
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Node Modules and NX Cache
+        id: cache_key_step
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ steps.yarn-cache.outputs.dir }}
+            .nx/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
-      - name: Lint
-        run: yarn nx affected:lint
+  # The lint job runs in parallel with the test job.
+  lint:
+    runs-on: ubuntu-latest
+    needs: setup_and_cache
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache Node Modules and NX Cache
+        id: cache_key_step
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/yarn
+            .nx/cache
+          key: ${{ needs.setup_and_cache.outputs.cache_key }}
+
+      - name: Lint affected projects
+        run: yarn nx affected --target=lint --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }}
+
+  # The test job runs in parallel with the lint job.
+  test:
+    runs-on: ubuntu-latest
+    needs: setup_and_cache
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache Node Modules and NX Cache
+        id: cache_key_step
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/yarn
+            .nx/cache
+          key: ${{ needs.setup_and_cache.outputs.cache_key }}
 
       - name: Run tests on affected projects
-        run: yarn nx affected:test --configuration=ci --passWithNoTests
+        run: yarn nx affected --target=test --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --configuration=ci --passWithNoTests
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
@@ -56,8 +115,52 @@ jobs:
             coverage/
             **/TestResults/**
 
+  # The build job runs after both lint and test jobs have completed successfully.
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache Node Modules and NX Cache
+        id: cache_key_step
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/yarn
+            .nx/cache
+          key: ${{ needs.setup_and_cache.outputs.cache_key }}
+
+      - name: Run codegen on affected projects
+        run: yarn nx affected --target=codegen --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }}
+
+      - name: Build affected projects
+        run: yarn nx affected --target=build --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }}
+
+  # The E2E job runs after the build job has completed successfully.
+  e2e:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache Node Modules and NX Cache
+        id: cache_key_step
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/yarn
+            .nx/cache
+          key: ${{ needs.setup_and_cache.outputs.cache_key }}
+
       - name: Run Cypress E2E tests on affected projects
-        run: yarn nx affected:e2e-ci
+        run: yarn nx affected --target=e2e-ci --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }}
 
       - name: Upload Cypress artifacts
         if: always()
@@ -67,9 +170,3 @@ jobs:
           path: |
             **/cypress/videos/**
             **/cypress/screenshots/**
-
-      - name: Run codegen on affected projects
-        run: yarn nx affected:codegen
-
-      - name: Build affected projects
-        run: yarn nx affected:build
