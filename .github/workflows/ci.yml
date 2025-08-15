@@ -268,7 +268,7 @@ jobs:
             ${{ runner.os }}-nx-
 
       - name: Run Cypress E2E tests on affected projects
-        run: yarn nx affected --target=e2e-ci --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }}
+        run: yarn nx affected --target=e2e --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }}
 
       - name: Upload Cypress artifacts
         if: always()
