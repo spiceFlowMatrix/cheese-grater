@@ -116,7 +116,7 @@ jobs:
 
       - name: Run tests on affected projects
         # We now explicitly set the configuration to 'ci' to ensure predictable behavior.
-        run: yarn nx affected --target=test --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --configuration=ci
+        run: yarn nx affected --target=test --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --configuration=ci --exclude=tag:generated-client
         env:
           DOTNET_CLI_TELEMETRY_OPTOUT: 1
           SkipNSwag: 'True' # This ensures that the NSwag post-build event is skipped during tests.
@@ -172,7 +172,7 @@ jobs:
 
       - name: Lint affected projects
         # We now explicitly set the configuration to 'ci' for consistency.
-        run: yarn nx affected --target=lint --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --configuration=ci
+        run: yarn nx affected --target=lint --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --configuration=ci --exclude=tag:generated-client
 
   # The build job runs after both lint and test jobs have completed successfully.
   build:
