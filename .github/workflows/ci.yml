@@ -340,7 +340,7 @@ jobs:
             ${{ runner.os }}-nx-
 
       - name: Debug project directory
-        run: ls -la ${{ matrix.project }}
+        run: ls -la apps/${{ matrix.project }}
 
       - name: Run Cypress E2E tests for project
         uses: cypress-io/github-action@v6
