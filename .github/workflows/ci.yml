@@ -356,19 +356,41 @@ jobs:
           if [ -z "$RAW_OUTPUTS" ]; then
             CLEAN_OUTPUTS=""
           else
-            CLEAN_OUTPUTS=$(printf "%s\n" "$RAW_OUTPUTS" | sed -e 's|^{workspaceRoot}/||' -e 's|$|/**|' | tr '\n' ' ')
+            CLEAN_OUTPUTS=$(printf "%s\n" "$RAW_OUTPUTS" | sed -e 's|^{workspaceRoot}/||' -e 's|$|/**|')
           fi
           echo "PROJECT_ROOT=$ROOT" >> $GITHUB_ENV
-          echo "PROJECT_OUTPUTS=$CLEAN_OUTPUTS" >> $GITHUB_ENV
+          echo "PROJECT_OUTPUTS<<EOF" >> $GITHUB_ENV
+          echo "$CLEAN_OUTPUTS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
           echo "CLEAN_OUTPUTS: $CLEAN_OUTPUTS"
         env:
           NODE_OPTIONS: --no-deprecation
+
+      - name: Debug server availability
+        run: |
+          echo "Checking if server is running at http://localhost:4200"
+          curl -I http://localhost:4200 || echo "Server not accessible"
 
       - name: Run Cypress E2E tests for project
         uses: cypress-io/github-action@v6
         with:
           project: ${{ env.PROJECT_ROOT }}
-          start: yarn nx run ${{ matrix.project }}:e2e
+          start: yarn nx run ${{ matrix.project }}:e2e --verbose
+
+      - name: Debug artifact paths
+        run: |
+          echo "Listing all files in dist/cypress/apps/todo-e2e:"
+          find dist/cypress/apps/todo-e2e -type f || echo "No files found"
+          echo "Listing screenshots directory:"
+          find dist/cypress/apps/todo-e2e/screenshots -type f || echo "No screenshots found"
+          echo "Listing videos directory:"
+          find dist/cypress/apps/todo-e2e/videos -type f || echo "No videos found"
+          echo "Testing glob patterns in PROJECT_OUTPUTS:"
+          echo "${{ env.PROJECT_OUTPUTS }}" | while IFS= read -r pattern; do
+            echo "Files matching $pattern:"
+            ls -la $pattern 2>/dev/null || echo "No files match $pattern"
+          done
+        if: always()
 
       - name: Upload Cypress artifacts
         if: always() && env.PROJECT_OUTPUTS != ''
@@ -377,3 +399,8 @@ jobs:
           name: cypress-artifacts-${{ matrix.project }}
           path: |
             ${{ env.PROJECT_OUTPUTS }}
+            dist/cypress/apps/todo-e2e/**
+          if-no-files-found: warn
+          compression-level: 6
+          overwrite: false
+          include-hidden-files: false
