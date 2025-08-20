@@ -46,7 +46,6 @@ jobs:
           dotnet-quality: 'ga'
           cache: true
           cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
-      - run: dotnet --version
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -288,13 +287,6 @@ jobs:
         if: steps.affected.outputs.projects == '[]'
         run: echo "No projects with e2e target are affected."
 
-      - name: Debug affected projects
-        run: |
-          echo "Raw AFFECTED_PROJECTS: '$AFFECTED_PROJECTS'"
-          echo "AFFECTED_PROJECTS_JSON: '$AFFECTED_PROJECTS_JSON'"
-          echo "Output written to GITHUB_OUTPUT: '$(cat $GITHUB_OUTPUT)'"
-          echo "Raw nx output: $(npx nx show projects --affected --withTarget=e2e --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --select=projects)"
-
   e2e-matrix:
     runs-on: ubuntu-latest
     needs: e2e
@@ -340,59 +332,28 @@ jobs:
             ${{ runner.os }}-nx-
 
       - name: Set project values
+        # Uses heredoc (<<EOF) to ensure PROJECT_OUTPUTS is newline-separated for actions/upload-artifact@v4
         run: |
-          echo "Matrix project: ${{ matrix.project }}"
-          PROJECT_JSON=$(npx nx show project ${{ matrix.project }} --json)
-          EXIT_CODE=$?
-          if [ $EXIT_CODE -ne 0 ]; then
-            echo "Error: npx nx show project ${{ matrix.project }} --json failed with exit code $EXIT_CODE"
-            echo "$PROJECT_JSON"
-            exit 1
-          fi
-          echo "Project JSON: $PROJECT_JSON"
-          ROOT=$(echo "$PROJECT_JSON" | jq -r '.root // ""')
-          RAW_OUTPUTS=$(echo "$PROJECT_JSON" | jq -r '.targets.e2e.outputs[] // ""')
-          echo "RAW_OUTPUTS: $RAW_OUTPUTS"
+          ROOT=$(npx nx show project ${{ matrix.project }} --json | jq -r '.root // ""')
+          RAW_OUTPUTS=$(npx nx show project ${{ matrix.project }} --json | jq -r '.targets.e2e.outputs[] // ""')
           if [ -z "$RAW_OUTPUTS" ]; then
             CLEAN_OUTPUTS=""
           else
             CLEAN_OUTPUTS=$(printf "%s\n" "$RAW_OUTPUTS" | sed -e 's|^{workspaceRoot}/||' -e 's|$|/**|')
           fi
           echo "PROJECT_ROOT=$ROOT" >> $GITHUB_ENV
-          echo "PROJECT_OUTPUTS<<EOF" >> $GITHUB_ENV
-          echo "$CLEAN_OUTPUTS" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-          echo "CLEAN_OUTPUTS: $CLEAN_OUTPUTS"
+          echo "PROJECT_OUTPUTS=$CLEAN_OUTPUTS" >> $GITHUB_ENV
         env:
           NODE_OPTIONS: --no-deprecation
-
-      - name: Debug server availability
-        run: |
-          echo "Checking if server is running at http://localhost:4200"
-          curl -I http://localhost:4200 || echo "Server not accessible"
 
       - name: Run Cypress E2E tests for project
         uses: cypress-io/github-action@v6
         with:
           project: ${{ env.PROJECT_ROOT }}
-          start: yarn nx run ${{ matrix.project }}:e2e --verbose
-
-      - name: Debug artifact paths
-        run: |
-          echo "Listing all files in dist/cypress/apps/todo-e2e:"
-          find dist/cypress/apps/todo-e2e -type f || echo "No files found"
-          echo "Listing screenshots directory:"
-          find dist/cypress/apps/todo-e2e/screenshots -type f || echo "No screenshots found"
-          echo "Listing videos directory:"
-          find dist/cypress/apps/todo-e2e/videos -type f || echo "No videos found"
-          echo "Testing glob patterns in PROJECT_OUTPUTS:"
-          echo "${{ env.PROJECT_OUTPUTS }}" | while IFS= read -r pattern; do
-            echo "Files matching $pattern:"
-            ls -la $pattern 2>/dev/null || echo "No files match $pattern"
-          done
-        if: always()
+          start: yarn nx run ${{ matrix.project }}:e2e
 
       - name: Upload Cypress artifacts
+        # Includes fallback path to ensure recursive upload of all files in dist/cypress/apps/todo-e2e
         if: always() && env.PROJECT_OUTPUTS != ''
         uses: actions/upload-artifact@v4
         with:
