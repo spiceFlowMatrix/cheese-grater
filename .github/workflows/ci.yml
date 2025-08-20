@@ -349,6 +349,8 @@ jobs:
 
           echo "PROJECT_ROOT=$ROOT" >> $GITHUB_ENV
           echo "PROJECT_OUTPUTS=$CLEAN_OUTPUTS" >> $GITHUB_ENV
+        env:
+          NODE_OPTIONS: --no-deprecation
 
       - name: Run Cypress E2E tests for project
         uses: cypress-io/github-action@v6
