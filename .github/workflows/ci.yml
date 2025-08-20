@@ -231,6 +231,8 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     needs: build
+    outputs:
+      projects: ${{ steps.affected.outputs.projects }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -267,16 +269,72 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nx-
 
-      - name: Run Cypress E2E tests on affected projects
+      - name: Get affected projects with e2e target
+        id: affected
+        run: |
+          AFFECTED_PROJECTS=$(yarn nx print-affected --target=e2e --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --select=projects)
+          # Convert comma-separated list to JSON array for matrix
+          AFFECTED_PROJECTS_JSON=$(echo "$AFFECTED_PROJECTS" | tr -d ' ' | jq -R 'split(",") | map(select(. != ""))')
+          echo "projects=$AFFECTED_PROJECTS_JSON" >> $GITHUB_OUTPUT
+        env:
+          NX_BRANCH_BASE: ${{ github.event.pull_request.base.sha || 'master' }}
+          NX_BRANCH_HEAD: ${{ github.sha }}
+
+  e2e-matrix:
+    runs-on: ubuntu-latest
+    needs: e2e
+    if: needs.e2e.outputs.projects != '[]'
+    strategy:
+      matrix:
+        project: ${{ fromJSON(needs.e2e.outputs.projects) }}
+      fail-fast: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and restore yarn dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+          dotnet-quality: 'ga'
+          cache: true
+          cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
+
+      - name: Restore Node Modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Restore NX computation cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: ${{ runner.os }}-nx-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-nx-
+
+      - name: Run Cypress E2E tests for project
         uses: cypress-io/github-action@v6
         with:
-          start: yarn nx affected --target=e2e --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }}
+          working-directory: ${{ matrix.project }}
+          start: yarn nx run ${{ matrix.project }}:e2e
 
       - name: Upload Cypress artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-artifacts
+          name: cypress-artifacts-${{ matrix.project }}
           path: |
-            **/cypress/videos/**
-            **/cypress/screenshots/**
+            ${{ matrix.project }}/cypress/videos/**
+            ${{ matrix.project }}/cypress/screenshots/**
