@@ -341,14 +341,26 @@ jobs:
 
       - name: Set project values
         run: |
-          ROOT=$(npx nx show project ${{ matrix.project }} --json | jq -r '.root')
-          RAW_OUTPUTS=$(npx nx show project ${{ matrix.project }} --json | jq -r '.targets.e2e.outputs[]')
-
-          # remove {workspaceRoot}/ prefix and append /** unconditionally
-          CLEAN_OUTPUTS=$(printf "%s\n" $RAW_OUTPUTS | sed -e 's|^{workspaceRoot}/||' -e 's|$|/**|')
-
+          echo "Matrix project: ${{ matrix.project }}"
+          PROJECT_JSON=$(npx nx show project ${{ matrix.project }} --json)
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "Error: npx nx show project ${{ matrix.project }} --json failed with exit code $EXIT_CODE"
+            echo "$PROJECT_JSON"
+            exit 1
+          fi
+          echo "Project JSON: $PROJECT_JSON"
+          ROOT=$(echo "$PROJECT_JSON" | jq -r '.root // ""')
+          RAW_OUTPUTS=$(echo "$PROJECT_JSON" | jq -r '.targets.e2e.outputs[] // ""')
+          echo "RAW_OUTPUTS: $RAW_OUTPUTS"
+          if [ -z "$RAW_OUTPUTS" ]; then
+            CLEAN_OUTPUTS=""
+          else
+            CLEAN_OUTPUTS=$(printf "%s\n" "$RAW_OUTPUTS" | sed -e 's|^{workspaceRoot}/||' -e 's|$|/**|' | tr '\n' ' ')
+          fi
           echo "PROJECT_ROOT=$ROOT" >> $GITHUB_ENV
           echo "PROJECT_OUTPUTS=$CLEAN_OUTPUTS" >> $GITHUB_ENV
+          echo "CLEAN_OUTPUTS: $CLEAN_OUTPUTS"
         env:
           NODE_OPTIONS: --no-deprecation
 
@@ -359,7 +371,7 @@ jobs:
           start: yarn nx run ${{ matrix.project }}:e2e
 
       - name: Upload Cypress artifacts
-        if: always()
+        if: always() && env.PROJECT_OUTPUTS != ''
         uses: actions/upload-artifact@v4
         with:
           name: cypress-artifacts-${{ matrix.project }}
