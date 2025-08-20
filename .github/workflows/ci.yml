@@ -269,10 +269,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nx-
 
-      - name: Get affected e2e projects
+      - name: Get affected projects with e2e target
         id: affected
         run: |
-          AFFECTED_PROJECTS=$(yarn nx show projects --affected --target=e2e --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --select=projects)
+          AFFECTED_PROJECTS=$(npx nx show projects --affected --withTarget=e2e --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --select=projects)
           # Convert newline-separated list to JSON array
           AFFECTED_PROJECTS_JSON=$(echo "$AFFECTED_PROJECTS" | jq -R -s 'split("\n") | map(select(. != ""))')
           echo "projects=$AFFECTED_PROJECTS_JSON" >> $GITHUB_OUTPUT
