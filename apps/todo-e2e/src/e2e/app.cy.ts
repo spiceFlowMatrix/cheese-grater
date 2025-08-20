@@ -1,4 +1,4 @@
-import { getGreeting } from '../support/app.po';
+import { getGreeting, getLoginButton } from '../support/app.po';
 
 describe('todo-e2e', () => {
   beforeEach(() => cy.visit('/'));
@@ -8,6 +8,6 @@ describe('todo-e2e', () => {
     cy.login('my-email@something.com', 'myPassword');
 
     // Function helper example, see `../support/app.po.ts` file
-    getGreeting().contains(/Welcome/);
+    getLoginButton().contains(/Logins/);
   });
 });

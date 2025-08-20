@@ -345,7 +345,6 @@ jobs:
       - name: Run Cypress E2E tests for project
         uses: cypress-io/github-action@v6
         with:
-          working-directory: ${{ matrix.project }}
           start: yarn nx run ${{ matrix.project }}:e2e
 
       - name: Upload Cypress artifacts
