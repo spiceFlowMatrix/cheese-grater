@@ -283,10 +283,6 @@ jobs:
           NX_BRANCH_HEAD: ${{ github.sha }}
           NODE_OPTIONS: --no-deprecation
 
-      - name: Log no affected projects
-        if: steps.affected.outputs.projects == '[]'
-        run: echo "No projects with e2e target are affected."
-
   e2e-matrix:
     runs-on: ubuntu-latest
     needs: e2e
@@ -342,7 +338,9 @@ jobs:
             CLEAN_OUTPUTS=$(printf "%s\n" "$RAW_OUTPUTS" | sed -e 's|^{workspaceRoot}/||' -e 's|$|/**|')
           fi
           echo "PROJECT_ROOT=$ROOT" >> $GITHUB_ENV
-          echo "PROJECT_OUTPUTS=$CLEAN_OUTPUTS" >> $GITHUB_ENV
+          echo "PROJECT_OUTPUTS<<EOF" >> $GITHUB_ENV
+          echo "$CLEAN_OUTPUTS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
         env:
           NODE_OPTIONS: --no-deprecation
 
