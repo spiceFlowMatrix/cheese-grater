@@ -272,14 +272,28 @@ jobs:
       - name: Get affected projects with e2e target
         id: affected
         run: |
-          AFFECTED_PROJECTS=$(npx nx show projects --affected --withTarget=e2e --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --select=projects)
-          # Convert newline-separated list to JSON array
-          AFFECTED_PROJECTS_JSON=$(echo "$AFFECTED_PROJECTS" | tr -d '\r' | jq -R -s 'split("\n") | map(select(. != ""))')
-          echo "projects=$AFFECTED_PROJECTS_JSON" >> $GITHUB_OUTPUT
+          AFFECTED_PROJECTS=$(npx nx show projects --affected --withTarget=e2e --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --select=projects || echo "")
+          if [ -z "$AFFECTED_PROJECTS" ]; then
+            AFFECTED_PROJECTS_JSON="[]"
+          else
+            AFFECTED_PROJECTS_JSON=$(echo "$AFFECTED_PROJECTS" | tr -d '\r' | jq -R -s -c 'split("\n") | map(select(. != ""))')
+          fi
+          echo -n "projects=$AFFECTED_PROJECTS_JSON" >> $GITHUB_OUTPUT
         env:
           NX_BRANCH_BASE: ${{ github.event.pull_request.base.sha || 'master' }}
           NX_BRANCH_HEAD: ${{ github.sha }}
           NODE_OPTIONS: --no-deprecation
+
+      - name: Log no affected projects
+        if: steps.affected.outputs.projects == '[]'
+        run: echo "No projects with e2e target are affected."
+
+      - name: Debug affected projects
+        run: |
+          echo "Raw AFFECTED_PROJECTS: '$AFFECTED_PROJECTS'"
+          echo "AFFECTED_PROJECTS_JSON: '$AFFECTED_PROJECTS_JSON'"
+          echo "Output written to GITHUB_OUTPUT: '$(cat $GITHUB_OUTPUT)'"
+          echo "Raw nx output: $(npx nx show projects --affected --withTarget=e2e --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --select=projects)"
 
   e2e-matrix:
     runs-on: ubuntu-latest
@@ -324,6 +338,9 @@ jobs:
           key: ${{ runner.os }}-nx-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-nx-
+
+      - name: Debug project directory
+        run: ls -la ${{ matrix.project }}
 
       - name: Run Cypress E2E tests for project
         uses: cypress-io/github-action@v6
