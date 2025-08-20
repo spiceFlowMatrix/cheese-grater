@@ -341,8 +341,8 @@ jobs:
 
       - name: Set project values
         run: |
-          ROOT=$(nx show project ${{ matrix.project }} --json | jq -r '.root')
-          RAW_OUTPUTS=$(nx show project ${{ matrix.project }} --json | jq -r '.targets.e2e.outputs[]')
+          ROOT=$(npx nx show project ${{ matrix.project }} --json | jq -r '.root')
+          RAW_OUTPUTS=$(npx nx show project ${{ matrix.project }} --json | jq -r '.targets.e2e.outputs[]')
 
           # remove {workspaceRoot}/ prefix and append /** unconditionally
           CLEAN_OUTPUTS=$(printf "%s\n" $RAW_OUTPUTS | sed -e 's|^{workspaceRoot}/||' -e 's|$|/**|')
