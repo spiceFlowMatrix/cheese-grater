@@ -358,7 +358,6 @@ jobs:
           name: cypress-artifacts-${{ matrix.project }}
           path: |
             ${{ env.PROJECT_OUTPUTS }}
-            dist/cypress/apps/todo-e2e/**
           if-no-files-found: warn
           compression-level: 6
           overwrite: false
