@@ -339,12 +339,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nx-
 
-      - name: Debug project directory
-        run: ls -la apps/${{ matrix.project }}
+      - name: Set project values
+        run: |
+          ROOT=$(nx show project ${{ matrix.project }} --json | jq -r '.root')
+          RAW_OUTPUTS=$(nx show project ${{ matrix.project }} --json | jq -r '.targets.e2e.outputs[]')
+
+          # remove {workspaceRoot}/ prefix and append /** unconditionally
+          CLEAN_OUTPUTS=$(printf "%s\n" $RAW_OUTPUTS | sed -e 's|^{workspaceRoot}/||' -e 's|$|/**|')
+
+          echo "PROJECT_ROOT=$ROOT" >> $GITHUB_ENV
+          echo "PROJECT_OUTPUTS=$CLEAN_OUTPUTS" >> $GITHUB_ENV
 
       - name: Run Cypress E2E tests for project
         uses: cypress-io/github-action@v6
         with:
+          project: ${{ env.PROJECT_ROOT }}
           start: yarn nx run ${{ matrix.project }}:e2e
 
       - name: Upload Cypress artifacts
@@ -353,5 +362,4 @@ jobs:
         with:
           name: cypress-artifacts-${{ matrix.project }}
           path: |
-            ${{ matrix.project }}/cypress/videos/**
-            ${{ matrix.project }}/cypress/screenshots/**
+            ${{ env.PROJECT_OUTPUTS }}
