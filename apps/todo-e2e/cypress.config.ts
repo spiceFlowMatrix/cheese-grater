@@ -10,7 +10,7 @@ export default defineConfig({
         production: 'yarn nx run todo:serve-static',
       },
       ciWebServerCommand: 'yarn nx run todo:serve-static',
-      ciBaseUrl: 'http://localhost:4200',
+      ciBaseUrl: 'http://localhost:4350',
     }),
     baseUrl: 'http://localhost:4200',
     // Please ensure you use `cy.origin()` when navigating between domains and remove this option.
