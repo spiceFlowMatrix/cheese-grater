@@ -8,6 +8,6 @@ describe('todo-e2e', () => {
     cy.login('my-email@something.com', 'myPassword');
 
     // Function helper example, see `../support/app.po.ts` file
-    getLoginButton().contains(/Logins/);
+    getLoginButton().contains(/Login/);
   });
 });
