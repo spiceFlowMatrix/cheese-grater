@@ -10,7 +10,6 @@
       "args": [
         "test",
         "grid",
-        "--runInBand=true",
         "--codeCoverage=false"
       ],
       "cwd": "${workspaceFolder}",

@@ -3,6 +3,9 @@ import { GridColumnHeader, GridComponent } from './grid.component';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { MatTableHarness } from '@angular/material/table/testing';
+import { HarnessLoader } from '@angular/cdk/testing';
 
 interface Person {
   name: string;
@@ -20,6 +23,7 @@ describe('GridComponent', () => {
   ];
   let component: GridComponent<Person>;
   let fixture: ComponentFixture<GridComponent<Person>>;
+  let loader: HarnessLoader;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -34,6 +38,7 @@ describe('GridComponent', () => {
 
     fixture = TestBed.createComponent(GridComponent<Person>);
     component = fixture.componentInstance;
+    loader = TestbedHarnessEnvironment.loader(fixture);
     fixture.detectChanges();
   });
 
@@ -92,24 +97,45 @@ describe('GridComponent', () => {
     expect(sortSpy).toHaveBeenCalledWith(sortState);
   });
 
-  // it('should render sorted data when MatSort changes', () => {
-  //   const columns = mockColumns;
-  //   const data = mockDataSource;
-  //   component.displayedColumns = columns;
-  //   component.dataSource = data;
-  //   fixture.detectChanges();
+  it('should click the header cell and trigger sorting', async () => {
+    const columns = mockColumns;
+    const data = mockDataSource;
+    component.displayedColumns = columns;
+    component.dataSource = data;
+    component.sorting = true;
 
-  //   component.sort?.sort({ id: 'age', start: 'desc', disableClear: false });
-  //   fixture.detectChanges();
+    // Get the MatTableHarness
+    const table = await loader.getHarness(MatTableHarness);
 
-  //   const tableElement = fixture.nativeElement.querySelector('table');
-  //   const bodyRows = tableElement.querySelectorAll('tbody tr');
-  //   const firstRowCells = bodyRows[0].querySelectorAll('td');
-  //   expect(firstRowCells[0].textContent).toContain('Jane');
-  //   expect(firstRowCells[1].textContent).toContain('25');
+    // Get the header rows
+    const headerRows = await table.getHeaderRows();
+    const ageHeader = (await headerRows[0].getCells({ columnName: 'age' }))[0];
 
-  //   const secondRowCells = bodyRows[1].querySelectorAll('td');
-  //   expect(secondRowCells[0].textContent).toContain('John');
-  //   expect(secondRowCells[1].textContent).toContain('30');
-  // });
+    // Simulate clicking the header cell using host()
+    await (await ageHeader.host()).click();
+    await (await ageHeader.host()).click();
+
+    expect(component.sort).toBeDefined();
+
+    // if (component.sort)
+    //   // Verify the outcome (e.g., sorting was applied)
+    //   expect(component.sort.direction).toBe('asc'); // Adjust based on your sort logic
+
+    // Get all the rows and make assertions on the displayed data
+    const rows = await table.getRows();
+
+    // Get the cells for the first row and assert the content
+    const firstRowCells = await rows[0].getCells();
+    const firstRowText = await Promise.all(
+      firstRowCells.map((cell) => cell.getText())
+    );
+    expect(firstRowText).toEqual(['Jane', '25']);
+
+    // Get the cells for the second row and assert the content
+    const secondRowCells = await rows[0].getCells();
+    const secondRowText = await Promise.all(
+      secondRowCells.map((cell) => cell.getText())
+    );
+    expect(secondRowText).toEqual(['John', '30']);
+  });
 });
