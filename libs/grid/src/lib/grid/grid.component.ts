@@ -6,8 +6,6 @@ import {
   computed,
   input,
   output,
-  signal,
-  Input,
 } from '@angular/core';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatSortModule, MatSort, Sort } from '@angular/material/sort';
@@ -52,19 +50,8 @@ export class GridComponent<T> implements AfterViewInit {
 
   /**
    * The data array to be displayed in the grid.
-   * This setter ensures the MatTableDataSource is updated whenever the input changes.
    */
-  @Input() set dataSource(data: T[]) {
-    if (!this.dataSourceSignal() || this.dataSourceSignal() === null) {
-      this.dataSourceSignal.set(new MatTableDataSource(data));
-      // Re-assign sort if it's already available
-      if (this.sort) {
-        this.dataSourceSignal()!.sort = this.sort;
-      }
-    } else {
-      this.dataSourceSignal()!.data = data;
-    }
-  }
+  readonly dataSource = input<T[]>([]);
 
   /**
    * A boolean to enable or disable sorting on the grid.
@@ -80,8 +67,16 @@ export class GridComponent<T> implements AfterViewInit {
 
   /**
    * A private signal to hold the `MatTableDataSource` instance.
+   * This signal is computed based on the `dataSource` input,
+   * ensuring the `MatTableDataSource` is always up-to-date with the data.
    */
-  protected dataSourceSignal = signal<MatTableDataSource<T> | null>(null);
+  protected dataSourceSignal = computed(() => {
+    const dataSource = new MatTableDataSource(this.dataSource());
+    if (this.sort) {
+      dataSource.sort = this.sort;
+    }
+    return dataSource;
+  });
 
   /**
    * ViewChild to get a reference to the `MatSort` directive.
@@ -102,7 +97,7 @@ export class GridComponent<T> implements AfterViewInit {
   ngAfterViewInit() {
     // We check for the data source and the sort to avoid errors
     if (this.dataSourceSignal() && this.sort) {
-      this.dataSourceSignal()!.sort = this.sort;
+      this.dataSourceSignal().sort = this.sort;
       // Also subscribe to the sort events to re-emit for the parent
       this.sort.sortChange.subscribe((sortState) =>
         this.sortChange.emit(sortState)
