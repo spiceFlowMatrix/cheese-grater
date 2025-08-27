@@ -1,4 +1,4 @@
-@if(dataSourceSignal() !== null) {
+@if(dataSourceSignal() !== null && dataSourceSignal()!.data.length > 0) {
 <table
   mat-table
   [dataSource]="dataSourceSignal()!"
@@ -25,5 +25,5 @@
 </table>
 } @else {
 <!-- Display a message if there's no data -->
-<p class="text-gray-500 italic">Data source initializing...</p>
+<p>Data source initializing...</p>
 }

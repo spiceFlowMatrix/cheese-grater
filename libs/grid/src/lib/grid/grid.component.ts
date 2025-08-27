@@ -1,15 +1,16 @@
 import {
   Component,
-  AfterViewInit,
   ViewChild,
   ChangeDetectionStrategy,
   computed,
   input,
   output,
+  inject,
+  DestroyRef,
 } from '@angular/core';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatSortModule, MatSort, Sort } from '@angular/material/sort';
-
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 /**
  * Interface for defining a column header in the grid.
  */
@@ -42,7 +43,9 @@ export interface GridColumnHeader {
   templateUrl: './grid.component.html',
   styleUrl: './grid.component.scss',
 })
-export class GridComponent<T> implements AfterViewInit {
+export class GridComponent<T> {
+  private destroyRef = inject(DestroyRef);
+
   /**
    * The array of column headers to be displayed.
    */
@@ -81,7 +84,15 @@ export class GridComponent<T> implements AfterViewInit {
   /**
    * ViewChild to get a reference to the `MatSort` directive.
    */
-  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatSort) set sort(sort: MatSort) {
+    if (this.dataSourceSignal() && sort) {
+      this.dataSourceSignal().sort = sort;
+      // Also subscribe to the sort events to re-emit for the parent
+      sort.sortChange
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((sortState) => this.sortChange.emit(sortState));
+    }
+  }
 
   /**
    * A computed signal that derives the column names from the displayedColumns input.
@@ -89,19 +100,4 @@ export class GridComponent<T> implements AfterViewInit {
   protected columns = computed(() =>
     this.displayedColumns().map((column) => column.value)
   );
-
-  /**
-   * Lifecycle hook to connect the `MatSort` instance to the `MatTableDataSource`.
-   * This is required for the built-in sorting logic to work.
-   */
-  ngAfterViewInit() {
-    // We check for the data source and the sort to avoid errors
-    if (this.dataSourceSignal() && this.sort) {
-      this.dataSourceSignal().sort = this.sort;
-      // Also subscribe to the sort events to re-emit for the parent
-      this.sort.sortChange.subscribe((sortState) =>
-        this.sortChange.emit(sortState)
-      );
-    }
-  }
 }
