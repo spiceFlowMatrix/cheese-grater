@@ -12,6 +12,9 @@ import { MatButtonModule } from '@angular/material/button';
 export class AuthRedirectPanelComponent {
   showLogin = input<boolean>(true);
   showSignup = input<boolean>(true);
+  titleLabel = input<string>('Please log in or sign up to continue.');
+  loginButtonLabel = input<string>('Log In');
+  signupButtonLabel = input<string>('Sign Up');
   loginClicked = output();
   signupClicked = output();
 }

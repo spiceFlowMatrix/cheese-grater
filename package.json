@@ -33,6 +33,7 @@
     "@angular/compiler-cli": "20.1.6",
     "@angular/language-service": "20.1.6",
     "@eslint/js": "^9.8.0",
+    "@faker-js/faker": "^10.0.0",
     "@nx-dotnet/core": "^3.0.0",
     "@nx/angular": "21.3.11",
     "@nx/cypress": "21.3.11",
