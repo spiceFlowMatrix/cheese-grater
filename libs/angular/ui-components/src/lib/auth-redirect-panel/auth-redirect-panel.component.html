@@ -1,0 +1,16 @@
+<div class="auth-redirect-panel-container"></div>
+
+<mat-card appearance="outlined">
+  <mat-card-header>
+    <mat-card-subtitle>Please Log in or Sign up to continue </mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    @if(showLogin()) {
+    <button matButton="filled" (click)="loginClicked.emit()">Log In</button>
+    } @if(showLogin() && showSignup()) {
+    <hr />
+    } @if(showSignup()) {
+    <button matButton="outlined" (click)="signupClicked.emit()">Sign Up</button>
+    }
+  </mat-card-content>
+</mat-card>

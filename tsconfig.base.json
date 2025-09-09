@@ -21,6 +21,9 @@
       "@cheese-grater/generated-web-types": [
         "libs/generated/web-types/src/index.ts"
       ],
+      "@cheese-grater/angular/ui-components": [
+        "libs/angular/ui-components/src/index.ts"
+      ],
       "@vaenthecheesegrater/grid": ["libs/grid/src/index.ts"]
     }
   },
