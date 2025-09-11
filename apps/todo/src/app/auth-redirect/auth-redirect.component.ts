@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthRedirectPanelComponent } from '@cheese-grater/angular/ui-components';
+import { AuthRedirectPanelComponent } from '@cheese-grater/angular/shared/ui';
 
 @Component({
   selector: 'app-auth-redirect',
