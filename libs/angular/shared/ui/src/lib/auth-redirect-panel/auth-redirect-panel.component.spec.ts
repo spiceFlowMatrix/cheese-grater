@@ -136,7 +136,7 @@ describe('AuthRedirectPanelComponent', () => {
     hostComponent.showSignup = false;
     hostFixture.detectChanges();
 
-    expect(
+    await expect(
       loader.getHarness(MatButtonHarness.with({ text: signupButtonLabel }))
     ).rejects.toThrow();
   });
