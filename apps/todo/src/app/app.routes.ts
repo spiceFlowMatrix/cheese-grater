@@ -4,14 +4,18 @@ export const appRoutes: Route[] = [
   {
     path: '',
     loadComponent: () =>
-      import('./core/layout/layout.component').then((m) => m.LayoutComponent),
+      import('@cheese-grater/angular/todos/feature').then(
+        (m) => m.LayoutComponent
+      ),
     loadChildren: () =>
-      import('./core/layout.routes').then((m) => m.layoutRoutes),
+      import('@cheese-grater/angular/todos/feature').then(
+        (m) => m.angularTodosFeatureRoutes
+      ),
   },
   {
     path: 'auth-redirect',
     loadComponent: () =>
-      import('./auth-redirect/auth-redirect.component').then(
+      import('@cheese-grater/angular/todos/feature').then(
         (m) => m.AuthRedirectComponent
       ),
   },
