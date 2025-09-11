@@ -1,9 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { CanActivateFn, provideRouter, Router } from '@angular/router';
+import { CanActivateFn, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import { authGuard } from './auth.guard';
-import Keycloak from 'keycloak-js/lib/keycloak';
+import Keycloak from 'keycloak-js';
 import { Component } from '@angular/core';
 import { faker } from '@faker-js/faker';
 
@@ -16,13 +16,14 @@ class RedirectComponent {}
 
 describe('authGuard', () => {
   let harness: RouterTestingHarness;
-  let router: Router;
   const requiredRoles: string[] = faker.helpers.multiple(() =>
     faker.word.noun()
   );
 
   // Mock the Keycloak instance
-  const mockKeycloak: Partial<Keycloak> = {
+  const mockKeycloak = {
+    init: jest.fn(),
+    login: jest.fn(),
     authenticated: false,
     resourceAccess: {},
     realmAccess: { roles: [] },
@@ -58,7 +59,6 @@ describe('authGuard', () => {
     }).compileComponents();
 
     harness = await RouterTestingHarness.create();
-    router = TestBed.inject(Router);
   });
 
   it('should be created', () => {
