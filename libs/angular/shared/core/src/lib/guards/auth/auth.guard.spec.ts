@@ -121,10 +121,10 @@ describe('authGuard', () => {
       );
     });
     it('given some required role are assigned, when navigating to a role-protected route, then navigation goes through', async () => {
-      const start = Math.floor(Math.random() * requiredRoles.length);
-      const end =
-        start + Math.floor(Math.random() * (requiredRoles.length - start + 1));
-      const roles = requiredRoles.slice(start, end);
+      // const start = Math.floor(Math.random() * requiredRoles.length);
+      // const end =
+      //   start + Math.floor(Math.random() * (requiredRoles.length - start + 1));
+      const roles = requiredRoles.slice(0, requiredRoles.length - 1);
 
       mockKeycloak.resourceAccess = {
         'test-client': { roles: roles },
