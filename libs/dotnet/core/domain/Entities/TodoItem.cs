@@ -1,4 +1,4 @@
-﻿namespace CheeseGrater.Core.Domain.Entities;
+namespace CheeseGrater.Core.Domain.Entities;
 
 public class TodoItem : BaseAuditableEntity
 {

@@ -1,7 +1,8 @@
-﻿using CheeseGrater.Application.TodoLists.Commands.CreateTodoList;
+using CheeseGrater.Application.TodoLists.Commands.CreateTodoList;
 using CheeseGrater.Application.TodoLists.Commands.DeleteTodoList;
 using CheeseGrater.Application.TodoLists.Commands.UpdateTodoList;
 using CheeseGrater.Application.TodoLists.Queries.GetTodos;
+using CheeseGrater.Application.TodoLists.Queries.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace CheeseGrater.Web.Endpoints;
@@ -25,14 +26,17 @@ public class TodoLists : EndpointGroupBase
     return TypedResults.Ok(vm);
   }
 
-  public async Task<Created<int>> CreateTodoList(ISender sender, CreateTodoListCommand command)
+  public async Task<Created<TodoListDto>> CreateTodoList(
+    ISender sender,
+    CreateTodoListCommand command
+  )
   {
-    var id = await sender.Send(command);
+    var dto = await sender.Send(command);
 
-    return TypedResults.Created($"/{nameof(TodoLists)}/{id}", id);
+    return TypedResults.Created($"/{nameof(TodoLists)}/{dto.Id}", dto);
   }
 
-  public async Task<Results<NoContent, BadRequest>> UpdateTodoList(
+  public async Task<Results<Ok<TodoListDto>, BadRequest>> UpdateTodoList(
     ISender sender,
     int id,
     UpdateTodoListCommand command
@@ -41,9 +45,9 @@ public class TodoLists : EndpointGroupBase
     if (id != command.Id)
       return TypedResults.BadRequest();
 
-    await sender.Send(command);
+    var dto = await sender.Send(command);
 
-    return TypedResults.NoContent();
+    return TypedResults.Ok(dto);
   }
 
   public async Task<NoContent> DeleteTodoList(ISender sender, int id)

@@ -1,4 +1,4 @@
-﻿namespace CheeseGrater.Core.Application.Common.Models;
+namespace CheeseGrater.Core.Application.Common.Models;
 
 public class PaginatedList<T>
 {

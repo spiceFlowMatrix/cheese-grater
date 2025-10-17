@@ -1,4 +1,4 @@
-﻿namespace CheeseGrater.Core.Domain.Enums;
+namespace CheeseGrater.Core.Domain.Enums;
 
 public enum PriorityLevel
 {

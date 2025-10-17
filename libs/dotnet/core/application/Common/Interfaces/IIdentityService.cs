@@ -1,4 +1,4 @@
-﻿namespace CheeseGrater.Core.Application.Common.Interfaces;
+namespace CheeseGrater.Core.Application.Common.Interfaces;
 
 public interface IIdentityService : IUser
 {

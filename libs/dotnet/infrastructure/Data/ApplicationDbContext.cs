@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using CheeseGrater.Application.Common.Interfaces;
 using CheeseGrater.Core.Domain.Entities;
 using CheeseGrater.Core.Infrastructure.Data;

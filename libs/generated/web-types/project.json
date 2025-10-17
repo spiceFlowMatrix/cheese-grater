@@ -3,7 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/generated/web-types/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["generated-client"],
   "targets": {
     "build": {
       "executor": "nx:noop",

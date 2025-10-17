@@ -1,4 +1,4 @@
-﻿namespace CheeseGrater.Application.TodoItems.Queries.GetTodoItemsWithPagination;
+namespace CheeseGrater.Application.TodoItems.Queries.GetTodoItemsWithPagination;
 
 public class GetTodoItemsWithPaginationQueryValidator
   : AbstractValidator<GetTodoItemsWithPaginationQuery>

@@ -1,4 +1,4 @@
-﻿namespace CheeseGrater.Core.Domain.Exceptions;
+namespace CheeseGrater.Core.Domain.Exceptions;
 
 public class UnsupportedColourException : Exception
 {

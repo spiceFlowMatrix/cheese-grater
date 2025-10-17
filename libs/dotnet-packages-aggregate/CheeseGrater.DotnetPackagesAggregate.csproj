@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\apps\dotnet\web\CheeseGrater.Dotnet.Web.csproj" />
+    <ProjectReference Include="..\..\apps\dotnet\web-test\CheeseGrater.Dotnet.Web.Test.csproj" />
+    <ProjectReference Include="..\dotnet\application\CheeseGrater.Dotnet.Application.csproj" />
+    <ProjectReference Include="..\dotnet\core\application\CheeseGrater.Dotnet.Core.Application.csproj" />
+    <ProjectReference Include="..\dotnet\core\domain\CheeseGrater.Dotnet.Core.Domain.csproj" />
+    <ProjectReference Include="..\dotnet\core\infrastructure\CheeseGrater.Dotnet.Core.Infrastructure.csproj" />
+    <ProjectReference Include="..\dotnet\infrastructure\CheeseGrater.Dotnet.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

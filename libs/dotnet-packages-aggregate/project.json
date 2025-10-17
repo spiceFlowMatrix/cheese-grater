@@ -1,0 +1,9 @@
+{
+  "name": "dotnet-packages-aggregate",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/dotnet-packages-aggregate",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project dotnet-packages-aggregate --web",
+  "targets": {}
+}

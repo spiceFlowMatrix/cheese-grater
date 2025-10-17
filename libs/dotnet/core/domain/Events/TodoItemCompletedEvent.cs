@@ -1,4 +1,4 @@
-﻿namespace CheeseGrater.Core.Domain.Events;
+namespace CheeseGrater.Core.Domain.Events;
 
 public class TodoItemCompletedEvent : BaseEvent
 {

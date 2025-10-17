@@ -1,4 +1,4 @@
-﻿namespace CheeseGrater.Dotnet.Web.Test;
+namespace CheeseGrater.Dotnet.Web.Test;
 
 public class Tests
 {

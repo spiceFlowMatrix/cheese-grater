@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using CheeseGrater.Core.Application.Common.Behaviours;
 using MediatR.Pipeline;
 using Microsoft.Extensions.Hosting;

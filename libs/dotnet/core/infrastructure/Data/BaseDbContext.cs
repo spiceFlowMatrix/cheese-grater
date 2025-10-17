@@ -1,4 +1,4 @@
-﻿using CheeseGrater.Core.Application.Common.Interfaces;
+using CheeseGrater.Core.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 

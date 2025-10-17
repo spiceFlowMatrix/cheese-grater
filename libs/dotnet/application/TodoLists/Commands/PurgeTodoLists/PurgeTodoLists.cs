@@ -1,11 +1,10 @@
-﻿using CheeseGrater.Application.Common.Interfaces;
+using CheeseGrater.Application.Common.Interfaces;
 using CheeseGrater.Core.Application.Common.Security;
 using CheeseGrater.Core.Domain.Constants;
 
 namespace CheeseGrater.Application.TodoLists.Commands.PurgeTodoLists;
 
 [Authorize(Roles = Roles.Administrator)]
-// [Authorize(Policy = Policies.CanPurge)]
 public record PurgeTodoListsCommand : IRequest;
 
 public class PurgeTodoListsCommandHandler : IRequestHandler<PurgeTodoListsCommand>

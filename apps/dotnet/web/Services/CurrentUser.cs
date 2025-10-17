@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using CheeseGrater.Core.Application.Common.Interfaces;
 
 namespace CheeseGrater.Web.Services;

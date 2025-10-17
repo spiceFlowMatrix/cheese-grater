@@ -1,4 +1,4 @@
-﻿using CheeseGrater.Core.Application.Common.Interfaces;
+using CheeseGrater.Core.Application.Common.Interfaces;
 using CheeseGrater.Core.Domain.Entities;
 
 namespace CheeseGrater.Application.Common.Interfaces;
