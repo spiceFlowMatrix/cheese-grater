@@ -1,4 +1,4 @@
-﻿namespace CheeseGrater.Application.TodoItems.Commands.UpdateTodoItem;
+namespace CheeseGrater.Application.TodoItems.Commands.UpdateTodoItem;
 
 public class UpdateTodoItemCommandValidator : AbstractValidator<UpdateTodoItemCommand>
 {

@@ -1,4 +1,4 @@
-﻿namespace CheeseGrater.Core.Domain.Constants;
+namespace CheeseGrater.Core.Domain.Constants;
 
 public abstract class Scopes
 {

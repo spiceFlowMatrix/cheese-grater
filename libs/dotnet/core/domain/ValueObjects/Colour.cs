@@ -1,4 +1,4 @@
-﻿namespace CheeseGrater.Core.Domain.ValueObjects;
+namespace CheeseGrater.Core.Domain.ValueObjects;
 
 public class Colour(string code) : ValueObject
 {

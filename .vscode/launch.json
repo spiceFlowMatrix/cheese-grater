@@ -1,0 +1,32 @@
+// .vscode/launch.json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Grid library Tests",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/nx/bin/nx",
+      "args": ["test", "grid", "--codeCoverage=false"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "sourceMaps": true,
+      "smartStep": true,
+      "trace": "all"
+    },
+    {
+      "name": "Debug UI-Components library Tests",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/nx/bin/nx",
+      "args": ["test", "ui-components", "--codeCoverage=false"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "sourceMaps": true,
+      "smartStep": true,
+      "trace": "all"
+    }
+  ]
+}

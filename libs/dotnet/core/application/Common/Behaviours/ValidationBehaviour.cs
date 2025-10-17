@@ -1,4 +1,4 @@
-﻿using ValidationException = CheeseGrater.Core.Application.Common.Exceptions.ValidationException;
+using ValidationException = CheeseGrater.Core.Application.Common.Exceptions.ValidationException;
 
 namespace CheeseGrater.Core.Application.Common.Behaviours;
 

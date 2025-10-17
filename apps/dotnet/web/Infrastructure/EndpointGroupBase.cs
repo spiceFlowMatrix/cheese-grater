@@ -1,4 +1,4 @@
-﻿namespace CheeseGrater.Web.Infrastructure;
+namespace CheeseGrater.Web.Infrastructure;
 
 public abstract class EndpointGroupBase
 {

@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using CheeseGrater.Core.Application.Common.Interfaces;
 using CheeseGrater.Core.Infrastructure.Data.Interceptors;

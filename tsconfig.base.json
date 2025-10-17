@@ -14,7 +14,21 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
+    "typeRoots": ["types", "node_modules/@types"],
     "paths": {
+      "@cheese-grater/angular/shared/core": [
+        "libs/angular/shared/core/src/index.ts"
+      ],
+      "@cheese-grater/angular/shared/ui": [
+        "libs/angular/shared/ui/src/index.ts"
+      ],
+      "@cheese-grater/angular/todos/core": [
+        "libs/angular/todos/core/src/index.ts"
+      ],
+      "@cheese-grater/angular/todos/feature": [
+        "libs/angular/todos/feature/src/index.ts"
+      ],
+      "@cheese-grater/angular/todos/ui": ["libs/angular/todos/ui/src/index.ts"],
       "@cheese-grater/generated-chat-api-types": [
         "libs/generated/chat-api-types/src/index.ts"
       ],

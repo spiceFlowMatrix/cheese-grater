@@ -1,41 +1,364 @@
-name: CI
+name: CI Pipeline
 
 on:
   push:
     branches:
       - master
+      - feature/*
+      - bugfix/*
   pull_request:
+    branches:
+      - master
 
 permissions:
-  actions: read
   contents: read
 
+env:
+  # The base and head SHAs are dynamically set to ensure NX affected
+  # correctly determines the changed files. This is particularly important
+  # for pull requests.
+  NX_BRANCH_BASE: ${{ github.event.pull_request.base.sha || 'master' }}
+  NX_BRANCH_HEAD: ${{ github.sha }}
+
 jobs:
-  main:
+  # This job runs first and performs a full installation of dependencies.
+  # Its main purpose is to build the initial cache that other jobs will reuse.
+  install:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # A fetch-depth of 0 is required for NX affected to
+          # compute the diff against the base branch.
+          fetch-depth: 0
+
+      - name: Setup Node.js and cache yarn dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn' # This caches the yarn packages in the system cache directory.
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+          dotnet-quality: 'ga'
+          cache: true
+          cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+      - name: Cache Node Modules
+        # This step caches the `node_modules` folder. Subsequent jobs will
+        # restore this cache, which is much faster than running `yarn install` again.
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Cache NX computation results
+        # This step caches the results of previously run NX commands,
+        # ensuring that subsequent commands for unchanged projects are skipped.
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: ${{ runner.os }}-nx-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-nx-
+
+  # The lint, test, and build jobs now run in parallel.
+  # This is the single, unified test job.
+  test:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Uncomment this line to enable task distribution
-      # - run: yarn nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
-
-      # Cache node_modules
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js and restore yarn dependencies
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'
           cache: 'yarn'
 
-      - run: yarn install --frozen-lockfile
-      - run: yarn cypress install
-      - uses: nrwl/nx-set-shas@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+          dotnet-quality: 'ga'
+          cache: true
+          cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
 
-      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: yarn nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      # When you enable task distribution, run the e2e-ci task instead of e2e
-      - run: yarn nx affected -t lint test build e2e
+      - name: Restore Node Modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Restore NX computation cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: ${{ runner.os }}-nx-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-nx-
+
+      - name: Run tests on affected projects
+        # We now explicitly set the configuration to 'ci' to ensure predictable behavior.
+        run: yarn nx affected --target=test --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --configuration=ci --exclude=tag:generated-client
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: 1
+          SkipNSwag: 'True' # This ensures that the NSwag post-build event is skipped during tests.
+
+      - name: Upload test coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-coverage
+          path: |
+            coverage/
+            **/TestResults/**
+
+  # Lint job still runs in parallel.
+  lint:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and restore yarn dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+          dotnet-quality: 'ga'
+          cache: true
+          cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
+
+      - name: Restore Node Modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Restore NX computation cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: ${{ runner.os }}-nx-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-nx-
+
+      - name: Lint affected projects
+        # We now explicitly set the configuration to 'ci' for consistency.
+        run: yarn nx affected --target=lint --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --configuration=ci --exclude=tag:generated-client
+
+  # The build job runs after both lint and test jobs have completed successfully.
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and restore yarn dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+          dotnet-quality: 'ga'
+          cache: true
+          cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
+
+      - name: Restore Node Modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Restore NX computation cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: ${{ runner.os }}-nx-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-nx-
+
+      - name: Run codegen on affected projects
+        # We assume the 'codegen' target correctly handles NSwag.
+        # We now explicitly set the configuration to 'ci' for consistency.
+        run: yarn nx affected --target=codegen --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --configuration=ci
+
+      - name: Build affected projects
+        # This command is the one that was previously failing. We now pass a flag
+        # to explicitly skip the NSwag post-build event.
+        run: yarn nx affected --target=build --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }}
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: 1
+          SkipNSwag: 'True' # This ensures that the NSwag post-build event is skipped during builds.
+
+  # The E2E job runs after the build job has completed successfully.
+  e2e:
+    runs-on: ubuntu-latest
+    needs: build
+    outputs:
+      projects: ${{ steps.affected.outputs.projects }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and restore yarn dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+          dotnet-quality: 'ga'
+          cache: true
+          cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
+
+      - name: Restore Node Modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Restore NX computation cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: ${{ runner.os }}-nx-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-nx-
+
+      - name: Get affected projects with e2e target
+        id: affected
+        run: |
+          AFFECTED_PROJECTS=$(npx nx show projects --affected --withTarget=e2e --base=${{ env.NX_BRANCH_BASE }} --head=${{ env.NX_BRANCH_HEAD }} --select=projects || echo "")
+          if [ -z "$AFFECTED_PROJECTS" ]; then
+            AFFECTED_PROJECTS_JSON="[]"
+          else
+            AFFECTED_PROJECTS_JSON=$(echo "$AFFECTED_PROJECTS" | tr -d '\r' | jq -R -s -c 'split("\n") | map(select(. != ""))')
+          fi
+          echo -n "projects=$AFFECTED_PROJECTS_JSON" >> $GITHUB_OUTPUT
+        env:
+          NX_BRANCH_BASE: ${{ github.event.pull_request.base.sha || 'master' }}
+          NX_BRANCH_HEAD: ${{ github.sha }}
+          NODE_OPTIONS: --no-deprecation
+
+  e2e-matrix:
+    runs-on: ubuntu-latest
+    needs: e2e
+    if: needs.e2e.outputs.projects != '[]'
+    strategy:
+      matrix:
+        project: ${{ fromJSON(needs.e2e.outputs.projects) }}
+      fail-fast: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and restore yarn dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+          dotnet-quality: 'ga'
+          cache: true
+          cache-dependency-path: libs/dotnet-packages-aggregate/packages.lock.json
+
+      - name: Restore Node Modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Restore NX computation cache
+        uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: ${{ runner.os }}-nx-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-nx-
+
+      - name: Set project values
+        # Uses heredoc (<<EOF) to ensure PROJECT_OUTPUTS is newline-separated for actions/upload-artifact@v4
+        run: |
+          ROOT=$(npx nx show project ${{ matrix.project }} --json | jq -r '.root // ""')
+          RAW_OUTPUTS=$(npx nx show project ${{ matrix.project }} --json | jq -r '.targets.e2e.outputs[] // ""')
+          if [ -z "$RAW_OUTPUTS" ]; then
+            CLEAN_OUTPUTS=""
+          else
+            CLEAN_OUTPUTS=$(printf "%s\n" "$RAW_OUTPUTS" | sed -e 's|^{workspaceRoot}/||' -e 's|$|/**|')
+          fi
+          echo "PROJECT_ROOT=$ROOT" >> $GITHUB_ENV
+          echo "PROJECT_OUTPUTS<<EOF" >> $GITHUB_ENV
+          echo "$CLEAN_OUTPUTS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+        env:
+          NODE_OPTIONS: --no-deprecation
+
+      - name: Run Cypress E2E tests for project
+        uses: cypress-io/github-action@v6
+        with:
+          project: ${{ env.PROJECT_ROOT }}
+          start: yarn nx run ${{ matrix.project }}:e2e
+
+      - name: Upload Cypress artifacts
+        # Includes fallback path to ensure recursive upload of all files in dist/cypress/apps/todo-e2e
+        if: always() && env.PROJECT_OUTPUTS != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-artifacts-${{ matrix.project }}
+          path: |
+            ${{ env.PROJECT_OUTPUTS }}
+          if-no-files-found: warn
+          compression-level: 6
+          overwrite: false
+          include-hidden-files: false

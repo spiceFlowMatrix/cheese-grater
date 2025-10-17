@@ -1,65 +1,103 @@
 import {
-  AfterViewInit,
   Component,
-  EventEmitter,
-  Input,
-  Output,
   ViewChild,
+  ChangeDetectionStrategy,
+  computed,
+  input,
+  output,
+  inject,
+  DestroyRef,
 } from '@angular/core';
-
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatSortModule, Sort } from '@angular/material/sort';
-import { MatSort } from '@angular/material/sort';
-
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatSortModule, MatSort, Sort } from '@angular/material/sort';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+/**
+ * Interface for defining a column header in the grid.
+ */
 export interface GridColumnHeader {
-  /** The name of the property for which this header will be used */
+  /** The name of the property for which this header will be used. */
   value: string;
-  /** This string will be rendered as the column header */
+  /** The string to be rendered as the column header. */
   label: string;
 }
 
+/**
+ * This component displays data in a sortable grid using Angular Material's MatTable.
+ *
+ * It encapsulates the `MatTableDataSource` logic internally, making it a "smarter"
+ * presentational component. It uses modern Angular features like `input()` and
+ * signals to manage its state and react to changes.
+ *
+ * Key features:
+ * - Uses `ChangeDetectionStrategy.OnPush` for performance.
+ * - Manages its own `MatTableDataSource` instance to leverage built-in sorting.
+ * - Connects the `MatSort` directive via `@ViewChild` and `ngAfterViewInit`.
+ * - The `dataSource` input uses a `set` accessor to handle incoming data updates.
+ * - The `columns` is a computed signal, ensuring it's always in sync with `displayedColumns`.
+ */
 @Component({
   selector: 'lib-grid',
+  standalone: true, // Marking the component as standalone
   imports: [MatTableModule, MatSortModule],
+  changeDetection: ChangeDetectionStrategy.OnPush, // Use OnPush for better performance
   templateUrl: './grid.component.html',
-  styleUrl: './grid.component.css',
+  styleUrl: './grid.component.scss',
 })
-export class GridComponent<T> implements AfterViewInit {
-  //#region Inputs
-  @Input() displayedColumns: Array<GridColumnHeader> = [];
-  @Input() get dataSource(): Array<T> {
-    return this._dataSource ? this._dataSource.data : [];
-  }
-  set dataSource(value: Array<T>) {
-    if (!this._dataSource) {
-      this._dataSource = new MatTableDataSource(value);
-      return;
+export class GridComponent<T> {
+  private destroyRef = inject(DestroyRef);
+
+  /**
+   * The array of column headers to be displayed.
+   */
+  readonly displayedColumns = input<GridColumnHeader[]>([]);
+
+  /**
+   * The data array to be displayed in the grid.
+   */
+  readonly dataSource = input<T[]>([]);
+
+  /**
+   * A boolean to enable or disable sorting on the grid.
+   */
+  readonly sorting = input(false);
+
+  /**
+   * Emits a `Sort` event when a column header is clicked. This can be used
+   * by the parent component to react to sorting changes, even if the table
+   * handles the sort visually.
+   */
+  readonly sortChange = output<Sort>();
+
+  /**
+   * A private signal to hold the `MatTableDataSource` instance.
+   * This signal is computed based on the `dataSource` input,
+   * ensuring the `MatTableDataSource` is always up-to-date with the data.
+   */
+  protected dataSourceSignal = computed(() => {
+    const dataSource = new MatTableDataSource(this.dataSource());
+    if (this.sort) {
+      dataSource.sort = this.sort;
     }
-    this._dataSource.data = value;
-  }
-  @Input() sorting = false;
-  //#endregion
+    return dataSource;
+  });
 
-  //#region Outputs
-  @Output() sortChange = new EventEmitter<Sort>();
-  //#endregion
-
-  //#region Internal Properties
-  protected _dataSource: MatTableDataSource<T> | null = null;
-  @ViewChild(MatSort) sort: MatSort | null = null;
-  //#endregion
-
-  //#region Angular Lifecycle Hooks
-  ngAfterViewInit() {
-    if (this._dataSource) this._dataSource.sort = this.sort;
-  }
-  //#endregion
-
-  protected get _columns(): string[] {
-    return this.displayedColumns.map((column) => column.value);
+  /**
+   * ViewChild to get a reference to the `MatSort` directive.
+   */
+  @ViewChild(MatSort) set sort(sort: MatSort) {
+    if (this.dataSourceSignal() && sort) {
+      this.dataSourceSignal().sort = sort;
+      // Also subscribe to the sort events to re-emit for the parent
+      sort.sortChange
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((sortState) => this.sortChange.emit(sortState));
+    }
   }
 
-  handleSortChange(sortState: Sort) {
-    this.sortChange.emit(sortState);
-  }
+  /**
+   * A computed signal that derives the column names from the displayedColumns input.
+   */
+  protected columns = computed(() =>
+    this.displayedColumns().map((column) => column.value)
+  );
 }

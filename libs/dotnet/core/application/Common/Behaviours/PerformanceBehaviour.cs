@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using CheeseGrater.Core.Application.Common.Interfaces;
 using Microsoft.Extensions.Logging;
 

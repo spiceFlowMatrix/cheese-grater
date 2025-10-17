@@ -1,4 +1,4 @@
-﻿using CheeseGrater.Core.Application.Common.Models;
+using CheeseGrater.Core.Application.Common.Models;
 
 namespace CheeseGrater.Core.Application.Common.Mappings;
 

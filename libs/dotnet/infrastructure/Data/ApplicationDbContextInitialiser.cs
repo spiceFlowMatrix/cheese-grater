@@ -1,4 +1,4 @@
-﻿using CheeseGrater.Core.Domain.Constants;
+using CheeseGrater.Core.Domain.Constants;
 using CheeseGrater.Core.Domain.Entities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
