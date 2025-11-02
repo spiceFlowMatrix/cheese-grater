@@ -536,10 +536,14 @@
           "MediatR": "[12.4.1, )"
         }
       },
-      "cheesegrater.dotnet.services.rpgapi.application": {
-        "type": "Project"
+      "CheeseGrater.RpgApi.Application": {
+        "type": "Project",
+        "dependencies": {
+          "CheeseGrater.Core.Application": "[1.0.0, )",
+          "CheeseGrater.RpgApi.Domain": "[1.0.0, )"
+        }
       },
-      "cheesegrater.dotnet.services.rpgapi.domain": {
+      "CheeseGrater.RpgApi.Domain": {
         "type": "Project",
         "dependencies": {
           "CheeseGrater.Core.Domain": "[1.0.0, )"

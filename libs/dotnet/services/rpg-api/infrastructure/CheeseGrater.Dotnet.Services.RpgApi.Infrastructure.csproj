@@ -3,6 +3,8 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <RootNamespace>CheeseGrater.Infrastructure</RootNamespace>
+    <AssemblyName>CheeseGrater.RpgApi.Infrastructure</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\core\infrastructure\CheeseGrater.Dotnet.Core.Infrastructure.csproj" />

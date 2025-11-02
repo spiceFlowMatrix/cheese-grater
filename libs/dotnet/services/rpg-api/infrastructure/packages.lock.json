@@ -506,8 +506,18 @@
           "Microsoft.EntityFrameworkCore.Relational": "[9.0.1, )"
         }
       },
-      "cheesegrater.dotnet.services.rpgapi.application": {
-        "type": "Project"
+      "CheeseGrater.RpgApi.Application": {
+        "type": "Project",
+        "dependencies": {
+          "CheeseGrater.Core.Application": "[1.0.0, )",
+          "CheeseGrater.RpgApi.Domain": "[1.0.0, )"
+        }
+      },
+      "CheeseGrater.RpgApi.Domain": {
+        "type": "Project",
+        "dependencies": {
+          "CheeseGrater.Core.Domain": "[1.0.0, )"
+        }
       },
       "Ardalis.GuardClauses": {
         "type": "CentralTransitive",

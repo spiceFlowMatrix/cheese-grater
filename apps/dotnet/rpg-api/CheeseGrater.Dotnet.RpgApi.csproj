@@ -3,8 +3,80 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>CheeseGrater.RpgApi</RootNamespace>
+    <AssemblyName>CheeseGrater.RpgApi</AssemblyName>
+    <!-- Define WorkspaceRoot to handle cases where SolutionDir is undefined -->
+    <WorkspaceRoot Condition="'$(SolutionDir)' == ''"
+      >$(MSBuildProjectDirectory)/../../..</WorkspaceRoot
+    >
+    <WorkspaceRoot Condition="'$(SolutionDir)' != ''">$(SolutionDir)</WorkspaceRoot>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Keycloak.AuthServices.Authentication" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="FluentValidation.AspNetCore" />
+    <PackageReference Include="NSwag.AspNetCore" />
+    <PackageReference Include="NSwag.MSBuild">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../libs/dotnet/services/rpg-api/application/CheeseGrater.Dotnet.Services.RpgApi.Application.csproj" />
+    <ProjectReference Include="../../../libs/dotnet/services/rpg-api/infrastructure/CheeseGrater.Dotnet.Services.RpgApi.Infrastructure.csproj" />
+  </ItemGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+  </PropertyGroup>
+  <Target
+    Name="NSwag"
+    AfterTargets="PostBuildEvent"
+    Condition=" '$(Configuration)' == 'Debug' And '$(SkipNSwag)' != 'True' "
+  >
+    <Exec
+      ConsoleToMSBuild="true"
+      ContinueOnError="true"
+      WorkingDirectory="$(ProjectDir)"
+      EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development;NSWAG_RUNNING=true"
+      Command="$(NSwagExe_Net90) run config.nswag /variables:Configuration=$(Configuration)"
+    >
+      <Output TaskParameter="ExitCode" PropertyName="NSwagExitCode" />
+      <Output TaskParameter="ConsoleOutput" PropertyName="NSwagOutput" />
+    </Exec>
+    <Message Text="$(NSwagOutput)" Condition="'$(NSwagExitCode)' == '0'" Importance="low" />
+    <Error Text="$(NSwagOutput)" Condition="'$(NSwagExitCode)' != '0'" />
+  </Target>
+  <!-- New target to copy the generated specification to multiple locations, including libs/generated/api -->
+  <Target
+    Name="CopyNSwagOutput"
+    AfterTargets="NSwag"
+    Condition=" '$(Configuration)' == 'Debug' And '$(SkipNSwag)' != 'True' And '$(NSwagExitCode)' == '0' "
+  >
+    <ItemGroup>
+      <!-- Define the source file -->
+      <NSwagOutputFile Include="wwwroot/api/specification.json" />
+      <!-- Define destination locations, including the libs folder -->
+      <NSwagOutputDestinations Include="$(MSBuildProjectDirectory)/../../../libs/generated/web-swagger/" />
+    </ItemGroup>
+    <!-- Create destination directories if they don't exist -->
+    <MakeDir Directories="@(NSwagOutputDestinations-&gt;'%(RootDir)%(Directory)')" />
+    <!-- Copy the file to each destination -->
+    <Copy
+      SourceFiles="@(NSwagOutputFile)"
+      DestinationFolder="@(NSwagOutputDestinations)"
+      SkipUnchangedFiles="true"
+    />
+    <Message
+      Text="Copied OpenAPI specification to @(NSwagOutputDestinations)"
+      Importance="normal"
+    />
+  </Target>
 </Project>
