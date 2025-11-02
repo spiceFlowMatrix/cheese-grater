@@ -4,6 +4,7 @@ namespace CheeseGrater.RpgApi.Domain.Entities;
 
 public class Player : BaseAuditableEntity
 {
-  public required string Name { get; set; }
-  public required int Level { get; set; }
+  public required string Username { get; set; } = string.Empty;
+
+  public IList<Character> Characters { get; private set; } = new List<Character>();
 }

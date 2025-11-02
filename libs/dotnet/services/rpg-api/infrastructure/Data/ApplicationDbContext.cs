@@ -16,6 +16,7 @@ public class ApplicationDbContext : BaseDbContext, IApplicationDbContext
     : base(options, configuration) { }
 
   public DbSet<Player> Players => Set<Player>();
+  public DbSet<Character> Characters => Set<Character>();
 
   // public DbSet<TodoList> TodoLists => Set<TodoList>();
   // public DbSet<TodoItem> TodoItems => Set<TodoItem>();

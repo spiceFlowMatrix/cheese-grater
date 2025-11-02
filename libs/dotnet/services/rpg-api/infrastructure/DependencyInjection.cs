@@ -3,11 +3,9 @@ using CheeseGrater.Core.Application.Common.Security;
 using CheeseGrater.Core.Domain.Constants;
 using CheeseGrater.RpgApi.Application.Common.Interfaces;
 using CheeseGrater.RpgApi.Infrastructure.Data;
+using CheeseGrater.RpgApi.Infrastructure.Game;
 using CheeseGrater.RpgApi.Infrastructure.Identity;
 using Keycloak.AuthServices.Authorization;
-using Keycloak.AuthServices.Authorization.Requirements;
-using Keycloak.AuthServices.Common;
-using Keycloak.AuthServices.Sdk;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
@@ -54,7 +52,10 @@ public static class DependencyInjection
 
     builder.Services.AddScoped<ApplicationDbContextInitialiser>();
     builder.Services.AddScoped<KeycloakInitialiser>();
-    builder.Services.AddSingleton<IPlayerInputStore, PlayerInputStore>();
+
+    builder.Services.AddSingleton<ICharacterInputStore, CharacterInputStore>();
+    builder.Services.AddSingleton<IWorldStateService, WorldStateService>();
+    builder.Services.AddHostedService<GameLoopService>();
 
     builder.Services.AddAuthorization(o =>
     {

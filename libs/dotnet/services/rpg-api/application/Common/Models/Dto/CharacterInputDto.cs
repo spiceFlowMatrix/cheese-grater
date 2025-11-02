@@ -1,6 +1,6 @@
-namespace CheeseGrater.RpgApi.Application.Common.Models;
+namespace CheeseGrater.RpgApi.Application.Common.Models.Dto;
 
-public class PlayerInputDto
+public class CharacterInputDto
 {
   public bool MoveUp { get; set; }
   public bool MoveDown { get; set; }
