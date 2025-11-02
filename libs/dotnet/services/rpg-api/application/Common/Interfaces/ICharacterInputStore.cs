@@ -4,7 +4,7 @@ namespace CheeseGrater.RpgApi.Application.Common.Interfaces;
 
 public interface ICharacterInputStore
 {
-  void SetInput(Guid characterId, CharacterInputDto input);
-  CharacterInputDto? GetInput(Guid characterId);
-  IEnumerable<KeyValuePair<Guid, CharacterInputDto>> GetAllInputs();
+  void SetInput(int characterId, CharacterInputDto input);
+  CharacterInputDto? GetInput(int characterId);
+  IEnumerable<KeyValuePair<int, CharacterInputDto>> GetAllInputs();
 }
