@@ -1,5 +1,28 @@
 # CheeseGrater
 
+## Prerequisites
+
+- Docker Desktop
+- NxConsole for VSCode
+- NodeJs
+- Angular
+- ASP.NET Core 9
+
+## Installation
+
+- `cd docker`
+- `docker compose up -d`
+  - This sets up all the critical infrastructure needed by backend apps
+
+## Usage
+
+> This is for default configuration. If you change configs like ports in the docker compose, you'd will need to use the ports you defined to access them
+
+- Keycloak `http://localhost:8081`
+- pgAdmin for main postgres instance (project has one that is used by all services) `localhost:5432`
+
+- Run whichever API service or app you want from the NX Console (easiest method but harder to configure)
+
 ## Known issues
 
 ### Infinite nx graph calculation time when serving asp.net core app for the first time
