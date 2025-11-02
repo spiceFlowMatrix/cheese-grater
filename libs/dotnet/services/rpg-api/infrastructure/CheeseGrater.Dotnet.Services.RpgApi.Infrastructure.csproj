@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\core\infrastructure\CheeseGrater.Dotnet.Core.Infrastructure.csproj" />
+    <ProjectReference Include="../application/CheeseGrater.Dotnet.Services.RpgApi.Application.csproj" />
+  </ItemGroup>
+</Project>

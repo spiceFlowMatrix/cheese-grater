@@ -1,0 +1,6 @@
+@CheeseGrater.Dotnet.RpgApi_HostAddress = http://localhost:5085
+
+GET {{CheeseGrater.Dotnet.RpgApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

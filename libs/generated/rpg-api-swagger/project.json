@@ -1,0 +1,23 @@
+{
+  "name": "rpg-api-swagger",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "executor": "nx:noop",
+      "outputs": ["libs/generated/rpg-api-swagger"]
+    },
+    "codegen": {
+      "executor": "@nx-dotnet/core:openapi-codegen",
+      "options": {
+        "useOpenApiGenerator": true,
+        "openApiGenerator": "typescript",
+        "openapiJsonPath": "libs/generated/rpg-api-swagger",
+        "outputProject": "generated-rpg-api-types"
+      },
+      "dependsOn": ["swagger"],
+      "inputs": ["{projectRoot}/libs/generated/rpg-api-swagger"],
+      "outputs": ["{workspaceRoot}"]
+    }
+  },
+  "implicitDependencies": ["dotnet-rpg-api"]
+}

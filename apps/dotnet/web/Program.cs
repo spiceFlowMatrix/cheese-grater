@@ -11,7 +11,10 @@ builder.AddWebServices();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (
+  app.Environment.IsDevelopment()
+  && Environment.GetEnvironmentVariable("NSWAG_RUNNING") != "true"
+)
 {
   await app.InitialiseDatabaseAsync();
   await app.InitialiseKeycloakAsync();

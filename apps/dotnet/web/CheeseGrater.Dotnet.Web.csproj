@@ -42,7 +42,7 @@
       ConsoleToMSBuild="true"
       ContinueOnError="true"
       WorkingDirectory="$(ProjectDir)"
-      EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development"
+      EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development;NSWAG_RUNNING=true"
       Command="$(NSwagExe_Net90) run config.nswag /variables:Configuration=$(Configuration)"
     >
       <Output TaskParameter="ExitCode" PropertyName="NSwagExitCode" />
