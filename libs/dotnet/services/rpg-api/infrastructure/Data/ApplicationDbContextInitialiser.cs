@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace CheeseGrater.Infrastructure.Data;
+namespace CheeseGrater.RpgApi.Infrastructure.Data;
 
 public static class InitialiserExtensions
 {

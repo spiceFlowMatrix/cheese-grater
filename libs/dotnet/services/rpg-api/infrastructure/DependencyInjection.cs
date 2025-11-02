@@ -1,0 +1,110 @@
+using CheeseGrater.Application.Common.Security;
+using CheeseGrater.Core.Application.Common.Security;
+using CheeseGrater.Core.Domain.Constants;
+using CheeseGrater.RpgApi.Application.Common.Interfaces;
+using CheeseGrater.RpgApi.Infrastructure.Data;
+using CheeseGrater.RpgApi.Infrastructure.Identity;
+using Keycloak.AuthServices.Authorization;
+using Keycloak.AuthServices.Authorization.Requirements;
+using Keycloak.AuthServices.Common;
+using Keycloak.AuthServices.Sdk;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+
+namespace Microsoft.Extensions.DependencyInjection;
+
+public static class DependencyInjection
+{
+  public static void AddRpgInfrastructureServices(this IHostApplicationBuilder builder)
+  {
+    builder.AddCoreInfrastructureServices();
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    Guard.Against.Null(
+      connectionString,
+      message: "Connection string 'DefaultConnection' not found."
+    );
+
+    // Read EF Core options from config
+    var efCoreSection = builder.Configuration.GetSection("EfCore");
+    var migrationsTable = efCoreSection["MigrationHistoryTable"] ?? "__efmigrationshistory";
+    var migrationsSchema = efCoreSection["MigrationHistorySchema"] ?? "public";
+
+    builder.Services.AddDbContext<ApplicationDbContext>(
+      (sp, options) =>
+      {
+        options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
+        options.UseNpgsql(
+          connectionString,
+          npgsqlOptions =>
+          {
+            npgsqlOptions.MigrationsHistoryTable(migrationsTable, migrationsSchema);
+          }
+        );
+        if (!IsDesignTime())
+          options.AddAsyncSeeding(sp);
+        options.UseSnakeCaseNamingConvention();
+      }
+    );
+
+    builder.Services.AddScoped<IApplicationDbContext>(provider =>
+      provider.GetRequiredService<ApplicationDbContext>()
+    );
+
+    builder.Services.AddScoped<ApplicationDbContextInitialiser>();
+    builder.Services.AddScoped<KeycloakInitialiser>();
+    builder.Services.AddSingleton<IPlayerInputStore, PlayerInputStore>();
+
+    builder.Services.AddAuthorization(o =>
+    {
+      // o.AddPolicy(PolicyConstants.MyCustomPolicy, b =>
+      // {
+      //     // b.AddRequirements(new DecisionRequirement("workspaces", "workspaces:read"));
+      //     b.RequireProtectedResource("workspaces", "workspaces:read");
+      // });
+      PolicyConstants.All.ForEach(
+        (policy) =>
+        {
+          switch (policy.Type)
+          {
+            case EPolicyType.Owner:
+              o.AddPolicy(
+                policy.PolicyName,
+                b =>
+                {
+                  b.RequireProtectedResource(Resources.TodoResource, [.. Scopes.All]);
+                }
+              );
+              break;
+            case EPolicyType.Role:
+            default:
+              o.AddPolicy(
+                policy.PolicyName,
+                b =>
+                {
+                  policy.Roles?.ForEach(
+                    (role) =>
+                    {
+                      b.RequireRealmRoles(role);
+                    }
+                  );
+                }
+              );
+              break;
+          }
+        }
+      );
+    });
+  }
+
+  /// <summary>
+  /// Check if the application is running in a design-time context (e.g., dotnet ef)
+  /// </summary>
+  /// <returns>bool</returns>
+  private static bool IsDesignTime()
+  {
+    var args = Environment.GetCommandLineArgs();
+    return args.Any(arg => arg.Contains("ef", StringComparison.OrdinalIgnoreCase));
+  }
+}

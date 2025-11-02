@@ -1,6 +1,6 @@
 using Azure.Identity;
 using CheeseGrater.Core.Application.Common.Interfaces;
-using CheeseGrater.Infrastructure.Data;
+using CheeseGrater.RpgApi.Infrastructure.Data;
 using CheeseGrater.RpgApi.Services;
 using Keycloak.AuthServices.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

@@ -5,7 +5,7 @@ using CheeseGrater.RpgApi.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
-namespace CheeseGrater.Infrastructure.Data;
+namespace CheeseGrater.RpgApi.Infrastructure.Data;
 
 public class ApplicationDbContext : BaseDbContext, IApplicationDbContext
 {

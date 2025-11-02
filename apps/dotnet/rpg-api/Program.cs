@@ -1,8 +1,11 @@
+using CheeseGrater.RpgApi.Infrastructure.Data;
+using CheeseGrater.RpgApi.Infrastructure.Identity;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.AddApplicationServices();
-builder.AddInfrastructureServices();
+builder.AddRpgInfrastructureServices();
 builder.AddWebServices();
 
 var app = builder.Build();
@@ -14,7 +17,7 @@ if (
 )
 {
   await app.InitialiseDatabaseAsync();
-  await app.InitialiseKeycloakAsync();
+//   await app.InitialiseKeycloakAsync();
 }
 else
 {

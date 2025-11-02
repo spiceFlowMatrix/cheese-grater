@@ -15,7 +15,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Kiota.Abstractions;
 using static Keycloak.AuthServices.Sdk.Kiota.Admin.Admin.Realms.Item.Clients.ClientsRequestBuilder;
 
-namespace CheeseGrater.Infrastructure.Identity;
+namespace CheeseGrater.RpgApi.Infrastructure.Identity;
 
 public static class KeycloakInitialiserExtensions
 {
