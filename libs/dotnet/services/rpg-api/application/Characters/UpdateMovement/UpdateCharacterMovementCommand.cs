@@ -10,6 +10,7 @@ namespace CheeseGrater.RpgApi.Application.Characters.UpdateMovement;
 public record UpdateCharacterMovementCommand : IRequest
 {
   public int PlayerId { get; init; }
+  public int CharacterId { get; init; }
 
   // Direction flags or vector
   public bool MoveUp { get; init; }
@@ -37,7 +38,7 @@ public class UpdateCharacterMovementCommandHandler : IRequestHandler<UpdateChara
   {
     // Update the input state for this player
     _inputStore.SetInput(
-      request.PlayerId,
+      request.CharacterId,
       new CharacterInputDto
       {
         MoveUp = request.MoveUp,

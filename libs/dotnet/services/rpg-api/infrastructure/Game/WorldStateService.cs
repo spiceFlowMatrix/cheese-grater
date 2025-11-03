@@ -6,9 +6,9 @@ namespace CheeseGrater.RpgApi.Infrastructure.Game;
 
 public class WorldStateService : IWorldStateService
 {
-  private readonly Dictionary<Guid, CharacterState> _characters = new();
+  private readonly Dictionary<int, CharacterState> _characters = new();
 
-  public CharacterState? GetCharacter(Guid id) => _characters.TryGetValue(id, out var c) ? c : null;
+  public CharacterState? GetCharacter(int id) => _characters.TryGetValue(id, out var c) ? c : null;
 
   public void UpdateCharacter(CharacterState character) => _characters[character.Id] = character;
 

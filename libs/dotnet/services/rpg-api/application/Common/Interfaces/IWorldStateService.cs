@@ -5,7 +5,7 @@ namespace CheeseGrater.RpgApi.Application.Common.Interfaces;
 
 public interface IWorldStateService
 {
-  CharacterState? GetCharacter(Guid id);
+  CharacterState? GetCharacter(int id);
   void UpdateCharacter(CharacterState character);
   WorldStateDto GetCurrentState();
 }

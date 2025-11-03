@@ -8,7 +8,7 @@ namespace CheeseGrater.RpgApi.Application.Common.Models;
 
 public class CharacterState
 {
-  public Guid Id { get; set; }
+  public int Id { get; set; }
   public string Name { get; set; } = string.Empty;
   public Position Position { get; set; } = new(0, 0);
   public float Speed { get; set; } = 5f;
