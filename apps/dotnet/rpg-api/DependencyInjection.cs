@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using Azure.Identity;
 using CheeseGrater.Core.Application.Common.Interfaces;
 using CheeseGrater.RpgApi.Infrastructure.Data;
@@ -5,6 +6,7 @@ using CheeseGrater.RpgApi.Services;
 using Keycloak.AuthServices.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -37,6 +39,35 @@ public static class DependencyInjection
 
     builder
       .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+      // .AddJwtBearer(
+      //   (opts) =>
+      //   {
+      //     opts.Events = new JwtBearerEvents
+      //     {
+      //       OnMessageReceived = context =>
+      //       {
+      //         var accessToken = context.Request.Query["access_token"].FirstOrDefault();
+      //         var path = context.HttpContext.Request.Path;
+      //         if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/game"))
+      //         {
+      //           context.Token = accessToken;
+      //         }
+      //         return Task.CompletedTask;
+      //       },
+      //     };
+
+      //     // Optional: make name / role claim mapping explicit if Keycloak uses different claim names
+      //     opts.TokenValidationParameters = new TokenValidationParameters
+      //     {
+      //       NameClaimType = JwtRegisteredClaimNames.PreferredUsername, // map 'sub' to Identity.Name if you like
+      //       RoleClaimType = "roles", // or "realm_access.roles" depending on Keycloak config
+      //     };
+      //   }
+      // )
       .AddKeycloakWebApi(builder.Configuration);
+
+    builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Program>());
+
+    builder.Services.AddSignalR().AddJsonProtocol();
   }
 }

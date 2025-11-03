@@ -1,5 +1,7 @@
 using CheeseGrater.RpgApi.Application.Common.Interfaces;
+using CheeseGrater.RpgApi.Application.Common.Models;
 using CheeseGrater.RpgApi.Domain.ValueObjects;
+using MediatR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -10,17 +12,20 @@ namespace CheeseGrater.RpgApi.Infrastructure.Game
     private readonly ILogger<GameLoopService> _logger;
     private readonly ICharacterInputStore _inputStore;
     private readonly IWorldStateService _worldState;
+    private readonly IMediator _mediator;
     private readonly float _tickRate = 60f;
 
     public GameLoopService(
       ICharacterInputStore inputStore,
       IWorldStateService worldState,
+      IMediator mediator,
       ILogger<GameLoopService> logger
     )
     {
       _inputStore = inputStore;
       _worldState = worldState;
       _logger = logger;
+      _mediator = mediator;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -29,13 +34,14 @@ namespace CheeseGrater.RpgApi.Infrastructure.Game
 
       while (!stoppingToken.IsCancellationRequested)
       {
-        UpdateWorld();
+        await UpdateWorld();
         await Task.Delay(tickDelay, stoppingToken);
       }
     }
 
-    private void UpdateWorld()
+    private async Task UpdateWorld()
     {
+      List<CharacterState> appliedCharacters = [];
       foreach (var (charId, input) in _inputStore.GetAllInputs())
       {
         var character = _worldState.GetCharacter(charId);
@@ -66,7 +72,11 @@ namespace CheeseGrater.RpgApi.Infrastructure.Game
 
           _worldState.UpdateCharacter(character);
         }
+
+        appliedCharacters.Add(character);
       }
+
+      await _mediator.Publish(new GameTickNotification { UpdatedCharacters = appliedCharacters });
     }
   }
 }

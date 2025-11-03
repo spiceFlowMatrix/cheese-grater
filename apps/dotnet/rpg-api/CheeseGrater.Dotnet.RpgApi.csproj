@@ -28,6 +28,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.Json" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../../libs/dotnet/services/rpg-api/application/CheeseGrater.Dotnet.Services.RpgApi.Application.csproj" />

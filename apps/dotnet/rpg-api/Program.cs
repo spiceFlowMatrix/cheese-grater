@@ -1,3 +1,4 @@
+using CheeseGrater.RpgApi.Hubs;
 using CheeseGrater.RpgApi.Infrastructure.Data;
 using CheeseGrater.RpgApi.Infrastructure.Identity;
 
@@ -17,7 +18,7 @@ if (
 )
 {
   await app.InitialiseDatabaseAsync();
-//   await app.InitialiseKeycloakAsync();
+  //   await app.InitialiseKeycloakAsync();
 }
 else
 {
@@ -44,6 +45,6 @@ app.UseAuthorization();
 
 app.MapGet("/", () => "Hello World!").RequireAuthorization();
 
-app.MapEndpoints();
+app.MapEndpoints().MapHub<GameHub>("/game");
 
 app.Run();

@@ -4,7 +4,15 @@ using CheeseGrater.RpgApi.Application.Common.Models.Dto;
 
 public class CharacterInputStore : ICharacterInputStore
 {
-  private readonly ConcurrentDictionary<int, CharacterInputDto> _inputs = new();
+  private readonly ConcurrentDictionary<int, CharacterInputDto> _inputs = new(
+    new Dictionary<int, CharacterInputDto>
+    {
+      {
+        1,
+        new CharacterInputDto { }
+      },
+    }
+  );
 
   public void SetInput(int playerId, CharacterInputDto input) => _inputs[playerId] = input;
 
