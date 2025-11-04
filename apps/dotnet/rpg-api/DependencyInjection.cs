@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Reflection;
 using Azure.Identity;
 using CheeseGrater.Core.Application.Common.Interfaces;
 using CheeseGrater.RpgApi.Infrastructure.Data;
@@ -7,6 +8,7 @@ using Keycloak.AuthServices.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -29,6 +31,20 @@ public static class DependencyInjection
     );
 
     builder.Services.AddEndpointsApiExplorer();
+
+    builder.Services.AddSwaggerGen(options =>
+    {
+      options.SwaggerDoc(
+        "signalr-v1",
+        new OpenApiInfo { Title = "CheeseGrater SignalR API", Version = "v1" }
+      );
+      options.AddSignalRSwaggerGen();
+
+      // If using XML comments, include the XML file
+      var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+      var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+      options.IncludeXmlComments(xmlPath);
+    });
 
     builder.Services.AddOpenApiDocument(
       (configure, sp) =>

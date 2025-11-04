@@ -36,6 +36,13 @@ app.UseSwaggerUi(settings =>
   settings.DocumentPath = "/api/specification.json";
 });
 
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+  c.SwaggerEndpoint("/swagger/signalr-v1/swagger.json", "CheeseGrater SignalR API V1");
+  c.RoutePrefix = "swagger-signalr";
+});
+
 app.MapFallbackToFile("index.html");
 
 app.UseExceptionHandler(options => { });

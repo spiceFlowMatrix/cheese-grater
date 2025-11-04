@@ -1,9 +1,11 @@
 using CheeseGrater.RpgApi.Application.Common.Models;
 using CheeseGrater.RpgApi.Hubs;
 using Microsoft.AspNetCore.SignalR;
+using SignalRSwaggerGen.Attributes;
 
 namespace CheeseGrater.RpgApi.Notifiers;
 
+[SignalRHub]
 public class GameTickNotificationHandler : INotificationHandler<GameTickNotification>
 {
   private readonly IHubContext<GameHub> _hubContext;
@@ -18,7 +20,11 @@ public class GameTickNotificationHandler : INotificationHandler<GameTickNotifica
     _logger = logger;
   }
 
-  public async Task Handle(GameTickNotification notification, CancellationToken cancellationToken)
+  [return: SignalRReturn(typeof(GameTickNotification))]
+  public async Task Handle(
+    [SignalRHidden] GameTickNotification notification,
+    [SignalRHidden] CancellationToken cancellationToken
+  )
   {
     // Broadcast to all connected clients
     await _hubContext.Clients.All.SendAsync(
@@ -26,6 +32,5 @@ public class GameTickNotificationHandler : INotificationHandler<GameTickNotifica
       notification.UpdatedCharacters,
       cancellationToken
     );
-    _logger.LogInformation("GameTick broadcasted to clients via IHubContext.");
   }
 }

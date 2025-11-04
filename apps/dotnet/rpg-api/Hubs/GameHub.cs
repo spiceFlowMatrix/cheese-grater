@@ -3,10 +3,12 @@ using CheeseGrater.RpgApi.Application.Common.Models;
 using CheeseGrater.RpgApi.Application.Common.Models.Dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using SignalRSwaggerGen.Attributes;
 
 namespace CheeseGrater.RpgApi.Hubs;
 
 [AllowAnonymous]
+[SignalRHub]
 public class GameHub : Hub
 {
   private readonly IMediator _mediator;
@@ -20,7 +22,6 @@ public class GameHub : Hub
 
   public async Task SendPlayerInput(int playerId, int characterId, CharacterInputDto input)
   {
-    _logger.LogInformation("SendPlayerInput");
     // Wrap inputs in a command
     var command = new UpdateCharacterMovementCommand
     {
