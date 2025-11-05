@@ -41,6 +41,9 @@
     <ProjectReference Include="../../../libs/dotnet/services/rpg-api/application/CheeseGrater.Dotnet.Services.RpgApi.Application.csproj" />
     <ProjectReference Include="../../../libs/dotnet/services/rpg-api/infrastructure/CheeseGrater.Dotnet.Services.RpgApi.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="../../../libs/contracts/gamecommands.proto" GrpcServices="Server" />
+  </ItemGroup>
   <PropertyGroup>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>

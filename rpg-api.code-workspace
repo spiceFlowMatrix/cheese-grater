@@ -1,8 +1,16 @@
 {
   "folders": [
     {
+      "path": "./",
+      "name": "root"
+    },
+    {
       "path": "apps/dotnet/rpg-api",
-      "name": "presentation"
+      "name": "presentation/api"
+    },
+    {
+      "path": "apps/dotnet/rpg-game-server",
+      "name": "presentation/game-server"
     },
     {
       "path": "apps/dotnet/rpg-api-test",

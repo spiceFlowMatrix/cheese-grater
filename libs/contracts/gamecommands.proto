@@ -1,0 +1,57 @@
+syntax = "proto3";
+option csharp_namespace = "CheeseGrater";
+
+package cheesegrater;
+
+import "google/protobuf/empty.proto";
+
+// Commands the backend issues to the game server
+service GameCommandService {
+    rpc StartGame(StartGameRequest) returns (google.protobuf.Empty);
+    rpc StopGame(StopGameRequest) returns (google.protobuf.Empty);
+    rpc UpdateGameState(GameStateUpdate) returns (google.protobuf.Empty);
+
+    // Backend -> GameServer: instruct to change equipped item
+    rpc NotifyEquipChange(EquipChangeRequest) returns (google.protobuf.Empty);
+}
+
+message StartGameRequest {
+    string game_id = 1;
+    repeated PlayerInfo players = 2;
+    GameConfig config = 3;
+}
+
+message StopGameRequest {
+    string game_id = 1;
+    string reason = 2;
+}
+
+message GameStateUpdate {
+    string game_id = 1;
+    GameState state = 2;
+    int64 timestamp = 3;
+}
+
+message PlayerInfo {
+    string player_id = 1;
+    string display_name = 2;
+}
+
+message GameConfig {
+    int32 max_players = 1;
+    int32 time_limit_seconds = 2;
+    bool is_ranked = 3;
+}
+
+enum GameState {
+    GAME_STATE_UNSPECIFIED = 0;
+    GAME_STATE_INITIALIZING = 1;
+    GAME_STATE_IN_PROGRESS = 2;
+    GAME_STATE_PAUSED = 3;
+    GAME_STATE_FINISHED = 4;
+}
+
+message EquipChangeRequest {
+    string playerId = 1;
+    string itemId   = 2;
+}
