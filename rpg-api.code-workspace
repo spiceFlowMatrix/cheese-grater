@@ -1,0 +1,29 @@
+{
+  "folders": [
+    {
+      "path": "apps/dotnet/rpg-api",
+      "name": "presentation"
+    },
+    {
+      "path": "apps/dotnet/rpg-api-test",
+      "name": "presentation-test"
+    },
+    {
+      "path": "libs/dotnet/services/rpg-api/application",
+      "name": "application-layer"
+    },
+    {
+      "path": "libs/dotnet/services/rpg-api/domain",
+      "name": "domain-layer"
+    },
+    {
+      "path": "libs/dotnet/services/rpg-api/infrastructure",
+      "name": "domain-layer"
+    },
+    {
+      "path": "libs/dotnet/core",
+      "name": "core"
+    }
+  ],
+  "settings": {}
+}
