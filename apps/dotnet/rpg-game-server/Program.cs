@@ -1,5 +1,6 @@
 ﻿// apps/rpg-game-server/Program.cs
 using System;
+using System.Text;
 using CheeseGrater;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
@@ -46,7 +47,7 @@ var builder = Host.CreateDefaultBuilder(args)
       app.UseRouting();
       app.UseEndpoints(end =>
       {
-        end.MapGrpcService<GameCommandService>();
+        end.MapGrpcService<GameCommandService.GameCommandServiceBase>();
       });
     });
   });
@@ -63,15 +64,15 @@ public class GameServerOptions
   public int MaxPeers { get; set; } = 64;
 }
 
-public class GameCommandsServiceBase(
+public class GameCommandsService(
   GameWorld world,
   RabbitMqPublisher publisher,
-  ILogger<GameCommandsServiceBase> logger
-) : CheeseGrater.GameCommandService
+  ILogger<GameCommandsService> logger
+) : GameCommandService.GameCommandServiceBase
 {
   private readonly GameWorld _world = world;
   private readonly RabbitMqPublisher _publisher = publisher;
-  private readonly ILogger<GameCommandsServiceBase> _logger = logger;
+  private readonly ILogger<GameCommandsService> _logger = logger;
 
   public override Task<Empty> NotifyEquipChange(
     EquipChangeRequest request,
@@ -107,7 +108,7 @@ public class GameWorld
     _equipped.TryGetValue(playerId, out var v) ? v : null;
 }
 
-public class EnetHostedService : Microsoft.Extensions.Hosting.BackgroundService
+public class EnetHostedService : BackgroundService
 {
   private readonly Microsoft.Extensions.Options.IOptions<GameServerOptions> _opts;
   private readonly ILogger<EnetHostedService> _logger;
@@ -144,7 +145,7 @@ public class EnetHostedService : Microsoft.Extensions.Hosting.BackgroundService
                 _logger.LogInformation("ENet: Peer connected: {PeerId}", evt.Peer.ID);
                 break;
               case ENet.EventType.Receive:
-                var msg = System.Text.Encoding.UTF8.GetString(evt.Packet.GetBytes());
+                var msg = Encoding.UTF8.GetString(evt.Packet.Data);
                 _logger.LogInformation("ENet: Received from {Peer}: {Msg}", evt.Peer.ID, msg);
                 // echo for demo
                 var resp = System.Text.Encoding.UTF8.GetBytes("Echo: " + msg);
