@@ -62,6 +62,15 @@ services:
     networks:
       - pg-network
 
+  rabbitmq:
+    image: rabbitmq:4-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
 volumes:
   postgres_data:
   keycloak_postgres_data:

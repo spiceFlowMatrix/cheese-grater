@@ -1,7 +1,4 @@
-﻿// apps/rpg-game-server/Program.cs
-using System;
-using System.Text;
-using CheeseGrater;
+﻿using CheeseGrater;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.AspNetCore.Builder;
@@ -29,6 +26,7 @@ var builder = Host.CreateDefaultBuilder(args)
     {
       // bind config
       services.Configure<GameServerOptions>(context.Configuration.GetSection("GameServer"));
+      services.Configure<RabbitMQOptions>(context.Configuration.GetSection("RabbitMQ"));
 
       // core game services
       services.AddSingleton<GameWorld>();
@@ -47,127 +45,10 @@ var builder = Host.CreateDefaultBuilder(args)
       app.UseRouting();
       app.UseEndpoints(end =>
       {
-        end.MapGrpcService<GameCommandService.GameCommandServiceBase>();
+        end.MapGrpcService<GameCommandsService>();
       });
     });
   });
 
 var host = builder.Build();
 await host.RunAsync();
-
-// ---- Small supporting types (could be extracted to separate files) ----
-
-public class GameServerOptions
-{
-  public string Host { get; set; } = "0.0.0.0";
-  public ushort Port { get; set; } = 7777;
-  public int MaxPeers { get; set; } = 64;
-}
-
-public class GameCommandsService(
-  GameWorld world,
-  RabbitMqPublisher publisher,
-  ILogger<GameCommandsService> logger
-) : GameCommandService.GameCommandServiceBase
-{
-  private readonly GameWorld _world = world;
-  private readonly RabbitMqPublisher _publisher = publisher;
-  private readonly ILogger<GameCommandsService> _logger = logger;
-
-  public override Task<Empty> NotifyEquipChange(
-    EquipChangeRequest request,
-    ServerCallContext context
-  )
-  {
-    _logger.LogInformation(
-      "gRPC: NotifyEquipChange player={Player} item={Item}",
-      request.PlayerId,
-      request.ItemId
-    );
-    _world.ApplyEquip(request.PlayerId, request.ItemId);
-    _publisher.PublishItemEquipped(request.PlayerId, request.ItemId);
-    return Task.FromResult(new Empty());
-  }
-}
-
-public class GameWorld
-{
-  private readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _equipped =
-    new();
-  private readonly ILogger<GameWorld> _logger;
-
-  public GameWorld(ILogger<GameWorld> logger) => _logger = logger;
-
-  public void ApplyEquip(string playerId, string itemId)
-  {
-    _equipped[playerId] = itemId;
-    _logger.LogInformation("World: Player {Player} equipped {Item}", playerId, itemId);
-  }
-
-  public string? GetEquipped(string playerId) =>
-    _equipped.TryGetValue(playerId, out var v) ? v : null;
-}
-
-public class EnetHostedService : BackgroundService
-{
-  private readonly Microsoft.Extensions.Options.IOptions<GameServerOptions> _opts;
-  private readonly ILogger<EnetHostedService> _logger;
-
-  public EnetHostedService(
-    Microsoft.Extensions.Options.IOptions<GameServerOptions> opts,
-    ILogger<EnetHostedService> logger
-  )
-  {
-    _opts = opts;
-    _logger = logger;
-  }
-
-  protected override Task ExecuteAsync(CancellationToken stoppingToken)
-  {
-    // Start ENet loop on separate thread/task
-    return Task.Run(
-      () =>
-      {
-        ENet.Library.Initialize();
-        using var host = new ENet.Host();
-        var address = new ENet.Address { Port = _opts.Value.Port };
-        host.Create(address, _opts.Value.MaxPeers);
-        _logger.LogInformation("ENet server started on UDP port {Port}", _opts.Value.Port);
-
-        var evt = new ENet.Event();
-        while (!stoppingToken.IsCancellationRequested)
-        {
-          while (host.Service(15, out evt) > 0)
-          {
-            switch (evt.Type)
-            {
-              case ENet.EventType.Connect:
-                _logger.LogInformation("ENet: Peer connected: {PeerId}", evt.Peer.ID);
-                break;
-              case ENet.EventType.Receive:
-                var msg = Encoding.UTF8.GetString(evt.Packet.Data);
-                _logger.LogInformation("ENet: Received from {Peer}: {Msg}", evt.Peer.ID, msg);
-                // echo for demo
-                var resp = System.Text.Encoding.UTF8.GetBytes("Echo: " + msg);
-                evt.Peer.Send(
-                  0,
-                  ref new ENet.Packet { UserData = resp, Flags = ENet.PacketFlags.Reliable }
-                );
-                evt.Packet.Dispose();
-                break;
-              case ENet.EventType.Disconnect:
-                _logger.LogInformation("ENet: Peer disconnected: {Peer}", evt.Peer.ID);
-                break;
-            }
-          }
-          Thread.Sleep(1);
-        }
-
-        host.Flush();
-        ENet.Library.Deinitialize();
-      },
-      stoppingToken
-    );
-  }
-}
-// Console.WriteLine("See apps/dotnet/rpg-game-server/RabbitMqPublisher.cs for the RabbitMqPublisher implementation.");
