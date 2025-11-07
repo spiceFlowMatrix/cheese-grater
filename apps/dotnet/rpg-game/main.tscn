@@ -1,6 +1,56 @@
-[gd_scene load_steps=2 format=3 uid="uid://cqmfxvq6s8x45"]
+[gd_scene load_steps=7 format=3 uid="uid://c4uot4db35jyb"]
 
-[ext_resource type="Script" uid="uid://vx54mldajev7" path="res://Main.cs" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://b5qmpo6e6opay" path="res://player.tscn" id="1_ig7tw"]
+[ext_resource type="Script" uid="uid://vx54mldajev7" path="res://Main.cs" id="1_lquwl"]
+[ext_resource type="PackedScene" uid="uid://b6e3fneaniows" path="res://hud.tscn" id="4_1bvp3"]
+[ext_resource type="AudioStream" uid="uid://cekgy8cgjnvob" path="res://art/House In a Forest Loop.ogg" id="5_7mycd"]
+[ext_resource type="AudioStream" uid="uid://b0albmqma486u" path="res://art/gameover.wav" id="6_272bh"]
+
+[sub_resource type="Curve2D" id="Curve2D_7dm0k"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 480, 0, 0, 0, 0, 0, 480, 720, 0, 0, 0, 0, 0, 720, 0, 0, 0, 0, 0, 0)
+}
+point_count = 5
 
 [node name="Main" type="Node"]
-script = ExtResource("1_ig7tw")
+script = ExtResource("1_lquwl")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+offset_right = 480.0
+offset_bottom = 720.0
+color = Color(0, 0.17254902, 0.24313726, 1)
+
+[node name="Player" parent="." instance=ExtResource("1_ig7tw")]
+position = Vector2(240, 500)
+
+[node name="MobTimer" type="Timer" parent="."]
+wait_time = 0.5
+
+[node name="ScoreTimer" type="Timer" parent="."]
+
+[node name="StartTimer" type="Timer" parent="."]
+wait_time = 2.0
+one_shot = true
+
+[node name="StartPosition" type="Marker2D" parent="."]
+
+[node name="MobPath" type="Path2D" parent="."]
+curve = SubResource("Curve2D_7dm0k")
+
+[node name="MobSpawnLocation" type="PathFollow2D" parent="MobPath"]
+
+[node name="HUD" parent="." instance=ExtResource("4_1bvp3")]
+script = null
+
+[node name="Music" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(0, 1)
+stream = ExtResource("5_7mycd")
+
+[node name="DeathSound" type="AudioStreamPlayer2D" parent="."]
+position = Vector2(240, 448)
+stream = ExtResource("6_272bh")
+
+[connection signal="body_entered" from="Player" to="Player" method="_OnBodyEntered"]
+[connection signal="timeout" from="MobTimer" to="." method="_OnMobTimerTimeout"]
+[connection signal="timeout" from="ScoreTimer" to="." method="_OnScoreTimerTimeout"]
+[connection signal="timeout" from="StartTimer" to="." method="_OnStartTimerTimeout"]
