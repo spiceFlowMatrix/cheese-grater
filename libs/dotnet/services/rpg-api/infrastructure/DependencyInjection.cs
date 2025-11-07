@@ -5,6 +5,7 @@ using CheeseGrater.RpgApi.Application.Common.Interfaces;
 using CheeseGrater.RpgApi.Infrastructure.Data;
 using CheeseGrater.RpgApi.Infrastructure.Game;
 using CheeseGrater.RpgApi.Infrastructure.Identity;
+using CheeseGrater.RpgApi.Infrastructure.RabbitMq;
 using Keycloak.AuthServices.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -97,6 +98,10 @@ public static class DependencyInjection
         }
       );
     });
+
+    builder.Services.AddSingleton<IGameWorld, GameWorld>();
+    builder.Services.AddSingleton<IEventPublisher, RabbitMqPublisher>();
+
   }
 
   /// <summary>

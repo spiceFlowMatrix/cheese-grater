@@ -1,7 +1,10 @@
 using System.Collections.Concurrent;
+using CheeseGrater.RpgApi.Application.Common.Interfaces;
 using Microsoft.Extensions.Logging;
 
-public class GameWorld
+namespace CheeseGrater.RpgApi.Infrastructure.Game;
+
+public class GameWorld : IGameWorld
 {
   private readonly ConcurrentDictionary<string, string> _equipped = new();
   private readonly ILogger<GameWorld> _logger;

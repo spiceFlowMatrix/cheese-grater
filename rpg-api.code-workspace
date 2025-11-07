@@ -9,6 +9,10 @@
       "name": "presentation/api"
     },
     {
+      "path": "apps/dotnet/rpg-game",
+      "name": "presentation/game"
+    },
+    {
       "path": "apps/dotnet/rpg-game-server",
       "name": "presentation/game-server"
     },
@@ -33,5 +37,7 @@
       "name": "core"
     }
   ],
-  "settings": {}
+  "settings": {
+    "godotTools.lsp.autoReconnect.attempts": 5
+  }
 }

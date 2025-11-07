@@ -1,3 +1,5 @@
+using CheeseGrater;
+using CheeseGrater.RpgApi.Application.Common.Game;
 using CheeseGrater.RpgApi.Hubs;
 using CheeseGrater.RpgApi.Infrastructure.Data;
 using CheeseGrater.RpgApi.Infrastructure.Identity;
@@ -7,6 +9,21 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.AddApplicationServices();
 builder.AddRpgInfrastructureServices();
+
+
+var grpcPort = builder.Configuration.GetValue<int>("Grpc:Port");
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+  options.ListenAnyIP(grpcPort, listenOptions =>
+  {
+    listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
+  });
+
+  // Optionally, keep HTTP/1.1 for your REST/SignalR endpoints
+  options.ListenAnyIP(5085);
+});
+
 builder.AddWebServices();
 
 var app = builder.Build();
@@ -53,5 +70,7 @@ app.UseAuthorization();
 app.MapGet("/", () => "Hello World!").RequireAuthorization();
 
 app.MapEndpoints().MapHub<GameHub>("/game");
+
+app.MapGrpcService<GameCommandsService>();
 
 app.Run();

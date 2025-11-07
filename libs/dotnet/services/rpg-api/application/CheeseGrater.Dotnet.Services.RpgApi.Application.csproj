@@ -10,4 +10,7 @@
     <ProjectReference Include="../domain/CheeseGrater.Dotnet.Services.RpgApi.Domain.csproj" />
     <ProjectReference Include="../../../core/application/CheeseGrater.Dotnet.Core.Application.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="../../../../contracts/gamecommands.proto" GrpcServices="Server" />
+  </ItemGroup>
 </Project>

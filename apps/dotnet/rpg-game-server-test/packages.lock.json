@@ -61,15 +61,6 @@
         "resolved": "2.71.0",
         "contentHash": "QquqUC37yxsDzd1QaDRsH2+uuznWPTS8CVE2Yzwl3CvU4geTNkolQXoVN812M2IwT6zpv3jsZRc9ExJFNFslTg=="
       },
-      "Grpc.Net.Client": {
-        "type": "Transitive",
-        "resolved": "2.71.0",
-        "contentHash": "U1vr20r5ngoT9nlb7wejF28EKN+taMhJsV9XtK9MkiepTZwnKxxiarriiMfCHuDAfPUm9XUjFMn/RIuJ4YY61w==",
-        "dependencies": {
-          "Grpc.Net.Common": "2.71.0",
-          "Microsoft.Extensions.Logging.Abstractions": "6.0.0"
-        }
-      },
       "Grpc.Net.ClientFactory": {
         "type": "Transitive",
         "resolved": "2.71.0",
@@ -220,7 +211,7 @@
           "ENet-CSharp": "[2.4.8, )",
           "Google.Protobuf": "[3.33.0, )",
           "Grpc.AspNetCore": "[2.71.0, )",
-          "RabbitMQ.Client": "[7.1.2, )"
+          "RabbitMQ.Client": "[7.2.0, )"
         }
       },
       "ENet-CSharp": {
@@ -246,11 +237,21 @@
           "Grpc.Tools": "2.71.0"
         }
       },
+      "Grpc.Net.Client": {
+        "type": "CentralTransitive",
+        "requested": "[2.71.0, )",
+        "resolved": "2.71.0",
+        "contentHash": "U1vr20r5ngoT9nlb7wejF28EKN+taMhJsV9XtK9MkiepTZwnKxxiarriiMfCHuDAfPUm9XUjFMn/RIuJ4YY61w==",
+        "dependencies": {
+          "Grpc.Net.Common": "2.71.0",
+          "Microsoft.Extensions.Logging.Abstractions": "6.0.0"
+        }
+      },
       "RabbitMQ.Client": {
         "type": "CentralTransitive",
-        "requested": "[7.1.2, )",
-        "resolved": "7.1.2",
-        "contentHash": "y3c6ulgULScWthHw5PLM1ShHRLhxg0vCtzX/hh61gRgNecL3ZC3WoBW2HYHoXOVRqTl99Br9E7CZEytGZEsCyQ==",
+        "requested": "[7.2.0, )",
+        "resolved": "7.2.0",
+        "contentHash": "PPQ7cF7lwbhqC4up6en1bTUZlz06YqQwJecOJzsguTtyhNA7oL5uNDZIx/h6ZfcyPZV4V3DYKSCxfm4RUFLcbA==",
         "dependencies": {
           "System.IO.Pipelines": "8.0.0",
           "System.Threading.RateLimiting": "8.0.0"

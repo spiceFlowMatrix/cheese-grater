@@ -1,8 +1,11 @@
-using System.Text.Json;
+using CheeseGrater.RpgApi.Application.Common.Interfaces;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
+using System.Text.Json;
+
+namespace CheeseGrater.RpgApi.Infrastructure.RabbitMq;
 
 public class RabbitMQOptions
 {
@@ -11,7 +14,7 @@ public class RabbitMQOptions
   public string Password { get; set; } = "guest";
 }
 
-public class RabbitMqPublisher : IAsyncDisposable
+public class RabbitMqPublisher : IAsyncDisposable, IEventPublisher
 {
   private readonly ConnectionFactory _factory;
   private readonly ILogger<RabbitMqPublisher> _logger;

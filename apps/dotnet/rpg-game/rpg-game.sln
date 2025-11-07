@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36616.10 d17.14
+VisualStudioVersion = 17.14.36616.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "rpg-game", "rpg-game.csproj", "{F6358C34-3211-496A-A3EB-6AE6D26B7387}"
 EndProject
@@ -16,6 +16,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheeseGrater.Dotnet.Core.Domain", "..\..\..\libs\dotnet\core\domain\CheeseGrater.Dotnet.Core.Domain.csproj", "{72D7D3BE-D8FF-920C-6EFC-EB0639811890}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheeseGrater.Dotnet.Core.Infrastructure", "..\..\..\libs\dotnet\core\infrastructure\CheeseGrater.Dotnet.Core.Infrastructure.csproj", "{C2FEA4DE-A800-20F8-8710-002009F7A1B4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Protobuf", "Protobuf", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\libs\contracts\gamecommands.proto = ..\..\..\libs\contracts\gamecommands.proto
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

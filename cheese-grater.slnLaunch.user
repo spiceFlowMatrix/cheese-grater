@@ -1,0 +1,17 @@
+[
+  {
+    "Name": "RpgApi+GRPC Test",
+    "Projects": [
+      {
+        "Path": "apps\\dotnet\\rpg-api\\CheeseGrater.Dotnet.RpgApi.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      },
+      {
+        "Path": "GrpcTester\\GrpcTester.csproj",
+        "Action": "Start",
+        "DebugTarget": "GrpcTester"
+      }
+    ]
+  }
+]
