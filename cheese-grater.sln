@@ -81,12 +81,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infrastructure-test", "infr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheeseGrater.Dotnet.Services.RpgApi.Infrastructure.Test", "libs\dotnet\services\rpg-api\infrastructure-test\CheeseGrater.Dotnet.Services.RpgApi.Infrastructure.Test.csproj", "{6CDD5B7C-E74F-4CB4-B497-5EEE9ADD2E15}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "rpg-game-server", "rpg-game-server", "{64A7A3D1-AD7B-5101-CB29-98637EBD81B7}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "rpg-game-server-test", "rpg-game-server-test", "{197441A9-F146-8621-EF5B-6D4D4955D079}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrpcTester", "GrpcTester\GrpcTester.csproj", "{2066DF3A-5326-46EE-AB4D-00E054B16332}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -289,18 +283,6 @@ Global
 		{6CDD5B7C-E74F-4CB4-B497-5EEE9ADD2E15}.Release|x64.Build.0 = Release|Any CPU
 		{6CDD5B7C-E74F-4CB4-B497-5EEE9ADD2E15}.Release|x86.ActiveCfg = Release|Any CPU
 		{6CDD5B7C-E74F-4CB4-B497-5EEE9ADD2E15}.Release|x86.Build.0 = Release|Any CPU
-		{2066DF3A-5326-46EE-AB4D-00E054B16332}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2066DF3A-5326-46EE-AB4D-00E054B16332}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2066DF3A-5326-46EE-AB4D-00E054B16332}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{2066DF3A-5326-46EE-AB4D-00E054B16332}.Debug|x64.Build.0 = Debug|Any CPU
-		{2066DF3A-5326-46EE-AB4D-00E054B16332}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{2066DF3A-5326-46EE-AB4D-00E054B16332}.Debug|x86.Build.0 = Debug|Any CPU
-		{2066DF3A-5326-46EE-AB4D-00E054B16332}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2066DF3A-5326-46EE-AB4D-00E054B16332}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2066DF3A-5326-46EE-AB4D-00E054B16332}.Release|x64.ActiveCfg = Release|Any CPU
-		{2066DF3A-5326-46EE-AB4D-00E054B16332}.Release|x64.Build.0 = Release|Any CPU
-		{2066DF3A-5326-46EE-AB4D-00E054B16332}.Release|x86.ActiveCfg = Release|Any CPU
-		{2066DF3A-5326-46EE-AB4D-00E054B16332}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -343,9 +325,6 @@ Global
 		{5C4D04BF-38C1-4C9C-974D-92A5C973CBF9} = {C788D591-62C6-B853-D30B-28015BB3B58F}
 		{7306867B-60EC-0D96-933A-05B200885BDC} = {6C61C1C1-AD76-5705-7943-C5CFA3164C1E}
 		{6CDD5B7C-E74F-4CB4-B497-5EEE9ADD2E15} = {7306867B-60EC-0D96-933A-05B200885BDC}
-		{64A7A3D1-AD7B-5101-CB29-98637EBD81B7} = {8A911403-05CA-0311-6682-E3413C4E3662}
-		{197441A9-F146-8621-EF5B-6D4D4955D079} = {8A911403-05CA-0311-6682-E3413C4E3662}
-		{2066DF3A-5326-46EE-AB4D-00E054B16332} = {8A911403-05CA-0311-6682-E3413C4E3662}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DF6FBFEF-A848-46E2-BA3F-CF11E4DD1A0A}
