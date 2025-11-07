@@ -1,0 +1,16 @@
+<Project Sdk="Godot.NET.Sdk/4.5.1">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RootNamespace>rpggame</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\libs\dotnet\core\application\CheeseGrater.Dotnet.Core.Application.csproj" />
+    <ProjectReference Include="..\..\..\libs\dotnet\core\domain\CheeseGrater.Dotnet.Core.Domain.csproj" />
+    <ProjectReference Include="..\..\..\libs\dotnet\core\infrastructure\CheeseGrater.Dotnet.Core.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\libs\dotnet\services\rpg-api\application\CheeseGrater.Dotnet.Services.RpgApi.Application.csproj" />
+    <ProjectReference Include="..\..\..\libs\dotnet\services\rpg-api\domain\CheeseGrater.Dotnet.Services.RpgApi.Domain.csproj" />
+    <ProjectReference Include="..\..\..\libs\dotnet\services\rpg-api\infrastructure\CheeseGrater.Dotnet.Services.RpgApi.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

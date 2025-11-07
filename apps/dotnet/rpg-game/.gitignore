@@ -1,0 +1,70 @@
+
+/android/
+
+############################
+# Godot-specific ignores
+############################
+
+# Godot metadata and caches
+.import/
+.export/
+.godot/
+.cache/
+
+# Temporary or generated scenes/resources
+*.import
+*.translation
+*.flags
+*.tmp
+
+# Godot export artifacts
+export_presets.cfg
+*.pck
+*.zip
+*.exe
+*.app
+*.apk
+*.aab
+*.dmg
+*.x86*
+*.wasm
+*.html
+
+# Backup files from editor
+*.old
+*.bak
+*.orig
+*.rej
+
+############################
+# .NET / Visual Studio
+############################
+
+# Build outputs
+bin/
+obj/
+dist/
+out/
+
+# User-specific files
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.userprefs
+
+# Visual Studio
+.vs/
+*.vsp
+*.vspx
+*.psess
+*.vspf
+
+# DotCover, Rider, ReSharper
+.idea/
+*.DotSettings.user
+_ReSharper*/
+*.DotCover
+
+# NuGet
+*.nup*

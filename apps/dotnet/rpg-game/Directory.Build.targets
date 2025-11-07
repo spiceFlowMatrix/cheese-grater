@@ -1,0 +1,4 @@
+<Project>
+  <!-- Prevent inheriting the parent Directory.Build.targets -->
+  <Import Project="Directory.Build.targets" Condition="false" />
+</Project>

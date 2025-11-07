@@ -1,0 +1,4 @@
+<Project>
+  <!-- This prevents inheriting the parent monorepo's Directory.Build.props -->
+  <Import Project="Directory.Build.props" Condition="false" />
+</Project>
