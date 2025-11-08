@@ -1,12 +1,12 @@
 [gd_scene load_steps=8 format=3 uid="uid://b5qmpo6e6opay"]
 
-[ext_resource type="Texture2D" uid="uid://dtixsrpiue80w" path="res://art/playerGrey_up1.png" id="1_hqtel"]
+[ext_resource type="Texture2D" uid="uid://c0xe2hi7ixvho" path="res://art/playerGrey_up1.png" id="1_hqtel"]
 [ext_resource type="Script" uid="uid://bgfu3gcywhnxi" path="res://Player.cs" id="1_sweqy"]
-[ext_resource type="Texture2D" uid="uid://bi15htv481xjh" path="res://art/playerGrey_up2.png" id="2_sweqy"]
-[ext_resource type="Texture2D" uid="uid://dotjmlpy1ksdl" path="res://art/playerGrey_walk1.png" id="3_2hs0m"]
-[ext_resource type="Texture2D" uid="uid://b72i1ns8ylmxo" path="res://art/playerGrey_walk2.png" id="4_1jxqw"]
+[ext_resource type="Texture2D" uid="uid://6uqv2voeawn3" path="res://art/playerGrey_up2.png" id="2_sweqy"]
+[ext_resource type="Texture2D" uid="uid://20cfkope47td" path="res://art/playerGrey_walk1.png" id="3_2hs0m"]
+[ext_resource type="Texture2D" uid="uid://bcbe8kgncwuj3" path="res://art/playerGrey_walk2.png" id="4_1jxqw"]
 
-[sub_resource type="SpriteFrames" id="SpriteFrames_dw050"]
+[sub_resource type="SpriteFrames" id="SpriteFrames_4flbx"]
 animations = [{
 "frames": [{
 "duration": 1.0,
@@ -31,23 +31,21 @@ animations = [{
 "speed": 5.0
 }]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_hqtel"]
-radius = 27.0
-height = 68.0
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_sweqy"]
+radius = 54.0
+height = 136.0
 
 [node name="Player" type="Area2D"]
+scale = Vector2(0.5, 0.5)
 script = ExtResource("1_sweqy")
 metadata/_edit_group_ = true
 metadata/_edit_lock_ = true
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-scale = Vector2(0.5, 0.5)
-sprite_frames = SubResource("SpriteFrames_dw050")
-animation = &"up"
-metadata/_edit_lock_ = true
+sprite_frames = SubResource("SpriteFrames_4flbx")
+animation = &"walk"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CapsuleShape2D_hqtel")
-metadata/_edit_lock_ = true
+shape = SubResource("CapsuleShape2D_sweqy")
 
-[connection signal="body_entered" from="." to="." method="_on_body_entered"]
+[connection signal="body_entered" from="." to="." method="_OnBodyEntered"]

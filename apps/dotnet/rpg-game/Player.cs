@@ -1,5 +1,5 @@
-using Godot;
 using System;
+using Godot;
 
 public partial class Player : Area2D
 {
@@ -7,69 +7,79 @@ public partial class Player : Area2D
 	public delegate void HitEventHandler();
 
 	[Export]
-	public float Speed { get; set; } = 400;
+	public int Speed { get; set; } = 400;
 
-	private Vector2 _screenSize;
+	public Vector2 ScreenSize;
 
 	public override void _Ready()
 	{
-		_screenSize = GetViewportRect().Size;
-		Hide();
-	}
-
-	public void Start(Vector2 pos)
-	{
-		Position = pos;
-		Show();
-		GetNode<CollisionShape2D>("CollisionShape2D").Disabled = false;
+		ScreenSize = GetViewportRect().Size;
 	}
 
 	public override void _Process(double delta)
 	{
-		Vector2 velocity = Vector2.Zero;
+		var velocity = Vector2.Zero;
 
 		if (Input.IsActionPressed("move_right"))
+		{
 			velocity.X += 1;
+		}
 		if (Input.IsActionPressed("move_left"))
+		{
 			velocity.X -= 1;
+		}
 		if (Input.IsActionPressed("move_down"))
+		{
 			velocity.Y += 1;
+		}
 		if (Input.IsActionPressed("move_up"))
+		{
 			velocity.Y -= 1;
+		}
 
-		var animatedSprite = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
+		var animatedSprite2D = GetNode<AnimatedSprite2D>("AnimatedSprite2D");
 
 		if (velocity.Length() > 0)
 		{
 			velocity = velocity.Normalized() * Speed;
-			animatedSprite.Play();
+			animatedSprite2D.Play();
 		}
 		else
 		{
-			animatedSprite.Stop();
+			animatedSprite2D.Stop();
 		}
+
+		Position += velocity * (float)delta;
+		Position = new Vector2(
+			x: Mathf.Clamp(Position.X, 0, ScreenSize.X),
+			y: Mathf.Clamp(Position.Y, 0, ScreenSize.Y)
+		);
 
 		if (velocity.X != 0)
 		{
-			animatedSprite.Animation = "walk";
-			animatedSprite.FlipV = false;
-			animatedSprite.FlipH = velocity.X < 0;
+			animatedSprite2D.Animation = "walk";
+			animatedSprite2D.FlipV = false;
+			animatedSprite2D.FlipH = velocity.X < 0;
 		}
 		else if (velocity.Y != 0)
 		{
-			animatedSprite.Animation = "up";
-			animatedSprite.FlipV = velocity.Y > 0;
+			animatedSprite2D.Animation = "up";
+			animatedSprite2D.FlipV = velocity.Y > 0;
 		}
-
-		// Uncomment these lines if you want the player to move locally
-		 Position += velocity * (float)delta;
-		 Position = Position.Clamp(Vector2.Zero, _screenSize);
 	}
 
 	private void _OnBodyEntered(Node2D body)
 	{
 		Hide();
 		EmitSignal(SignalName.Hit);
-		GetNode<CollisionShape2D>("CollisionShape2D").SetDeferred("disabled", true);
+		GetNode<CollisionShape2D>("CollisionShape2D")
+			.SetDeferred(CollisionShape2D.PropertyName.Disabled, true);
+	}
+
+	public void Start(Vector2 position)
+	{
+		Position = position;
+		Show();
+		GetNode<CollisionShape2D>("CollisionShape2D").Disabled = true;
 	}
 }

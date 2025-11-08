@@ -1,63 +1,6 @@
-[gd_scene load_steps=4 format=3 uid="uid://b6e3fneaniows"]
+[gd_scene load_steps=2 format=3 uid="uid://b6e3fneaniows"]
 
 [ext_resource type="Script" uid="uid://ck8134k2xp8t1" path="res://Scripts/Hud.cs" id="1_37p78"]
 
-[sub_resource type="InputEventAction" id="InputEventAction_64ctp"]
-action = &"start_game"
-
-[sub_resource type="Shortcut" id="Shortcut_8sq4i"]
-events = [SubResource("InputEventAction_64ctp")]
-
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_37p78")
-
-[node name="ScoreLabel" type="Label" parent="."]
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 78.0
-grow_horizontal = 2
-size_flags_horizontal = 6
-size_flags_vertical = 6
-theme_override_font_sizes/font_size = 64
-text = "0"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Message" type="Label" parent="."]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -240.0
-offset_top = -37.5
-offset_right = 240.0
-offset_bottom = 37.5
-grow_horizontal = 2
-grow_vertical = 2
-text = "Dodge the Creeps!"
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 2
-
-[node name="StartButton" type="Button" parent="."]
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -100.0
-offset_top = -140.0
-offset_right = 100.0
-offset_bottom = -109.0
-grow_horizontal = 2
-grow_vertical = 0
-shortcut = SubResource("Shortcut_8sq4i")
-text = "Start"
-
-[node name="MessageTimer" type="Timer" parent="."]
-wait_time = 2.0
-one_shot = true
-
-[connection signal="pressed" from="StartButton" to="." method="_OnStartButtonPressed"]
-[connection signal="timeout" from="MessageTimer" to="." method="_OnMessageTimerTimeout"]
