@@ -213,8 +213,10 @@ _data = {
 &"move": SubResource("Animation_lymsv")
 }
 
-[node name="Unit" type="Node2D"]
+[node name="Unit" type="Node2D" node_paths=PackedStringArray("_sprite", "_visuals")]
 script = ExtResource("1_k67iv")
+_sprite = NodePath("Visuals/Sprite")
+_visuals = NodePath("Visuals")
 
 [node name="Visuals" type="Node2D" parent="."]
 unique_name_in_owner = true
