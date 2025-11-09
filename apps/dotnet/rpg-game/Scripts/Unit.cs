@@ -4,15 +4,17 @@ using Godot;
 public partial class Unit : Node2D
 {
 	[Export]
-	private Sprite2D _sprite;
+	protected Sprite2D _sprite { get; set; }
 
 	[Export]
-	private Node2D _visuals;
+	protected Node2D _visuals { get; set; }
+
+	[Export]
+	protected AnimationPlayer _animationPlayer { get; set; }
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-		GD.Print(_sprite.Name);
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
