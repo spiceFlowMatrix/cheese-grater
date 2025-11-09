@@ -5,6 +5,8 @@
 		<EnableDynamicLoading>true</EnableDynamicLoading>
 		<RootNamespace>rpggame</RootNamespace>
 	</PropertyGroup>
+
+	<!-- Project References 
 	<ItemGroup>
 		<PackageReference Include="Google.Protobuf" />
 		<PackageReference Include="Grpc.Net.Client" />
@@ -25,5 +27,6 @@
 	<ItemGroup>
 		<Protobuf Include="..\..\..\libs\contracts\gamecommands.proto" GrpcServices="Client" ></Protobuf>
 	</ItemGroup>
+	-->
 
 </Project>

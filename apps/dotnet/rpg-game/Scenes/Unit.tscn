@@ -1,8 +1,7 @@
-[gd_scene load_steps=9 format=3 uid="uid://ddhfyk4cycu1s"]
+[gd_scene load_steps=8 format=3 uid="uid://ddhfyk4cycu1s"]
 
 [ext_resource type="Script" uid="uid://ue54ffpbvdai" path="res://Scripts/Unit.cs" id="1_k67iv"]
 [ext_resource type="Texture2D" uid="uid://devt2xbk78rej" path="res://assets/sprites/shadow.png" id="1_lymsv"]
-[ext_resource type="Texture2D" uid="uid://cproxhccob85g" path="res://assets/sprites/Players/Player_1.png" id="2_k67iv"]
 
 [sub_resource type="Animation" id="Animation_k67iv"]
 length = 0.001
@@ -53,6 +52,18 @@ tracks/3/keys = {
 "transitions": PackedFloat32Array(1),
 "update": 0,
 "values": [Vector2(0.8, 1)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Visuals/Shadow:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
 }
 
 [sub_resource type="Animation" id="Animation_8mmvs"]
@@ -128,27 +139,27 @@ tracks/0/keys = {
 }
 tracks/1/type = "value"
 tracks/1/imported = false
-tracks/1/enabled = false
-tracks/1/path = NodePath("Visuals/Sprite:position")
+tracks/1/enabled = true
+tracks/1/path = NodePath("Visuals/Sprite:rotation")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
-"times": PackedFloat32Array(),
-"transitions": PackedFloat32Array(),
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
 "update": 0,
-"values": []
+"values": [0.0]
 }
 tracks/2/type = "value"
 tracks/2/imported = false
-tracks/2/enabled = false
-tracks/2/path = NodePath("Visuals/Sprite:rotation")
+tracks/2/enabled = true
+tracks/2/path = NodePath("Visuals/Shadow:position")
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = {
-"times": PackedFloat32Array(),
-"transitions": PackedFloat32Array(),
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
 "update": 0,
-"values": []
+"values": [Vector2(0, -4)]
 }
 
 [sub_resource type="Animation" id="Animation_lymsv"]
@@ -213,10 +224,11 @@ _data = {
 &"move": SubResource("Animation_lymsv")
 }
 
-[node name="Unit" type="Node2D" node_paths=PackedStringArray("_sprite", "_visuals")]
+[node name="Unit" type="Node2D" node_paths=PackedStringArray("_sprite", "_visuals", "_animationPlayer")]
 script = ExtResource("1_k67iv")
 _sprite = NodePath("Visuals/Sprite")
 _visuals = NodePath("Visuals")
+_animationPlayer = NodePath("AnimationPlayer")
 
 [node name="Visuals" type="Node2D" parent="."]
 unique_name_in_owner = true
@@ -230,7 +242,6 @@ texture = ExtResource("1_lymsv")
 
 [node name="Sprite" type="Sprite2D" parent="Visuals"]
 position = Vector2(0, -61)
-texture = ExtResource("2_k67iv")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 
