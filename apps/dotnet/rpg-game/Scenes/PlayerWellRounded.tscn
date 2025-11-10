@@ -8,8 +8,14 @@
 radius = 25.0
 height = 60.0
 
-[node name="PlayerWellRounded" instance=ExtResource("1_lbwj1")]
+[node name="PlayerWellRounded" node_paths=PackedStringArray("DashTimer", "DashCooldownTimer", "Collision") instance=ExtResource("1_lbwj1")]
 script = ExtResource("2_g2gu7")
+DashDuration = 0.5
+DashSpeedMultiplier = 2.7
+DashCooldown = 1.5
+DashTimer = NodePath("DashTimer")
+DashCooldownTimer = NodePath("DashCooldownTimer")
+Collision = NodePath("CollisionShape2D")
 
 [node name="Sprite" parent="Visuals" index="1"]
 texture = ExtResource("3_g2gu7")
@@ -19,5 +25,7 @@ position = Vector2(0, -30)
 shape = SubResource("CapsuleShape2D_g2gu7")
 
 [node name="DashTimer" type="Timer" parent="." index="3"]
+one_shot = true
 
 [node name="DashCooldownTimer" type="Timer" parent="." index="4"]
+one_shot = true
