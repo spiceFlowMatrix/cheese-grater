@@ -1,15 +1,20 @@
-[gd_scene load_steps=6 format=3 uid="uid://bp75oe30sujtn"]
+[gd_scene load_steps=8 format=3 uid="uid://bp75oe30sujtn"]
 
 [ext_resource type="PackedScene" uid="uid://ddhfyk4cycu1s" path="res://Scenes/Unit.tscn" id="1_lbwj1"]
 [ext_resource type="Script" uid="uid://bgfu3gcywhnxi" path="res://Scripts/Player.cs" id="2_g2gu7"]
 [ext_resource type="Resource" uid="uid://blipbyqffh584" path="res://Resources/Units/StatsPlayerWellRounded.tres" id="3_0ghbn"]
 [ext_resource type="Texture2D" uid="uid://cproxhccob85g" path="res://assets/sprites/Players/Player_1.png" id="3_g2gu7"]
+[ext_resource type="Script" uid="uid://cmasqy23xk072" path="res://Scripts/Trail.cs" id="4_fmjq6"]
+
+[sub_resource type="Curve" id="Curve_d78v0"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 2
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_g2gu7"]
 radius = 25.0
 height = 60.0
 
-[node name="PlayerWellRounded" node_paths=PackedStringArray("DashTimer", "DashCooldownTimer", "Collision") instance=ExtResource("1_lbwj1")]
+[node name="PlayerWellRounded" node_paths=PackedStringArray("DashTimer", "DashCooldownTimer", "Collision", "Trail") instance=ExtResource("1_lbwj1")]
 script = ExtResource("2_g2gu7")
 DashDuration = 0.5
 DashSpeedMultiplier = 2.7
@@ -17,9 +22,26 @@ DashCooldown = 1.5
 DashTimer = NodePath("DashTimer")
 DashCooldownTimer = NodePath("DashCooldownTimer")
 Collision = NodePath("CollisionShape2D")
+Trail = NodePath("Visuals/Trail")
 Stats = ExtResource("3_0ghbn")
 
-[node name="Sprite" parent="Visuals" index="1"]
+[node name="Trail" type="Line2D" parent="Visuals" index="0" node_paths=PackedStringArray("Player", "TrailTimer")]
+top_level = true
+position = Vector2(0, -60)
+points = PackedVector2Array(-300, 0, 0, 0, 0, 0)
+width = 20.0
+width_curve = SubResource("Curve_d78v0")
+default_color = Color(1, 1, 1, 0.36078432)
+script = ExtResource("4_fmjq6")
+Player = NodePath("../..")
+TrailLength = 50
+TrailTimer = NodePath("../../TrailTimer")
+
+[node name="Shadow" parent="Visuals" index="1"]
+z_index = 1
+
+[node name="Sprite" parent="Visuals" index="2"]
+z_index = 1
 texture = ExtResource("3_g2gu7")
 
 [node name="CollisionShape2D" parent="." index="1"]
@@ -30,4 +52,7 @@ shape = SubResource("CapsuleShape2D_g2gu7")
 one_shot = true
 
 [node name="DashCooldownTimer" type="Timer" parent="." index="4"]
+one_shot = true
+
+[node name="TrailTimer" type="Timer" parent="." index="5"]
 one_shot = true

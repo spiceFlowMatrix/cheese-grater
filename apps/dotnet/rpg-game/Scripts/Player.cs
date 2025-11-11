@@ -17,6 +17,8 @@ public partial class Player : Unit
 	public Timer DashCooldownTimer { get; set; }
 	[Export]
 	public CollisionShape2D Collision { get; set; }
+	[Export]
+	public Trail Trail { get; set; }
 
 	private Vector2 _moveDir { get; set; }
 	private bool _isDashing { get; set; } = false;
@@ -84,6 +86,7 @@ public partial class Player : Unit
 		_isDashing = true;
 		_dashAvailable = false;
 		Collision.SetDeferred("disabled", true);
+		Trail.StartTrail();
 		_visuals.Modulate = new Color(1, 1, 1, 0.5f);
 		DashTimer.Start();
 	}
