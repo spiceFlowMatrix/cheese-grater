@@ -5,6 +5,9 @@
 		<EnableDynamicLoading>true</EnableDynamicLoading>
 		<RootNamespace>rpggame</RootNamespace>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Folder Include="Resources\Units\" />
+	</ItemGroup>
 
 	<!-- Project References 
 	<ItemGroup>
