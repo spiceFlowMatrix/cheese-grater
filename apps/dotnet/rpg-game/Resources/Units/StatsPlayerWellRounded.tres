@@ -1,0 +1,16 @@
+[gd_resource type="Resource" load_steps=3 format=3 uid="uid://blipbyqffh584"]
+
+[ext_resource type="Texture2D" uid="uid://cproxhccob85g" path="res://assets/sprites/Players/Player_1.png" id="1_gma5b"]
+[ext_resource type="Script" uid="uid://b57031nymrvg0" path="res://Resources/UnitStats.cs" id="2_yem3j"]
+
+[resource]
+script = ExtResource("2_yem3j")
+Name = "Well Rounded"
+Icon = ExtResource("1_gma5b")
+Health = 15
+HealthIncreasePerWave = 0.0
+Damage = 3
+DamageIncreasePerWave = 0.0
+Luck = 5.0
+BlockChance = 1.0
+GoldDrop = 0

@@ -4,6 +4,8 @@ using Godot;
 public partial class Unit : Node2D
 {
 	[Export]
+	protected UnitStats Stats { get; set; }
+	[Export]
 	protected Sprite2D _sprite { get; set; }
 
 	[Export]

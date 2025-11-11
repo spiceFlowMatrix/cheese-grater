@@ -35,7 +35,7 @@ public partial class Player : Unit
 	{
 		_moveDir = Input.GetVector("move_left", "move_right", "move_up", "move_down");
 
-		var currentVelocity = _moveDir * 500;
+		var currentVelocity = _moveDir * Stats.Speed;
 
 		if (_isDashing) currentVelocity *= (float)DashSpeedMultiplier;
 
