@@ -43,6 +43,8 @@ public partial class Player : Unit
 
 		Position += currentVelocity * (float)delta;
 
+		Position = new Vector2(Mathf.Clamp(Position.X, -1000, 1000), Mathf.Clamp(Position.Y, -500, 500));
+
 		if (canDash())
 		{
 			startDash();

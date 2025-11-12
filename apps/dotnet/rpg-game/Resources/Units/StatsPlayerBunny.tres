@@ -1,0 +1,17 @@
+[gd_resource type="Resource" load_steps=3 format=3 uid="uid://d0mquh0k1sc8i"]
+
+[ext_resource type="Texture2D" uid="uid://cvcbtcux3rlju" path="res://assets/sprites/Players/Player_4.png" id="1_sp2ok"]
+[ext_resource type="Script" uid="uid://b57031nymrvg0" path="res://Resources/UnitStats.cs" id="2_b287y"]
+
+[resource]
+script = ExtResource("2_b287y")
+Name = "Bunny"
+Icon = ExtResource("1_sp2ok")
+Health = 20
+HealthIncreasePerWave = 0.0
+Damage = 5
+DamageIncreasePerWave = 0.0
+Speed = 325
+Luck = 5.0
+BlockChance = 3.0
+GoldDrop = 0

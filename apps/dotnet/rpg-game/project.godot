@@ -11,8 +11,13 @@ config_version=5
 [application]
 
 config/name="rpg-game"
+run/main_scene="uid://b8q7wh0rdvmcn"
 config/features=PackedStringArray("4.5", "C#", "Mobile")
 config/icon="res://icon.svg"
+
+[autoload]
+
+Global="*res://Autoloads/Global.cs"
 
 [display]
 

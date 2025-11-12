@@ -1,7 +1,7 @@
 [gd_scene load_steps=8 format=3 uid="uid://ddhfyk4cycu1s"]
 
 [ext_resource type="Script" uid="uid://ue54ffpbvdai" path="res://Scripts/Unit.cs" id="1_k67iv"]
-[ext_resource type="Texture2D" uid="uid://devt2xbk78rej" path="res://assets/sprites/shadow.png" id="1_lymsv"]
+[ext_resource type="Texture2D" uid="uid://vy1roii1lcep" path="res://assets/sprites/shadow.png" id="1_lymsv"]
 
 [sub_resource type="Animation" id="Animation_k67iv"]
 length = 0.001
@@ -224,7 +224,7 @@ _data = {
 &"move": SubResource("Animation_lymsv")
 }
 
-[node name="Unit" type="Node2D" node_paths=PackedStringArray("_sprite", "_visuals", "_animationPlayer")]
+[node name="Unit" type="Area2D" node_paths=PackedStringArray("_sprite", "_visuals", "_animationPlayer")]
 script = ExtResource("1_k67iv")
 _sprite = NodePath("Visuals/Sprite")
 _visuals = NodePath("Visuals")
