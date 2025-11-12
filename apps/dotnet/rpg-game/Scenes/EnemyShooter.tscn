@@ -1,0 +1,11 @@
+[gd_scene load_steps=4 format=3 uid="uid://dylv817uf4sbx"]
+
+[ext_resource type="PackedScene" uid="uid://ccl7j62olks4h" path="res://Scenes/EnemyChaserSlow.tscn" id="1_3l2bp"]
+[ext_resource type="Resource" uid="uid://drcwso3x6lsh5" path="res://Resources/Units/Enemies/StatsEnemyShooter.tres" id="2_4cg17"]
+[ext_resource type="Texture2D" uid="uid://cawseop42hbel" path="res://assets/sprites/Enemies/Enemy_4.png" id="2_k01dm"]
+
+[node name="EnemyShooter" instance=ExtResource("1_3l2bp")]
+Stats = ExtResource("2_4cg17")
+
+[node name="Sprite" parent="Visuals" index="1"]
+texture = ExtResource("2_k01dm")

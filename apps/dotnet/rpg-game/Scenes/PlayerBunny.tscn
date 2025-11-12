@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://c1c4fe8qtoxiq"]
 
 [ext_resource type="PackedScene" uid="uid://bp75oe30sujtn" path="res://Scenes/PlayerWellRounded.tscn" id="1_ellpj"]
-[ext_resource type="Resource" uid="uid://d0mquh0k1sc8i" path="res://Resources/Units/StatsPlayerBunny.tres" id="2_duite"]
+[ext_resource type="Resource" uid="uid://d0mquh0k1sc8i" path="res://Resources/Units/Players/StatsPlayerBunny.tres" id="2_duite"]
 [ext_resource type="Texture2D" uid="uid://cvcbtcux3rlju" path="res://assets/sprites/Players/Player_4.png" id="2_j41vv"]
 
 [node name="PlayerBunny" instance=ExtResource("1_ellpj")]

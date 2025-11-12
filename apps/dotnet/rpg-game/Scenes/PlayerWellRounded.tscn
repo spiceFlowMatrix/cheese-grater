@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://ddhfyk4cycu1s" path="res://Scenes/Unit.tscn" id="1_lbwj1"]
 [ext_resource type="Script" uid="uid://bgfu3gcywhnxi" path="res://Scripts/Player.cs" id="2_g2gu7"]
-[ext_resource type="Resource" uid="uid://blipbyqffh584" path="res://Resources/Units/StatsPlayerWellRounded.tres" id="3_0ghbn"]
+[ext_resource type="Resource" uid="uid://blipbyqffh584" path="res://Resources/Units/Players/StatsPlayerWellRounded.tres" id="3_0ghbn"]
 [ext_resource type="Texture2D" uid="uid://bgksjdlg0t63h" path="res://assets/sprites/Players/Player_1.png" id="3_g2gu7"]
 [ext_resource type="Script" uid="uid://cmasqy23xk072" path="res://Scripts/Trail.cs" id="4_fmjq6"]
 
@@ -15,6 +15,7 @@ radius = 25.0
 height = 60.0
 
 [node name="PlayerWellRounded" node_paths=PackedStringArray("DashTimer", "DashCooldownTimer", "Collision", "Trail") instance=ExtResource("1_lbwj1")]
+collision_mask = 2
 script = ExtResource("2_g2gu7")
 DashDuration = 0.5
 DashSpeedMultiplier = 2.7

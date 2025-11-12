@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://bp75oe30sujtn" path="res://Scenes/PlayerWellRounded.tscn" id="1_l4ihe"]
 [ext_resource type="Texture2D" uid="uid://duxgxm0nlkw82" path="res://assets/sprites/Players/Player_5.png" id="2_2c4us"]
-[ext_resource type="Resource" uid="uid://ijuyn215qgwq" path="res://Resources/Units/StatsPlayerKnight.tres" id="2_h3pa0"]
+[ext_resource type="Resource" uid="uid://ijuyn215qgwq" path="res://Resources/Units/Players/StatsPlayerKnight.tres" id="2_h3pa0"]
 
 [node name="PlayerKnight" instance=ExtResource("1_l4ihe")]
 Stats = ExtResource("2_h3pa0")

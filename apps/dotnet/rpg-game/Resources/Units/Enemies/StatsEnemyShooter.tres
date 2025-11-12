@@ -1,0 +1,18 @@
+[gd_resource type="Resource" load_steps=3 format=3 uid="uid://drcwso3x6lsh5"]
+
+[ext_resource type="Texture2D" uid="uid://cawseop42hbel" path="res://assets/sprites/Enemies/Enemy_4.png" id="1_jma15"]
+[ext_resource type="Script" uid="uid://b57031nymrvg0" path="res://Resources/UnitStats.cs" id="2_qoyo6"]
+
+[resource]
+script = ExtResource("2_qoyo6")
+Name = "Shooter"
+Type = 1
+Icon = ExtResource("1_jma15")
+Health = 4
+HealthIncreasePerWave = 2.0
+Damage = 3.0
+DamageIncreasePerWave = 1.5
+Speed = 260
+Luck = 0.0
+BlockChance = 3.0
+GoldDrop = 3

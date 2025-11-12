@@ -1,0 +1,16 @@
+[gd_resource type="Resource" load_steps=3 format=3 uid="uid://bpi48xmvo6rta"]
+
+[ext_resource type="Texture2D" uid="uid://bpucwxki06mjx" path="res://assets/sprites/Enemies/Enemy_2.png" id="1_bioje"]
+[ext_resource type="Script" uid="uid://b57031nymrvg0" path="res://Resources/UnitStats.cs" id="2_7g2kl"]
+
+[resource]
+script = ExtResource("2_7g2kl")
+Name = "Chaser Mid"
+Type = 1
+Icon = ExtResource("1_bioje")
+Health = 8
+HealthIncreasePerWave = 2.0
+Damage = 2.0
+Luck = 0.0
+BlockChance = 7.0
+GoldDrop = 2

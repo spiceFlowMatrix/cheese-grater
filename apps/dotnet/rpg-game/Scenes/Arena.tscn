@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://b8q7wh0rdvmcn"]
+[gd_scene load_steps=7 format=3 uid="uid://b8q7wh0rdvmcn"]
 
 [ext_resource type="Texture2D" uid="uid://g3pky65mdwd" path="res://assets/sprites/BG.png" id="1_0g2wx"]
 [ext_resource type="Script" uid="uid://b2ftpr0vebks1" path="res://Scripts/Arena.cs" id="1_4f205"]
 [ext_resource type="Texture2D" uid="uid://0b28s6h6136o" path="res://assets/sprites/Map.png" id="2_pyk7t"]
 [ext_resource type="PackedScene" uid="uid://bp75oe30sujtn" path="res://Scenes/PlayerWellRounded.tscn" id="3_pyk7t"]
 [ext_resource type="Script" uid="uid://dm2g6sa00emkx" path="res://Scripts/Camera.cs" id="4_x00a1"]
+[ext_resource type="PackedScene" uid="uid://ccl7j62olks4h" path="res://Scenes/EnemyChaserSlow.tscn" id="6_dpcf1"]
 
 [node name="Arena" type="Node2D" node_paths=PackedStringArray("Player")]
 script = ExtResource("1_4f205")
@@ -22,3 +23,12 @@ texture = ExtResource("2_pyk7t")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 script = ExtResource("4_x00a1")
+
+[node name="EnemyChaserSlow" parent="." instance=ExtResource("6_dpcf1")]
+position = Vector2(-579, 215)
+
+[node name="EnemyChaserSlow2" parent="." instance=ExtResource("6_dpcf1")]
+position = Vector2(-612, -89)
+
+[node name="EnemyChaserSlow3" parent="." instance=ExtResource("6_dpcf1")]
+position = Vector2(-362, -224)
