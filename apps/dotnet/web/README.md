@@ -37,6 +37,8 @@ Keycloak-related links:
   - Service registration & UMA wiring: [libs/dotnet/core/infrastructure/DependencyInjection.cs](../../../libs/dotnet/core/infrastructure/DependencyInjection.cs)
   - Keycloak seeding/initialization service: [libs/dotnet/infrastructure/Identity/IdentityServiceInitializer.cs](../../../libs/dotnet/infrastructure/Identity/IdentityServiceInitializer.cs)
   - Resource creation per Todo list: [libs/dotnet/application/TodoLists/Commands/CreateTodoList/CreateTodoList.cs](../../../libs/dotnet/application/TodoLists/Commands/CreateTodoList/CreateTodoList.cs)
+  - Identity abstraction & policy enforcement helper: [libs/dotnet/core/infrastructure/Identity/IdentityService.cs](../../../libs/dotnet/core/infrastructure/Identity/IdentityService.cs)
+  - Keycloak admin client request sanitizer: [libs/dotnet/core/infrastructure/Identity/RequestBodyFixHandler.cs](../../../libs/dotnet/core/infrastructure/Identity/RequestBodyFixHandler.cs)
 
 ### 2. Run the API (run from repo root)
 
