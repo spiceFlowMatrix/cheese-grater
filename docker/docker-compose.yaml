@@ -8,7 +8,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     networks:
       - pg-network
 
@@ -20,7 +20,7 @@ services:
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
     ports:
-      - "8080:80"
+      - "8089:80"
     depends_on:
       - postgres
     volumes:
@@ -35,7 +35,7 @@ services:
       POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
       POSTGRES_DB: keycloak
     volumes:
-      - keycloak_postgres_data:/var/lib/postgresql/data
+      - keycloak_postgres_data:/var/lib/postgresql
     networks:
       - pg-network
 
