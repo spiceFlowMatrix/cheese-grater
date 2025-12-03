@@ -13,10 +13,10 @@ This is the primary ASP.NET Core 9 backend API inside the Nx monorepo.
 ## 📦 Running the Backend
 
 ### 1. Start Infrastructure
-`ash
+```bash
 cd docker
 docker compose up -d
-`
+````
 
 Services started:
 - Postgres (main application DB)
@@ -25,9 +25,9 @@ Services started:
 - pgAdmin
 
 ### 2. Run the API
-`ash
+```bash
 nx serve dotnet-web
-`
+```
 (or run through Nx Console)
 
 API will auto-initialize:
@@ -43,14 +43,14 @@ API will auto-initialize:
 - Per-request authorization via MediatR behaviors
 
 ## 📁 Folder Structure
-`
+```
 apps/dotnet/web
 ├── Endpoints/
 ├── Infrastructure/
 ├── Services/
 ├── appsettings.json
 └── README.md
-`
+```
 
 ## 🗄 Environment Variables
 See /docker/.env for required variables (database passwords, Keycloak admin credentials, client secrets, etc.).
