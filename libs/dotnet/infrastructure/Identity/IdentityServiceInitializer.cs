@@ -157,7 +157,7 @@ public class KeycloakInitialiser
 
     if (clients == null || !clients.Any())
     {
-      _logger.LogError("No clients found in realm 'Test'.");
+      _logger.LogError("No clients found in realm '{RealmName}'.", realm);
       return null;
     }
 

@@ -5,8 +5,10 @@ using CheeseGrater.Core.Application.Common.Interfaces;
 using CheeseGrater.Core.Application.Common.Security;
 using CheeseGrater.Core.Domain.Constants;
 using CheeseGrater.Core.Domain.Entities;
+using Keycloak.AuthServices.Sdk;
 using Keycloak.AuthServices.Sdk.Protection;
 using Keycloak.AuthServices.Sdk.Protection.Models;
+using Microsoft.Extensions.Options;
 
 namespace CheeseGrater.Application.TodoLists.Commands.CreateTodoList;
 
@@ -22,18 +24,22 @@ public class CreateTodoListCommandHandler : IRequestHandler<CreateTodoListComman
   private readonly IKeycloakProtectionClient _resourceClient;
   private readonly IIdentityService _identityService;
   private readonly IMapper _mapper;
+  private readonly KeycloakProtectionClientOptions _protectionOptions;
 
   public CreateTodoListCommandHandler(
     IApplicationDbContext context,
     IKeycloakProtectionClient resourceClient,
     IIdentityService identityService,
-    IMapper mapper
+    IMapper mapper,
+    IOptions<KeycloakProtectionClientOptions> protectionOptions
   )
   {
     _context = context;
     _resourceClient = resourceClient;
     _identityService = identityService;
     _mapper = mapper;
+    _protectionOptions =
+      protectionOptions?.Value ?? throw new ArgumentNullException(nameof(protectionOptions));
   }
 
   public async Task<TodoListDto> Handle(
@@ -52,8 +58,9 @@ public class CreateTodoListCommandHandler : IRequestHandler<CreateTodoListComman
     try
     {
       var userId = _identityService?.UserId ?? throw new InvalidOperationException();
+      var realmName = _protectionOptions.Realm ?? throw new InvalidOperationException();
       await _resourceClient.CreateResourceAsync(
-        "Test",
+        realmName,
         new Resource(
           $"{Resources.TodoResourceItem}/{entity.Id}",
           [.. Scopes.All.Select((scope) => $"{Resources.TodoResourceItem}:{scope}")]
