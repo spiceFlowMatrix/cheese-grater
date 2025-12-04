@@ -1,0 +1,24 @@
+# Declarative Keycloak config for the master realm (consumed by keycloak-config-cli).
+realm: master
+clients:
+  - clientId: web-admin-serviceaccount
+    enabled: true
+    publicClient: false
+    serviceAccountsEnabled: true
+    standardFlowEnabled: false
+    directAccessGrantsEnabled: false
+    protocol: openid-connect
+    secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
+    protocolMappers:
+      - name: aud-security-admin-console
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        config:
+          included.client.audience: security-admin-console
+          id.token.claim: "true"
+          access.token.claim: "true"
+users:
+  - username: service-account-web-admin-serviceaccount
+    enabled: true
+    realmRoles:
+      - admin

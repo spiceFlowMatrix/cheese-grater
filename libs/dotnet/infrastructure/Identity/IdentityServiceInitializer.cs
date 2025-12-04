@@ -121,7 +121,7 @@ public class KeycloakInitialiser
     }
     catch (Exception ex)
     {
-      _logger.LogError(ex, "Failed to retrieve TestClient details.");
+      _logger.LogError(ex, "Failed to retrieve client {ClientName} details.", clientNameId);
       return null;
     }
 
@@ -164,7 +164,7 @@ public class KeycloakInitialiser
     var selectClient = clients.FirstOrDefault(c => c.ClientId == clientNameId);
     if (selectClient == null)
     {
-      _logger.LogError("TestClient was not found after creation attempt.");
+      _logger.LogError("Client {ClientName} was not found after creation attempt.", clientNameId);
       return null;
     }
 
@@ -175,13 +175,13 @@ public class KeycloakInitialiser
     }
     catch (Exception ex)
     {
-      _logger.LogError(ex, "Failed to retrieve TestClient details.");
+      _logger.LogError(ex, "Failed to retrieve client {ClientName} details.", clientNameId);
       return null;
     }
 
     if (client == null)
     {
-      _logger.LogError("TestClient details could not be loaded.");
+      _logger.LogError("Client {ClientName} details could not be loaded.", clientNameId);
       return null;
     }
 
@@ -196,7 +196,8 @@ public class KeycloakInitialiser
     {
       _logger.LogError(
         ex,
-        "Failed to update TestClient with service account and authorization settings."
+        "Failed to update client {ClientName} with service account and authorization settings.",
+        clientNameId
       );
     }
 

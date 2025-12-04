@@ -1,8 +1,14 @@
-﻿# CheeseGrater .NET Backend — Keycloak Integrated API
+# CheeseGrater .NET Backend — Keycloak Integrated API
 
 This is the primary ASP.NET Core 9 backend API inside the Nx monorepo.
 
-## 🚀 Features
+## Purpose of This Monorepo
+
+1. **Reusable Base Platform** – common identity, data, and tooling you can lift into new services.
+2. **Core Service Library** – shared domain/application/infrastructure packages.
+3. **Showcase & Demo Environment** – runnable stack to demonstrate Keycloak + UMA integration.
+
+## Features
 
 - Keycloak authentication via JWT (Keycloak.AuthServices)
 - UMA resource-based authorization
@@ -11,9 +17,9 @@ This is the primary ASP.NET Core 9 backend API inside the Nx monorepo.
 - Minimal API endpoint groups
 - Clean Architecture with application, core, domain, and infrastructure layers
 
-## 📦 Running the Backend
+## Running the Backend
 
-### 1. Start Infrastructure (run from repo root)
+### 1) Start Infrastructure (from repo root)
 
 ```bash
 cd ../../../   # must start at repository root
@@ -40,30 +46,48 @@ Keycloak-related links:
   - Identity abstraction & policy enforcement helper: [libs/dotnet/core/infrastructure/Identity/IdentityService.cs](../../../libs/dotnet/core/infrastructure/Identity/IdentityService.cs)
   - Keycloak admin client request sanitizer: [libs/dotnet/core/infrastructure/Identity/RequestBodyFixHandler.cs](../../../libs/dotnet/core/infrastructure/Identity/RequestBodyFixHandler.cs)
 
-### 2. Run the API (run from repo root)
+## Dual IAM Initialization Modes
+
+- **Declarative Mode (recommended)** – `KEYCLOAK_BOOTSTRAP_MODE=off` runs keycloak-config-cli with `docker/keycloak/config/master-realm.yaml` for reproducible admin client setup.
+- **Bootstrap Mode (fast dev)** – `KEYCLOAK_BOOTSTRAP_MODE=on` runs `/opt/keycloak/bootstrap/create-admin-client.sh` inside the Keycloak container to create/update the admin service account client and secret.
+
+### Architecture (ASCII)
+
+```
+Monorepo
+ ├── Core Libraries
+ ├── Sample Apps
+ ├── Identity Infrastructure
+ │     ├── Declarative Mode
+ │     └── Bootstrap Mode
+ └── Docker Stack
+```
+
+### Keycloak usage in this backend
+
+- UMA protection and protected resource policies enforced in handlers and MediatR behaviors.
+- Admin API access via the `web-admin-serviceaccount` service account client (deterministic secret).
+- Admin client creation happens either declaratively (config file) or via bootstrap script to keep NSwag/seed flows consistent.
+
+## Run the API (from repo root)
 
 ```bash
 cd ../../../
 nx serve dotnet-web
 ```
 
-(or run through Nx Console)
-
 API will auto-initialize:
 
 - Database
 - Keycloak seeds (Development only)
 
-## 🔐 Authentication / Authorization
+## Authentication / Authorization
 
 - JWT bearer authentication via Keycloak
-- UMA resource protection using:
-  - KeycloakProtectionClient
-  - isOwnerPolicy.js custom policy
-- Resource creation on TodoList creation
-- Per-request authorization via MediatR behaviors
+- UMA resource protection using the KeycloakProtectionClient
+- Per-request authorization via MediatR behaviors and UMA policies
 
-## 📁 Folder Structure
+## Folder Structure
 
 ```
 apps/dotnet/web
@@ -74,11 +98,10 @@ apps/dotnet/web
 └── README.md
 ```
 
-## 🗄 Environment Variables
+## Environment Variables
 
-See /docker/.env for required variables (database passwords, Keycloak admin credentials, client secrets, etc.).
+See `/docker/.env.example` for required variables (database passwords, Keycloak admin credentials, client secrets, bootstrap toggle).
 
-## 🧪 API Testing
+## API Testing
 
-Swagger UI available at:
-`http://localhost:4200/api`
+Swagger UI: `http://localhost:4200/api`
