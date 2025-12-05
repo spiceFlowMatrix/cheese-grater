@@ -42,6 +42,8 @@ public class KeycloakInitialiser
     WriteIndented = true,
   };
 
+  private static bool IsConflict(ApiException ex) => ex.ResponseStatusCode == 409;
+
   public KeycloakInitialiser(
     ILogger<KeycloakInitialiser> logger,
     IKeycloakProtectionClient protectionClient,
@@ -63,6 +65,7 @@ public class KeycloakInitialiser
     try
     {
       await SeedAsync();
+      _logger.LogInformation("Keycloak seeding completed (idempotent run).");
     }
     catch (Exception ex)
     {
@@ -232,6 +235,15 @@ public class KeycloakInitialiser
         realm
       );
     }
+    catch (ApiException apiEx) when (IsConflict(apiEx))
+    {
+      _logger.LogInformation(
+        "Resource '{ResourceName}' already exists for client '{ClientId}' in realm '{Realm}'. Skipping.",
+        Resources.TodoResource,
+        clientId,
+        realm
+      );
+    }
     catch (Exception ex)
     {
       _logger.LogError(
@@ -269,6 +281,15 @@ public class KeycloakInitialiser
           realm
         );
       }
+      catch (ApiException apiEx) when (IsConflict(apiEx))
+      {
+        _logger.LogInformation(
+          "Scope '{ScopeName}' already exists for client '{ClientId}' in realm '{Realm}'. Skipping.",
+          scope.Name,
+          clientId,
+          realm
+        );
+      }
       catch (Exception ex)
       {
         _logger.LogError(
@@ -290,9 +311,11 @@ public class KeycloakInitialiser
     if (existingRoles == null)
       return;
 
+    var existingRoleNames = existingRoles.Select(r => r.Name).Where(n => n != null).ToHashSet();
+
     // Filter roles that do not exist
     var rolesToAdd = Roles
-      .All.Where(role => !existingRoles.Select((e) => e.Name).Contains(role))
+      .All.Where(role => !existingRoleNames.Contains(role))
       .Select(role => new RoleRepresentation { Name = role });
 
     // Add new roles
@@ -393,6 +416,15 @@ public class KeycloakInitialiser
 
         _logger.LogInformation("Successfully seeded policy {PolicyName}", policy.PolicyName);
       }
+      catch (ApiException apiEx) when (IsConflict(apiEx))
+      {
+        _logger.LogInformation(
+          "Policy '{PolicyName}' already exists for client '{ClientId}' in realm '{Realm}'. Skipping.",
+          policy.PolicyName,
+          clientId,
+          realm
+        );
+      }
       catch (Exception ex)
       {
         _logger.LogError(
@@ -459,6 +491,15 @@ public class KeycloakInitialiser
           );
         _logger.LogInformation(
           "Permission '{PermissionName}' seeded successfully for client '{ClientId}' in realm '{Realm}'.",
+          permission.Name,
+          clientId,
+          realm
+        );
+      }
+      catch (ApiException apiEx) when (IsConflict(apiEx))
+      {
+        _logger.LogInformation(
+          "Permission '{PermissionName}' already exists for client '{ClientId}' in realm '{Realm}'. Skipping.",
           permission.Name,
           clientId,
           realm
