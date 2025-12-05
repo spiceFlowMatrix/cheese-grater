@@ -1,4 +1,5 @@
 using Azure.Identity;
+using CheeseGrater.Application.Common.Security;
 using CheeseGrater.Core.Application.Common.Interfaces;
 using CheeseGrater.Infrastructure.Data;
 using CheeseGrater.Web.Services;
@@ -25,6 +26,31 @@ public static class DependencyInjection
     builder.Services.Configure<ApiBehaviorOptions>(options =>
       options.SuppressModelStateInvalidFilter = true
     );
+
+    var spaClientOptions =
+      builder.Configuration.GetSection("SpaClient").Get<SpaClientOptions>()
+      ?? new SpaClientOptions();
+    var spaOrigin = spaClientOptions.RootUrl?.TrimEnd('/');
+
+    builder.Services.AddCors(options =>
+    {
+      options.AddPolicy(
+        "SpaCors",
+        policy =>
+        {
+          if (!string.IsNullOrWhiteSpace(spaOrigin))
+          {
+            policy.WithOrigins(spaOrigin).AllowCredentials();
+          }
+          else
+          {
+            policy.AllowAnyOrigin();
+          }
+
+          policy.AllowAnyHeader().AllowAnyMethod();
+        }
+      );
+    });
 
     builder.Services.AddEndpointsApiExplorer();
 

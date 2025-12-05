@@ -34,6 +34,7 @@ public class KeycloakInitialiser
   private readonly KeycloakAdminApiClient _adminClient;
   private readonly Keycloak.AuthServices.Sdk.Kiota.KeycloakAdminClientOptions _options;
   private readonly KeycloakProtectionClientOptions _protectionOptions;
+  private readonly SpaClientOptions _spaClientOptions;
 
   private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
   {
@@ -44,12 +45,19 @@ public class KeycloakInitialiser
 
   private static bool IsConflict(ApiException ex) => ex.ResponseStatusCode == 409;
 
+  private static string EnsureTrailingSlash(string value)
+  {
+    var normalized = (value ?? string.Empty).Trim();
+    return normalized.EndsWith("/") ? normalized : $"{normalized}/";
+  }
+
   public KeycloakInitialiser(
     ILogger<KeycloakInitialiser> logger,
     IKeycloakProtectionClient protectionClient,
     KeycloakAdminApiClient adminClient,
     IOptions<Keycloak.AuthServices.Sdk.Kiota.KeycloakAdminClientOptions> options,
-    IOptions<KeycloakProtectionClientOptions> protectionOptions
+    IOptions<KeycloakProtectionClientOptions> protectionOptions,
+    IOptions<SpaClientOptions> spaClientOptions
   )
   {
     _protectionClient = protectionClient;
@@ -58,6 +66,8 @@ public class KeycloakInitialiser
     _options = options.Value ?? throw new ArgumentNullException(nameof(options.Value));
     _protectionOptions =
       protectionOptions.Value ?? throw new ArgumentNullException(nameof(protectionOptions.Value));
+    _spaClientOptions =
+      spaClientOptions.Value ?? throw new ArgumentNullException(nameof(spaClientOptions.Value));
   }
 
   public async Task InitialiseAsync()
@@ -92,6 +102,21 @@ public class KeycloakInitialiser
           await SeedRolesAsync(realmName, clientId);
           await SeedPoliciesAsync(realmName, clientId);
           await SeedPermissionsAsync(realmName, clientId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(_spaClientOptions.ClientId))
+        {
+          if (string.IsNullOrWhiteSpace(_spaClientOptions.RootUrl))
+          {
+            _logger.LogWarning(
+              "SPA client id is set but RootUrl is missing. Skipping SPA client seeding."
+            );
+          }
+          else
+          {
+            var spaRootUrl = EnsureTrailingSlash(_spaClientOptions.RootUrl);
+            await SeedSpaClientAsync(realmName, _spaClientOptions.ClientId, spaRootUrl);
+          }
         }
       }
     }
@@ -193,7 +218,7 @@ public class KeycloakInitialiser
 
     try
     {
-      await _adminClient.Admin.Realms[clientNameId].Clients[client.Id].PutAsync(client);
+      await _adminClient.Admin.Realms[realm].Clients[client.Id].PutAsync(client);
     }
     catch (Exception ex)
     {
@@ -205,6 +230,137 @@ public class KeycloakInitialiser
     }
 
     return client.Id;
+  }
+
+  private async Task SeedSpaClientAsync(string realm, string spaClientId, string spaRootUrl)
+  {
+    if (string.IsNullOrWhiteSpace(realm))
+      throw new ArgumentException("Realm cannot be null or empty.", nameof(realm));
+    if (string.IsNullOrWhiteSpace(spaClientId))
+      throw new ArgumentException("SPA client id cannot be null or empty.", nameof(spaClientId));
+    if (string.IsNullOrWhiteSpace(spaRootUrl))
+      throw new ArgumentException("SPA root url cannot be null or empty.", nameof(spaRootUrl));
+
+    var redirectPattern = $"{spaRootUrl}*";
+    var existingClients = await _adminClient
+      .Admin.Realms[realm]
+      .Clients.GetAsync(config =>
+      {
+        config.QueryParameters = new ClientsRequestBuilderGetQueryParameters
+        {
+          ClientId = spaClientId,
+        };
+      });
+
+    var existingClientId = existingClients?.FirstOrDefault(c => c.ClientId == spaClientId)?.Id;
+
+    if (string.IsNullOrWhiteSpace(existingClientId))
+    {
+      try
+      {
+        var attributes = new ClientRepresentation_attributes();
+        attributes.AdditionalData["post.logout.redirect.uris"] = redirectPattern;
+
+        await _adminClient
+          .Admin.Realms[realm]
+          .Clients.PostAsync(
+            new ClientRepresentation
+            {
+              ClientId = spaClientId,
+              Name = spaClientId,
+              Enabled = true,
+              PublicClient = true,
+              StandardFlowEnabled = true,
+              DirectAccessGrantsEnabled = false,
+              Protocol = "openid-connect",
+              RootUrl = spaRootUrl,
+              RedirectUris = [redirectPattern],
+              WebOrigins = [spaRootUrl.TrimEnd('/')],
+              Attributes = attributes,
+            }
+          );
+        _logger.LogInformation(
+          "SPA client '{ClientId}' created with root '{RootUrl}' in realm '{Realm}'.",
+          spaClientId,
+          spaRootUrl,
+          realm
+        );
+        return;
+      }
+      catch (Exception ex)
+      {
+        _logger.LogError(
+          ex,
+          "Failed to create SPA client '{ClientId}' in realm '{Realm}'.",
+          spaClientId,
+          realm
+        );
+        return;
+      }
+    }
+
+    ClientRepresentation? client = null;
+    try
+    {
+      client = await _adminClient.Admin.Realms[realm].Clients[existingClientId].GetAsync();
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(
+        ex,
+        "Failed to retrieve SPA client '{ClientId}' details in realm '{Realm}'.",
+        spaClientId,
+        realm
+      );
+      return;
+    }
+
+    if (client == null)
+    {
+      _logger.LogWarning(
+        "SPA client '{ClientId}' was not found after lookup in realm '{Realm}'.",
+        spaClientId,
+        realm
+      );
+      return;
+    }
+
+    client.PublicClient = true;
+    client.StandardFlowEnabled = true;
+    client.DirectAccessGrantsEnabled = false;
+    client.RootUrl = spaRootUrl;
+
+    var redirectUris = client.RedirectUris?.ToHashSet() ?? new HashSet<string>();
+    redirectUris.Add(redirectPattern);
+    client.RedirectUris = [.. redirectUris];
+
+    var webOrigins = client.WebOrigins?.ToHashSet() ?? new HashSet<string>();
+    webOrigins.Remove("+");
+    webOrigins.Add(spaRootUrl.TrimEnd('/'));
+    client.WebOrigins = [.. webOrigins];
+
+    client.Attributes ??= new ClientRepresentation_attributes();
+    client.Attributes.AdditionalData["post.logout.redirect.uris"] = redirectPattern;
+
+    try
+    {
+      await _adminClient.Admin.Realms[realm].Clients[existingClientId].PutAsync(client);
+      _logger.LogInformation(
+        "SPA client '{ClientId}' updated with root '{RootUrl}' in realm '{Realm}'.",
+        spaClientId,
+        spaRootUrl,
+        realm
+      );
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(
+        ex,
+        "Failed to update SPA client '{ClientId}' in realm '{Realm}'.",
+        spaClientId,
+        realm
+      );
+    }
   }
 
   private async Task SeedResourcesAsync(string realm, string clientId)
@@ -416,17 +572,14 @@ public class KeycloakInitialiser
 
         _logger.LogInformation("Successfully seeded policy {PolicyName}", policy.PolicyName);
       }
-      catch (ApiException apiEx) when (IsConflict(apiEx))
-      {
-        _logger.LogInformation(
-          "Policy '{PolicyName}' already exists for client '{ClientId}' in realm '{Realm}'. Skipping.",
-          policy.PolicyName,
-          clientId,
-          realm
-        );
-      }
       catch (Exception ex)
       {
+        if (ex is ApiException apiEx && IsConflict(apiEx))
+        {
+          _logger.LogWarning("Skipping existing item: {Message}", apiEx.Message);
+          continue;
+        }
+
         _logger.LogError(
           ex,
           "Error seeding policy {PolicyName} for client {ClientId} in realm {Realm}",
@@ -496,17 +649,14 @@ public class KeycloakInitialiser
           realm
         );
       }
-      catch (ApiException apiEx) when (IsConflict(apiEx))
-      {
-        _logger.LogInformation(
-          "Permission '{PermissionName}' already exists for client '{ClientId}' in realm '{Realm}'. Skipping.",
-          permission.Name,
-          clientId,
-          realm
-        );
-      }
       catch (Exception ex)
       {
+        if (ex is ApiException apiEx && IsConflict(apiEx))
+        {
+          _logger.LogWarning("Skipping existing item: {Message}", apiEx.Message);
+          continue;
+        }
+
         _logger.LogError(
           ex,
           "Failed to seed permission '{PermissionName}' for client '{ClientId}' in realm '{Realm}'.",

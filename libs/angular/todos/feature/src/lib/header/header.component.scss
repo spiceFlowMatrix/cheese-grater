@@ -1,0 +1,23 @@
+.todos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.brand {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.actions .login-link {
+  text-decoration: none;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.actions .login-link:hover {
+  text-decoration: underline;
+}

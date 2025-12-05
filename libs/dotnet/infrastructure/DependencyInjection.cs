@@ -54,6 +54,30 @@ public static class DependencyInjection
 
     builder.Services.AddScoped<ApplicationDbContextInitialiser>();
     builder.Services.AddScoped<KeycloakInitialiser>();
+    builder
+      .Services.AddOptions<SpaClientOptions>()
+      .Bind(builder.Configuration.GetSection("SpaClient"))
+      .PostConfigure(options =>
+      {
+        var envClientId = builder.Configuration["KEYCLOAK_SPA_CLIENT_ID"];
+        var envRootUrl = builder.Configuration["KEYCLOAK_SPA_ROOT_URL"];
+        var envRequireHttps = builder.Configuration["KEYCLOAK_SPA_REQUIRE_HTTPS"];
+
+        if (!string.IsNullOrWhiteSpace(envClientId))
+        {
+          options.ClientId = envClientId;
+        }
+
+        if (!string.IsNullOrWhiteSpace(envRootUrl))
+        {
+          options.RootUrl = envRootUrl;
+        }
+
+        if (bool.TryParse(envRequireHttps, out var requireHttps))
+        {
+          options.RequireHttps = requireHttps;
+        }
+      });
 
     builder.Services.AddAuthorization(o =>
     {

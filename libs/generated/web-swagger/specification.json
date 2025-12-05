@@ -23,6 +23,19 @@
         }
       }
     },
+    "/api/identity/spa-config": {
+      "get": {
+        "tags": [
+          "Identity"
+        ],
+        "operationId": "GetApiIdentitySpaConfig",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/TodoItems": {
       "get": {
         "tags": [

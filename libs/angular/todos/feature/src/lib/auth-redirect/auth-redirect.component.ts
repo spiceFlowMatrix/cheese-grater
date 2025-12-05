@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import Keycloak from 'keycloak-js';
 import { AuthRedirectPanelComponent } from '@cheese-grater/angular/shared/ui';
 
 @Component({
@@ -9,4 +10,19 @@ import { AuthRedirectPanelComponent } from '@cheese-grater/angular/shared/ui';
   styleUrl: './auth-redirect.component.scss',
   standalone: true,
 })
-export class AuthRedirectComponent {}
+export class AuthRedirectComponent {
+  private readonly keycloak = inject(Keycloak);
+  public authenticated = this.keycloak?.authenticated ?? false;
+
+  async onLogin() {
+    await this.keycloak.login();
+    this.authenticated = this.keycloak?.authenticated ?? false;
+  }
+
+  async onLogout() {
+    await this.keycloak.logout({
+      redirectUri: window.location.origin,
+    });
+    this.authenticated = this.keycloak?.authenticated ?? false;
+  }
+}

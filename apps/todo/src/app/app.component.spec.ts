@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { RouterModule } from '@angular/router';
 import Keycloak from 'keycloak-js';
+import { SpaAuthConfigService } from './core/services/spa-auth-config.service';
 
 // Mock Keycloak
 const mockKeycloak = {
@@ -11,11 +12,25 @@ const mockKeycloak = {
   token: 'mock-token',
 };
 
+const mockSpaAuthConfigService = {
+  loadConfig: jest.fn().mockResolvedValue({
+    authServerUrl: 'http://localhost:8081/',
+    realm: 'Test',
+    clientId: 'todo-web',
+    redirectUri: 'http://localhost:4200/',
+    logoutRedirectUri: 'http://localhost:4200/',
+    requireHttps: false,
+  }),
+};
+
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent, RouterModule.forRoot([])],
-      providers: [{ provide: Keycloak, useValue: mockKeycloak }],
+      providers: [
+        { provide: Keycloak, useValue: mockKeycloak },
+        { provide: SpaAuthConfigService, useValue: mockSpaAuthConfigService },
+      ],
     }).compileComponents();
   });
 
