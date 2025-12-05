@@ -48,7 +48,7 @@ Keycloak-related links:
 
 ## Dual IAM Initialization Modes
 
-- **Declarative Mode (recommended)** – `KEYCLOAK_BOOTSTRAP_MODE=off` runs keycloak-config-cli with `docker/keycloak/config/master-realm.yaml` for reproducible admin client setup.
+- **Declarative Mode (recommended)** – `KEYCLOAK_BOOTSTRAP_MODE=off` builds a config image that renders `docker/keycloak/config/master-realm.yaml.template` with env vars, then runs keycloak-config-cli against the generated YAML for reproducible admin client setup.
 - **Bootstrap Mode (fast dev)** – `KEYCLOAK_BOOTSTRAP_MODE=on` runs `/opt/keycloak/bootstrap/create-admin-client.sh` inside the Keycloak container to create/update the admin service account client and secret.
 
 ### Architecture (ASCII)

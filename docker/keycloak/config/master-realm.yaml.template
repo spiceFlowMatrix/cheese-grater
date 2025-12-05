@@ -1,5 +1,7 @@
-# Declarative Keycloak config for the master realm (consumed by keycloak-config-cli).
+# Declarative Keycloak config template for the master realm (rendered by entrypoint.sh)
+
 realm: master
+
 clients:
   - clientId: web-admin-serviceaccount
     enabled: true
@@ -9,6 +11,7 @@ clients:
     directAccessGrantsEnabled: false
     protocol: openid-connect
     secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
+
     protocolMappers:
       - name: aud-security-admin-console
         protocol: openid-connect
@@ -17,6 +20,7 @@ clients:
           included.client.audience: security-admin-console
           id.token.claim: "true"
           access.token.claim: "true"
+
 users:
   - username: service-account-web-admin-serviceaccount
     enabled: true

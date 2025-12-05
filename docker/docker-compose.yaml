@@ -70,7 +70,9 @@ services:
       - pg-network
 
   keycloak-config:
-    image: adorsys/keycloak-config-cli:latest
+    build:
+      context: ./keycloak/config
+      dockerfile: Dockerfile
     depends_on:
       keycloak:
         condition: service_healthy
@@ -79,21 +81,7 @@ services:
       KEYCLOAK_USER: ${KEYCLOAK_ADMIN}
       KEYCLOAK_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
-      IMPORT_FILES_LOCATIONS: /config/*
-      KEYCLOAK_BOOTSTRAP_MODE: ${KEYCLOAK_BOOTSTRAP_MODE:-off}
-      IMPORT_VARS_ENABLED: "true"
-      IMPORT_VAR_PREFIX: ""
-    volumes:
-      - ./keycloak/config:/config:ro
-    command: >
-      sh -c '
-        if [ "$KEYCLOAK_BOOTSTRAP_MODE" = "off" ]; then
-          echo "Keycloak is healthy. Applying declarative config...";
-          java -jar /opt/keycloak-config-cli.jar;
-        else
-          echo "Bootstrap mode on, skipping declarative import";
-        fi
-      '
+      LOGGING_LEVEL_ROOT: DEBUG
     networks:
       - pg-network
 

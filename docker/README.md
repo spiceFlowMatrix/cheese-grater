@@ -8,7 +8,7 @@
 ## Dual IAM Initialization Modes
 - **Declarative Mode (recommended)**  
   - `KEYCLOAK_BOOTSTRAP_MODE=off`  
-  - Runs `adorsys/keycloak-config-cli` against `docker/keycloak/config/master-realm.yaml` (deterministic admin client + secret).
+  - Builds a tiny config image that renders `docker/keycloak/config/master-realm.yaml.template` with env vars, then runs keycloak-config-cli against the generated YAML.
 - **Bootstrap Mode (fast dev)**  
   - `KEYCLOAK_BOOTSTRAP_MODE=on`  
   - Keycloak container runs `/opt/keycloak/bootstrap/create-admin-client.sh` (kcadm-based, idempotent) to create/update `web-admin-serviceaccount`, set its secret, audience mapper, and admin role.
@@ -31,7 +31,7 @@ Monorepo
 - `pgadmin` for DB inspection
 
 ## Key Files
-- Declarative config: `docker/keycloak/config/master-realm.yaml`
+- Declarative config template: `docker/keycloak/config/master-realm.yaml.template` (rendered at runtime)
 - Bootstrap script: `docker/keycloak/bootstrap/create-admin-client.sh`
 - Compose: `docker/docker-compose.yaml`
 - Env template: `.env.example` (real `.env` is gitignored)

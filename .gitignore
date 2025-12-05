@@ -44,6 +44,9 @@ Thumbs.db
 .nx/cache
 .nx/workspace-data
 
+# Generated Keycloak config artifacts
+docker/keycloak/config/generated/
+
 .angular
 
 .cursor\rules\nx-rules.mdc

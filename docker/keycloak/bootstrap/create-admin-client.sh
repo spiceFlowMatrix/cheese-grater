@@ -4,7 +4,6 @@ set -euo pipefail
 : "${KEYCLOAK_ADMIN:?Missing KEYCLOAK_ADMIN}"
 : "${KEYCLOAK_ADMIN_PASSWORD:?Missing KEYCLOAK_ADMIN_PASSWORD}"
 : "${KEYCLOAK_ADMIN_CLIENT_ID:=web-admin-serviceaccount}"
-: "${KEYCLOAK_ADMIN_CLIENT_SECRET:?Missing KEYCLOAK_ADMIN_CLIENT_SECRET}"
 
 KC_BIN="/opt/keycloak/bin/kcadm.sh"
 KC_HOST="${KC_HOST:-http://localhost:8080}"
@@ -37,9 +36,6 @@ if [[ -z "$CLIENT_ID" ]]; then
     -s protocol="openid-connect" >/dev/null 2>&1 || true
   CLIENT_ID=$($KC_BIN get clients -r "$REALM" -q clientId="$KEYCLOAK_ADMIN_CLIENT_ID" --fields id --format csv | tail -n 1 | tr -d '\r')
 fi
-
-# Ensure secret is set
-$KC_BIN update clients/"$CLIENT_ID" -r "$REALM" -s secret="$KEYCLOAK_ADMIN_CLIENT_SECRET"
 
 # Add audience mapper (idempotent)
 AUDIENCE_MAPPER_NAME="aud-security-admin-console"
