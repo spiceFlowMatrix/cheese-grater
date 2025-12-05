@@ -1,0 +1,27 @@
+# Ignore node build artifacts
+node_modules/
+**/node_modules/
+dist/
+.nx/
+.angular/
+coverage/
+tmp/
+**/bin/
+**/obj/
+.yarn/cache/
+.yarn/install-state.gz
+
+# Allow .NET solution & project files
+!*.sln
+!*.csproj
+!Directory.Packages.props
+!NuGet.config
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+
+# Git & OS
+.git/
+.DS_Store

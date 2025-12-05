@@ -1,0 +1,165 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: cg-postgres
+    env_file:
+      - ../.env.example
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-cheese_grater}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: cg-pgadmin
+    env_file:
+      - ../.env.example
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-changeme-pgadmin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./servers.json:/pgadmin4/servers.json
+
+  keycloak-db:
+    image: postgres:16
+    container_name: cg-keycloak-db
+    env_file:
+      - ../.env.example
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-changeme-keycloakdb}
+      POSTGRES_DB: keycloak
+    volumes:
+      - keycloak_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.2.5
+    container_name: cg-keycloak
+    env_file:
+      - ../.env.example
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-changeme}
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:-changeme-admin-client}
+      KEYCLOAK_ADMIN_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID:-web-admin-serviceaccount}
+      KEYCLOAK_BOOTSTRAP_MODE: ${KEYCLOAK_BOOTSTRAP_MODE:-off}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-changeme-keycloakdb}
+      KC_LOG_LEVEL: info
+    ports:
+      - "${KEYCLOAK_HTTP_PORT:-8081}:8080"
+    volumes:
+      - ./keycloak/providers:/opt/keycloak/providers
+      - ./keycloak/imports:/opt/keycloak/data/import
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  keycloak-config-cli:
+    build:
+      context: ./keycloak/config
+      dockerfile: Dockerfile
+    container_name: cg-keycloak-config-cli
+    env_file:
+      - ../.env.example
+    environment:
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_USER: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-changeme}
+      IMPORT_VARS_ENABLED: "true"
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:-changeme-admin-client}
+      LOGGING_LEVEL_ROOT: INFO
+    depends_on:
+      keycloak:
+        condition: service_healthy
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/dotnet/web/Dockerfile
+    container_name: cg-api
+    env_file:
+      - ../.env.example
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      ConnectionStrings__DefaultConnection: ${CONNECTIONSTRINGS__DEFAULTCONNECTION:-Host=postgres;Port=5432;Database=cheese_grater;Username=admin;Password=changeme-postgres}
+      Keycloak__auth-server-url: ${KEYCLOAK_AUTH_SERVER_URL:-http://keycloak:8080/}
+      Keycloak__realm: ${KEYCLOAK_REALM:-Test}
+      Keycloak__resource: ${KEYCLOAK_RESOURCE:-test-client}
+      Keycloak__credentials__secret: ${KEYCLOAK_RESOURCE_SECRET:-}
+      KeycloakAdmin__realm: ${KEYCLOAK_ADMIN_REALM:-master}
+      KeycloakAdmin__auth-server-url: ${KEYCLOAK_AUTH_SERVER_URL:-http://keycloak:8080/}
+      KeycloakAdmin__resource: ${KEYCLOAK_ADMIN_CLIENT_ID:-web-admin-serviceaccount}
+      KeycloakAdmin__credentials__secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:-changeme-admin-client}
+      SpaClient__ClientId: ${KEYCLOAK_SPA_CLIENT_ID:-todo-web}
+      SpaClient__RootUrl: ${KEYCLOAK_SPA_ROOT_URL:-http://localhost:4200}
+      SpaClient__RequireHttps: ${KEYCLOAK_SPA_REQUIRE_HTTPS:-false}
+      Keycloak__SeedOnStartup: ${KEYCLOAK_SEED_ON_STARTUP:-true}
+    ports:
+      - "${API_HTTP_PORT:-5106}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      keycloak-config-cli:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/todo/Dockerfile
+    container_name: cg-web
+    env_file:
+      - ../.env.example
+    ports:
+      - "${WEB_HTTP_PORT:-4200}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  keycloak_postgres_data:

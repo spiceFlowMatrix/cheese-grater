@@ -1,42 +1,45 @@
-# Docker Stack & Identity Modes
+# Docker Stack
 
-## Purpose of This Monorepo
-1) **Reusable Base Platform** – shared infra/auth templates for new projects.  
-2) **Core Service Library** – common domain/infrastructure packages.  
-3) **Showcase & Demo Environment** – runnable Keycloak/Postgres stack for demos.
+Run all infra and app containers from this directory using `docker-compose.yml`.
 
-## Dual IAM Initialization Modes
-- **Declarative Mode (recommended)**  
-  - `KEYCLOAK_BOOTSTRAP_MODE=off`  
-  - Builds a tiny config image that renders `docker/keycloak/config/master-realm.yaml.template` with env vars, then runs keycloak-config-cli against the generated YAML.
-- **Bootstrap Mode (fast dev)**  
-  - `KEYCLOAK_BOOTSTRAP_MODE=on`  
-  - Keycloak container runs `/opt/keycloak/bootstrap/create-admin-client.sh` (kcadm-based, idempotent) to create/update `web-admin-serviceaccount`, set its secret, audience mapper, and admin role.
+## Quick Start
 
-### Architecture (ASCII)
+From repo root:
+
 ```
-Monorepo
- ├── Core Libraries
- ├── Sample Apps
- ├── Identity Infrastructure
- │     ├── Declarative Mode
- │     └── Bootstrap Mode
- └── Docker Stack
+cp .env.example .env
+docker compose -f docker/docker-compose.yml up --build
 ```
+
+Services exposed:
+- API: http://localhost:5106
+- SPA: http://localhost:4200
+- Keycloak: http://localhost:8081
+- PgAdmin: http://localhost:5050
 
 ## Services
-- `postgres` / `keycloak-postgres` (data under `/var/lib/postgresql`)
-- `keycloak` with realm import + bootstrap hook
-- `keycloak-config` (one-shot declarative import when bootstrap is off)
-- `pgadmin` for DB inspection
+- `postgres` (app DB) with healthcheck
+- `pgadmin` (DB inspection)
+- `keycloak-db` (Keycloak DB) with healthcheck
+- `keycloak` (realm import + bootstrap hook) with `/health/ready` healthcheck
+- `keycloak-config-cli` (one-shot declarative import via keycloak-config-cli)
+- `api` (ASP.NET Core) depends on DB + Keycloak + config CLI; health `/health`
+- `web` (Angular via Nginx) depends on API; health `/`
 
-## Key Files
-- Declarative config template: `docker/keycloak/config/master-realm.yaml.template` (rendered at runtime)
-- Bootstrap script: `docker/keycloak/bootstrap/create-admin-client.sh`
-- Compose: `docker/docker-compose.yaml`
-- Env template: `.env.example` (real `.env` is gitignored)
+## Paths & Build Contexts
+- Compose file: `docker/docker-compose.yml` (only compose file)
+- API Dockerfile: `../apps/dotnet/web/Dockerfile` (relative to this directory)
+- SPA Dockerfile: `../apps/todo/Dockerfile`
+- Keycloak config CLI: `./keycloak/config/Dockerfile`
+- Keycloak providers/imports: `./keycloak/providers`, `./keycloak/imports`
 
-## Keycloak Usage
-- Service account admin client (`web-admin-serviceaccount`) with deterministic secret for Admin API calls.
-- Audience mapper for `security-admin-console`.
-- Admin realm role assigned to the service account.
+## IAM Initialization Modes
+- **Declarative Mode (default)**: `KEYCLOAK_BOOTSTRAP_MODE=off` renders `keycloak/config/master-realm.yaml.template` and runs keycloak-config-cli.
+- **Bootstrap Mode (fast dev)**: `KEYCLOAK_BOOTSTRAP_MODE=on` executes `/opt/keycloak/bootstrap/create-admin-client.sh` inside Keycloak to (re)create `web-admin-serviceaccount`.
+
+## Env
+- Use the root `.env.example` as the source of truth. Copy to `.env` at repo root before running compose.
+
+## Notes
+- All services share the default network; hostnames match service names (`postgres`, `keycloak`, `api`, `web`).
+- Healthcheck-based `depends_on` ensures startup order.

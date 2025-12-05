@@ -1,47 +1,46 @@
 # CheeseGrater
 
-## Purpose of This Monorepo
+CheeseGrater is a full-stack reference repo showing a modern **.NET 9 API + Angular SPA** secured with **Keycloak**, backed by **Postgres**, and fully dockerised with deterministic seeding. It’s meant as a portfolio-quality playground and a zero-config starter: clone, `docker compose up`, and everything runs.
 
-1. **Reusable Base Platform** – shared infrastructure, auth, and data patterns you can clone into new projects.
-2. **Core Service Library** – domain and infrastructure libraries intended for reuse across services.
-3. **Showcase & Demo Environment** – runnable Keycloak/Postgres stack plus sample apps to demonstrate the platform.
+## Architecture Overview
 
-## Prerequisites
+- **Infra**: Postgres + PgAdmin, Keycloak with config CLI seeding.
+- **Backend**: ASP.NET Core 9 API with Keycloak auth, UMA policies, and SPA config endpoint.
+- **Frontend**: Angular SPA that bootstraps Keycloak dynamically from the backend (`/api/identity/spa-config`).
 
-- Docker Desktop
-- Node.js, Angular, Nx tooling
-- .NET 9 SDK
+## Quick Start (Docker)
 
-## Install & Run
+Prereqs: Docker & Docker Compose.
 
-- `cd docker && docker compose up -d` (brings up Postgres, Keycloak, pgAdmin)
-- Run sample apps via Nx (e.g., `nx serve dotnet-web`)
+1. `cp .env.example .env`
+2. From repo root: `docker compose -f docker/docker-compose.yml up --build`
+3. Open:
+   - API: http://localhost:5106
+   - SPA: http://localhost:4200
+   - Keycloak: http://localhost:8081
+   - PgAdmin: http://localhost:5050
 
-## Dual IAM Initialization Modes
+## Run Backend Locally (uses Docker infra)
 
-- **Declarative Mode (recommended)** – GitOps-friendly, reproducible. `KEYCLOAK_BOOTSTRAP_MODE=off` builds a small config image that renders `docker/keycloak/config/master-realm.yaml.template` with env vars and runs keycloak-config-cli against the generated YAML.
-- **Bootstrap Mode (fast dev)** – runs `docker/keycloak/bootstrap/create-admin-client.sh` via `kcadm.sh` to create/update the admin service account client and secret. Enable with `KEYCLOAK_BOOTSTRAP_MODE=on`.
+1. Start infra: `docker compose up postgres keycloak keycloak-config-cli keycloak-db pgadmin`
+2. From repo root: `dotnet run --project apps/dotnet/web/CheeseGrater.Dotnet.Web.csproj`
+3. Backend reads DB/Keycloak from env (`.env`), so no JSON edits required.
 
-### Architecture (ASCII)
+## Run Frontend Locally
 
-```
-Monorepo
- ├── Core Libraries
- ├── Sample Apps
- ├── Identity Infrastructure
- │     ├── Declarative Mode
- │     └── Bootstrap Mode
- └── Docker Stack
-```
+1. Ensure backend is running (Docker or local).
+2. Install deps: `npm install` (from repo root).
+3. `npx nx serve todo` (SPA runs at http://localhost:4200).
+4. The SPA calls `/api/identity/spa-config`; no hardcoded API/Keycloak URLs.
 
-## Keycloak Usage Highlights
+## Configuration
 
-- UMA and resource-based policies in the .NET backend.
-- Service account admin client (`web-admin-serviceaccount`) for Admin API access.
-- Deterministic admin client creation (declarative file or bootstrap script) so tokens can be issued during automated seeding and NSwag runs.
+- `.env.example` lists all defaults; copy to `.env` to override.
+- Backend envs: DB connection, Keycloak (realm, admin client, SPA client), seeding toggle.
+- Frontend gets its Keycloak/API details from the backend endpoint—no environment files to edit.
 
-## Known Issues
+## Known Limitations / Open Issues
 
-- Nx graph hiccups: run `nx reset` if the graph stalls.
-- Nx migrate with `@nx-dotnet/core`: temporarily remove the plugin in `nx.json` if migrate hangs.
-- Central Package Management: ensure the file name is exactly `Directory.Packages.props` (case-sensitive on Linux CI).
+- HTTPS termination not configured in Docker examples.
+- Angular container uses a basic Nginx proxy; adjust if you need SSR.
+- Additional environments (staging/prod) are not templated yet.
