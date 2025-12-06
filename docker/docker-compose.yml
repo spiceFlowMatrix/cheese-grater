@@ -8,7 +8,7 @@ services:
       - ../.env.example
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-s3curePgPw_7kA2f9hQx}
       POSTGRES_DB: ${POSTGRES_DB:-cheese_grater}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
@@ -19,6 +19,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 5s
 
   pgadmin:
     image: dpage/pgadmin4:8
@@ -54,6 +55,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 5s
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.2.5
@@ -62,8 +64,8 @@ services:
       - ../.env.example
     command: start-dev --import-realm
     environment:
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-changeme}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-changeme}
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:-changeme-admin-client}
       KEYCLOAK_ADMIN_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID:-web-admin-serviceaccount}
       KEYCLOAK_BOOTSTRAP_MODE: ${KEYCLOAK_BOOTSTRAP_MODE:-off}
@@ -81,10 +83,11 @@ services:
       keycloak-db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1"]
+      test: ["CMD-SHELL", "echo > /dev/tcp/localhost/8080 || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 40
+      start_period: 30s
 
   keycloak-config-cli:
     build:
@@ -104,6 +107,25 @@ services:
       keycloak:
         condition: service_healthy
 
+  db-migrator:
+    build:
+      context: ..
+      dockerfile: apps/dotnet/web/Dockerfile.migrator
+      target: migrator
+    container_name: cg-db-migrator
+    env_file:
+      - ../.env.example
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: ${CONNECTIONSTRINGS__DEFAULTCONNECTION:-Host=postgres;Port=5432;Database=cheese_grater;Username=admin;Password=s3curePgPw_7kA2f9hQx}
+      SkipNSwag: "True"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    labels:
+      com.cheesegrater.skip-health: "true"
+
   api:
     build:
       context: ..
@@ -114,7 +136,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://0.0.0.0:8080
-      ConnectionStrings__DefaultConnection: ${CONNECTIONSTRINGS__DEFAULTCONNECTION:-Host=postgres;Port=5432;Database=cheese_grater;Username=admin;Password=changeme-postgres}
+      ConnectionStrings__DefaultConnection: ${CONNECTIONSTRINGS__DEFAULTCONNECTION:-Host=postgres;Port=5432;Database=cheese_grater;Username=admin;Password=s3curePgPw_7kA2f9hQx}
       Keycloak__auth-server-url: ${KEYCLOAK_AUTH_SERVER_URL:-http://keycloak:8080/}
       Keycloak__realm: ${KEYCLOAK_REALM:-Test}
       Keycloak__resource: ${KEYCLOAK_RESOURCE:-test-client}
@@ -136,29 +158,31 @@ services:
         condition: service_healthy
       keycloak-config-cli:
         condition: service_completed_successfully
+      db-migrator:
+        condition: service_completed_successfully
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      test: ["CMD-SHELL", "echo > /dev/tcp/localhost/8080 || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
 
-  web:
-    build:
-      context: ..
-      dockerfile: apps/todo/Dockerfile
-    container_name: cg-web
-    env_file:
-      - ../.env.example
-    ports:
-      - "${WEB_HTTP_PORT:-4200}:80"
-    depends_on:
-      api:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
+  # web:
+  #   build:
+  #     context: ..
+  #     dockerfile: apps/todo/Dockerfile
+  #   container_name: cg-web
+  #   ports:
+  #     - "${WEB_HTTP_PORT:-4200}:80"
+  #   depends_on:
+  #     api:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "echo > /dev/tcp/localhost/80 || exit 1"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 10
+  #     start_period: 5s
 
 volumes:
   postgres_data:

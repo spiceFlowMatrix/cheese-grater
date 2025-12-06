@@ -1,0 +1,28 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS migrator
+WORKDIR /src
+
+COPY cheese-grater.sln ./
+
+COPY apps/dotnet/web/*.csproj apps/dotnet/web/
+COPY apps/dotnet/web-test/*.csproj apps/dotnet/web-test/
+COPY libs/dotnet-packages-aggregate/*.csproj libs/dotnet-packages-aggregate/
+COPY libs/dotnet/application/*.csproj libs/dotnet/application/
+COPY libs/dotnet/infrastructure/*.csproj libs/dotnet/infrastructure/
+COPY libs/dotnet/core/application/*.csproj libs/dotnet/core/application/
+COPY libs/dotnet/core/domain/*.csproj libs/dotnet/core/domain/
+COPY libs/dotnet/core/infrastructure/*.csproj libs/dotnet/core/infrastructure/
+
+# Required by dotnet tools
+ENV DOTNET_CLI_HOME=/tmp \
+    DOTNET_NOLOGO=1 \
+    NX_DOTNET_SKIP_MODULE_BOUNDARIES=true \
+    NX_DOTNET_NO_RESTORE=1
+
+# Install EF CLI matching SDK to a fixed path (avoids cross-device issues)
+RUN dotnet tool install --tool-path /usr/local/bin dotnet-ef --version 9.0.0
+
+COPY . .
+
+CMD ["/usr/local/bin/dotnet-ef", "database", "update", \
+     "--project", "apps/dotnet/web/CheeseGrater.Dotnet.Web.csproj", \
+     "--startup-project", "apps/dotnet/web/CheeseGrater.Dotnet.Web.csproj"]

@@ -13,7 +13,7 @@ RUN corepack enable && corepack prepare yarn@1.22.22 --activate
 
 FROM base AS deps
 COPY package.json yarn.lock* .yarnrc .yarnrc.yml ./
-COPY .yarn ./.yarn
+COPY .yarn .yarn
 
 RUN --mount=type=cache,target=/tmp/yarn-cache \
     yarn install --frozen-lockfile --ignore-scripts --ignore-optional --cache-folder /tmp/yarn-cache
@@ -28,8 +28,7 @@ COPY apps ./apps
 COPY libs ./libs
 
 RUN --mount=type=cache,target=/workspace/.nx/cache \
-    --mount=type=cache,target=/tmp/yarn-cache \
-    yarn nx build todo --configuration=production --skip-nx-cache=false --verbose
+    yarn nx build todo --configuration=production --skip-nx-cache=false
 
 FROM nginx:1.27-alpine AS runtime
 WORKDIR /usr/share/nginx/html

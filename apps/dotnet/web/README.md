@@ -1,34 +1,25 @@
 # CheeseGrater .NET Backend
 
-Primary ASP.NET Core 9 API with Keycloak integration and SPA config delivery.
+ASP.NET Core 9 API secured with Keycloak, delivers SPA config, and uses a compose-run EF migrator to keep the database current.
 
-## Purpose
-- Demo API with Clean Architecture layers and UMA/Keycloak integration.
-- Exposes `/api/identity/spa-config` for the Angular SPA to bootstrap Keycloak.
-- Seeds Keycloak (dev only) for API + SPA clients.
+## How it works
+- **EF migrator**: `db-migrator` service (Docker) builds the app image and runs `dotnet ef database update` before the API starts.
+- **Keycloak admin client**: seeded via `keycloak-config-cli`; admin client id/secret come from `.env` and allow the API to seed Keycloak (dev).
+- **SPA config**: `GET /api/identity/spa-config` returns Keycloak + API settings for the Angular app (no frontend env files).
 
-## Run Locally (connects to Docker infra)
-1. Start infra: `docker compose -f docker/docker-compose.yml up postgres keycloak keycloak-config-cli keycloak-db pgadmin`
-2. From repo root: `dotnet run --project apps/dotnet/web/CheeseGrater.Dotnet.Web.csproj`
-3. Open API: `http://localhost:5106` (or your configured `API_HTTP_PORT`).
+## Run locally
+- Start infra + API via Docker: `docker compose -f docker/docker-compose.yml up --build`
+- Or, to run API locally against Docker infra: `dotnet run --project apps/dotnet/web/CheeseGrater.Dotnet.Web.csproj` (after infra is up)
+- API: http://localhost:5106
+- Swagger UI: http://localhost:5106/api (spec at `/api/specification.json`)
 
-## Keycloak Integration
-- Realm: `Test` (default)
-- API client: `test-client` (confidential; secret via env)
-- SPA client: `todo-web` (public; seeded with redirects/web origins from `SpaClient` options)
-- SPA config endpoint: `GET /api/identity/spa-config`
-- Seeding: Development only; controlled by `Keycloak:SeedOnStartup` (or env `KEYCLOAK__SEEDONSTARTUP`).
-
-## Environment Variables (common)
-- `ConnectionStrings__DefaultConnection` (e.g., `Host=postgres;Port=5432;...`)
-- `Keycloak__auth-server-url` (docker: `http://keycloak:8080/`, local: `http://localhost:8081/`)
-- `Keycloak__realm`, `Keycloak__resource`, `Keycloak__credentials__secret`
+## Environment
+- `ConnectionStrings__DefaultConnection`
+- `Keycloak__auth-server-url`, `Keycloak__realm`, `Keycloak__resource`, `Keycloak__credentials__secret`
 - `KeycloakAdmin__auth-server-url`, `KeycloakAdmin__resource`, `KeycloakAdmin__credentials__secret`
 - `SpaClient__ClientId`, `SpaClient__RootUrl`, `SpaClient__RequireHttps`
-- `Keycloak:SeedOnStartup` (bool)
-
-See root `.env.example` for defaults.
+- `Keycloak__SeedOnStartup` to toggle dev seeding
+Defaults live in `.env.example`; override via `.env` / `.env.local`.
 
 ## Health
-- Health endpoint: `/health`
-- Docker healthcheck uses this path.
+- `/health` used by Docker healthcheck.

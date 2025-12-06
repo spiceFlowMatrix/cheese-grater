@@ -12,8 +12,7 @@ docker compose -f docker/docker-compose.yml up --build
 ```
 
 Services exposed:
-- API: http://localhost:5106
-- SPA: http://localhost:4200
+- API: http://localhost:5106 (Swagger UI at `/api`, spec at `/api/specification.json`)
 - Keycloak: http://localhost:8081
 - PgAdmin: http://localhost:5050
 
@@ -21,10 +20,10 @@ Services exposed:
 - `postgres` (app DB) with healthcheck
 - `pgadmin` (DB inspection)
 - `keycloak-db` (Keycloak DB) with healthcheck
-- `keycloak` (realm import + bootstrap hook) with `/health/ready` healthcheck
+- `keycloak` (realm import + bootstrap hook) with `/realms/master` healthcheck
 - `keycloak-config-cli` (one-shot declarative import via keycloak-config-cli)
-- `api` (ASP.NET Core) depends on DB + Keycloak + config CLI; health `/health`
-- `web` (Angular via Nginx) depends on API; health `/`
+- `db-migrator` (one-shot EF migrations)
+- `api` (ASP.NET Core) depends on DB + Keycloak + config CLI + migrator; health `/health`
 
 ## Paths & Build Contexts
 - Compose file: `docker/docker-compose.yml` (only compose file)

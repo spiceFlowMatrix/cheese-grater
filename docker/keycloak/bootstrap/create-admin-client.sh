@@ -53,3 +53,4 @@ fi
 # Grant admin realm role to the service account
 SERVICE_ACCOUNT="service-account-$KEYCLOAK_ADMIN_CLIENT_ID"
 $KC_BIN add-roles --uusername "$SERVICE_ACCOUNT" -r "$REALM" --rolename admin >/dev/null 2>&1 || true
+

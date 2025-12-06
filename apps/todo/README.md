@@ -1,25 +1,16 @@
 # Todo Angular App
 
-Angular SPA demonstrating Keycloak auth via dynamic config from the backend.
+Angular SPA that bootstraps Keycloak + API settings from the backend (no Angular env files).
 
-## Purpose
-- Simple UI shell with auth redirect flow and header.
-- Fetches Keycloak + API config from `/api/identity/spa-config` at startup.
-- No hardcoded API or Keycloak URLs in the code.
+## How it works
+- Fetches `/api/identity/spa-config` at startup to configure Keycloak and API base URL.
+- Auth flows use the SPA client seeded in Keycloak (via config CLI).
 
-## Run Locally
-1. Ensure backend + infra are running (Docker `docker compose up` or local backend).
-2. Install deps: `npm install` (from repo root).
-3. `npx nx serve todo` (defaults to http://localhost:4200).
+## Run locally
+1) Start infra + API: `docker compose -f docker/docker-compose.yml up --build`
+2) `yarn install`
+3) `yarn nx serve todo` (http://localhost:4200)
 
-## Configuration
-- SPA bootstraps via the backend endpoint; no Angular environment files required.
-- Keycloak client ID / redirect origins come from the backend `SpaClient` options.
-
-## Docker Notes
-- Served by the `web` service in `docker-compose.yml` (Nginx).
-- `/api` is proxied to the `api` service inside the Docker network.
-
-## Auth Flow
-- Header links to `/auth-redirect`.
-- Auth redirect page shows login or logout buttons based on Keycloak state and calls Keycloak JS login/logout.
+## Dockerized deployment
+- Built via `apps/todo/Dockerfile` (nginx runtime).  
+- Healthcheck uses `curl` on `/`; `/api` should be proxied to the API service in compose.

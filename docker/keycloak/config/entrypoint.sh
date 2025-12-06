@@ -18,3 +18,4 @@ done
 
 echo "Applying declarative configuration..."
 exec java -jar /app/keycloak-config-cli.jar --import.files.locations="$OUTPUT"
+

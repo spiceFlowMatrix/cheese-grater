@@ -1,46 +1,32 @@
 # CheeseGrater
 
-CheeseGrater is a full-stack reference repo showing a modern **.NET 9 API + Angular SPA** secured with **Keycloak**, backed by **Postgres**, and fully dockerised with deterministic seeding. It’s meant as a portfolio-quality playground and a zero-config starter: clone, `docker compose up`, and everything runs.
+Deterministic full-stack starter showcasing **.NET 9** + **Angular** with **Keycloak** and **Postgres**, wired for reproducible local infra, EF migrations via a one-shot migrator, and monorepo-friendly Docker/Nx workflows.
 
-## Architecture Overview
+## What’s inside
 
-- **Infra**: Postgres + PgAdmin, Keycloak with config CLI seeding.
-- **Backend**: ASP.NET Core 9 API with Keycloak auth, UMA policies, and SPA config endpoint.
-- **Frontend**: Angular SPA that bootstraps Keycloak dynamically from the backend (`/api/identity/spa-config`).
+- **Infra**: Postgres + PgAdmin, Keycloak with declarative seeding (config CLI).
+- **Backend**: ASP.NET Core 9 API with Keycloak auth/UMA and SPA config at `/api/identity/spa-config`.
+- **Frontend**: Angular SPA that bootstraps Keycloak/API config from the backend (no hardcoded env files).
 
-## Quick Start (Docker)
+## Quick start (Docker infra + API)
 
-Prereqs: Docker & Docker Compose.
+Prereqs: Docker/Compose. Run from repo root:
 
-1. `cp .env.example .env`
-2. From repo root: `docker compose -f docker/docker-compose.yml up --build`
-3. Open:
-   - API: http://localhost:5106
-   - SPA: http://localhost:4200
-   - Keycloak: http://localhost:8081
-   - PgAdmin: http://localhost:5050
+1. `cp .env.example .env` (or use `.env.local` for personal overrides)
+2. `docker compose -f docker/docker-compose.yml up --build`
+3. URLs: API http://localhost:5106 (Swagger UI at `/api`, spec at `/api/specification.json`), Keycloak http://localhost:8081, PgAdmin http://localhost:5050.
 
-## Run Backend Locally (uses Docker infra)
+## Local development
 
-1. Start infra: `docker compose up postgres keycloak keycloak-config-cli keycloak-db pgadmin`
-2. From repo root: `dotnet run --project apps/dotnet/web/CheeseGrater.Dotnet.Web.csproj`
-3. Backend reads DB/Keycloak from env (`.env`), so no JSON edits required.
+- **Infra + API via Docker**: `docker compose -f docker/docker-compose.yml up --build` (includes EF `db-migrator`, Postgres, Keycloak, API).
+- **Frontend locally**: `yarn install` then `yarn nx serve todo` (http://localhost:4200). The SPA reads `/api/identity/spa-config`; no Angular env files needed.
 
-## Run Frontend Locally
+## Environment overrides
 
-1. Ensure backend is running (Docker or local).
-2. Install deps: `npm install` (from repo root).
-3. `npx nx serve todo` (SPA runs at http://localhost:4200).
-4. The SPA calls `/api/identity/spa-config`; no hardcoded API/Keycloak URLs.
+- Copy `.env.example` to `.env` for Docker defaults; use `.env.local` for local-only overrides.
+- Key vars: `ConnectionStrings__DefaultConnection`, Keycloak realm/admin/client secrets, SPA client IDs/URLs. Defaults are in `.env.example`.
 
-## Configuration
+## Notes
 
-- `.env.example` lists all defaults; copy to `.env` to override.
-- Backend envs: DB connection, Keycloak (realm, admin client, SPA client), seeding toggle.
-- Frontend gets its Keycloak/API details from the backend endpoint—no environment files to edit.
-
-## Known Limitations / Open Issues
-
-- HTTPS termination not configured in Docker examples.
-- Angular container uses a basic Nginx proxy; adjust if you need SSR.
-- Additional environments (staging/prod) are not templated yet.
+- EF migrations run via the `db-migrator` one-shot service in Compose before the API starts.
+- HTTPS/prod hardening is out of scope; adjust compose/nginx as needed.

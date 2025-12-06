@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy solution file & project files first for layer caching
+# Copy solution and csproj files for proper Docker layer caching
 COPY cheese-grater.sln ./
 
 COPY apps/dotnet/web/*.csproj apps/dotnet/web/
@@ -13,7 +13,7 @@ COPY libs/dotnet/core/application/*.csproj libs/dotnet/core/application/
 COPY libs/dotnet/core/domain/*.csproj libs/dotnet/core/domain/
 COPY libs/dotnet/core/infrastructure/*.csproj libs/dotnet/core/infrastructure/
 
-# Skip Nx module boundary checks in Docker (node not available in SDK image)
+# Skip Nx module boundary checks inside Docker (node CLI isn't available here)
 ENV NX_DOTNET_SKIP_MODULE_BOUNDARIES=true
 
 # Restore dependencies
@@ -22,8 +22,11 @@ RUN dotnet restore
 # Copy the rest of the repository
 COPY . .
 
-# Publish the web API (skip NSwag)
-RUN dotnet publish apps/dotnet/web/CheeseGrater.Dotnet.Web.csproj -c Release -o /app/publish /p:SkipNSwag=True
+# Publish (skip NSwag generation)
+RUN dotnet publish apps/dotnet/web/CheeseGrater.Dotnet.Web.csproj \
+    -c Release \
+    -o /app/publish \
+    /p:SkipNSwag=True
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
