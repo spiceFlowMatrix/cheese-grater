@@ -14,7 +14,15 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
   await app.InitialiseDatabaseAsync();
-  await app.InitialiseKeycloakAsync();
+
+  var isNswagProcess =
+    AppContext.BaseDirectory.Contains("nswag", StringComparison.OrdinalIgnoreCase)
+    || AppDomain.CurrentDomain.FriendlyName.Contains("NSwag", StringComparison.OrdinalIgnoreCase);
+
+  if (builder.Configuration.GetValue("Keycloak:SeedOnStartup", true) && !isNswagProcess)
+  {
+    await app.InitialiseKeycloakAsync();
+  }
 }
 else
 {
@@ -36,6 +44,7 @@ app.MapFallbackToFile("index.html");
 
 app.UseExceptionHandler(options => { });
 
+app.UseCors("SpaCors");
 app.UseAuthentication();
 app.UseAuthorization();
 

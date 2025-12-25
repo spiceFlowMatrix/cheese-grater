@@ -1,7 +1,21 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
+import { createAppConfig, DEFAULT_SPA_AUTH_CONFIG } from './app/app.config';
+import { SpaAuthConfig } from './app/core/models/spa-auth-config.model';
 
-bootstrapApplication(AppComponent, appConfig).catch((err) =>
-  console.error(err)
-);
+const loadSpaConfig = async (): Promise<SpaAuthConfig> => {
+  try {
+    const response = await fetch('/api/identity/spa-config');
+    if (!response.ok) {
+      throw new Error(`Failed to load SPA auth config (${response.status})`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Falling back to default SPA auth config.', error);
+    return DEFAULT_SPA_AUTH_CONFIG;
+  }
+};
+
+loadSpaConfig()
+  .then((spaConfig) => bootstrapApplication(AppComponent, createAppConfig(spaConfig)))
+  .catch((err) => console.error(err));

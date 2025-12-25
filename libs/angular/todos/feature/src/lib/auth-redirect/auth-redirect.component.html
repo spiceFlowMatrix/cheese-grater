@@ -1,1 +1,10 @@
-<lib-auth-redirect-panel></lib-auth-redirect-panel>
+<lib-auth-redirect-panel
+  [showLogin]="!authenticated"
+  [showSignup]="false"
+  [showLogout]="authenticated"
+  [titleLabel]="authenticated ? 'You are signed in' : 'Log in to continue'"
+  [loginButtonLabel]="'Log in'"
+  [logoutButtonLabel]="'Log out'"
+  (loginClicked)="onLogin()"
+  (logoutClicked)="onLogout()"
+></lib-auth-redirect-panel>

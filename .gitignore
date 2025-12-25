@@ -38,8 +38,15 @@ testem.log
 .DS_Store
 Thumbs.db
 
+# Local environment files
+.env
+!docker/.env
+
 .nx/cache
 .nx/workspace-data
+
+# Generated Keycloak config artifacts
+docker/keycloak/config/generated/
 
 .angular
 

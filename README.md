@@ -1,48 +1,32 @@
 # CheeseGrater
 
-## Prerequisites
+Deterministic full-stack starter showcasing **.NET 9** + **Angular** with **Keycloak** and **Postgres**, wired for reproducible local infra, EF migrations via a one-shot migrator, and monorepo-friendly Docker/Nx workflows.
 
-- Docker Desktop
-- NxConsole for VSCode
-- NodeJs
-- Angular
-- ASP.NET Core 9
+## What’s inside
 
-## Installation
+- **Infra**: Postgres + PgAdmin, Keycloak with declarative seeding (config CLI).
+- **Backend**: ASP.NET Core 9 API with Keycloak auth/UMA and SPA config at `/api/identity/spa-config`.
+- **Frontend**: Angular SPA that bootstraps Keycloak/API config from the backend (no hardcoded env files).
 
-- `cd docker`
-- `docker compose up -d`
-  - This sets up all the critical infrastructure needed by backend apps
+## Quick start (Docker infra + API)
 
-## Usage
+Prereqs: Docker/Compose. Run from repo root:
 
-> This is for default configuration. If you change configs like ports in the docker compose, you'd will need to use the ports you defined to access them
+1. `cp .env.example .env` (or use `.env.local` for personal overrides)
+2. `docker compose -f docker/docker-compose.yml up --build`
+3. URLs: API http://localhost:5106 (Swagger UI at `/api`, spec at `/api/specification.json`), Keycloak http://localhost:8081, PgAdmin http://localhost:5050.
 
-- Keycloak `http://localhost:8081`
-- pgAdmin for main postgres instance (project has one that is used by all services) `localhost:5432`
+## Local development
 
-- Run whichever API service or app you want from the NX Console (easiest method but harder to configure)
+- **Infra + API via Docker**: `docker compose -f docker/docker-compose.yml up --build` (includes EF `db-migrator`, Postgres, Keycloak, API).
+- **Frontend locally**: `yarn install` then `yarn nx serve todo` (http://localhost:4200). The SPA reads `/api/identity/spa-config`; no Angular env files needed.
 
-## Known issues
+## Environment overrides
 
-### Infinite nx graph calculation time when serving asp.net core app for the first time
+- Copy `.env.example` to `.env` for Docker defaults; use `.env.local` for local-only overrides.
+- Key vars: `ConnectionStrings__DefaultConnection`, Keycloak realm/admin/client secrets, SPA client IDs/URLs. Defaults are in `.env.example`.
 
-Try running `nx reset` and then serving the asp.net core app again. This seemed to have solved the issue.
+## Notes
 
-> **Source:** https://github.com/nx-dotnet/nx-dotnet/issues/924#issuecomment-2968430323
-
-### Adding new .NET libs/apps don't get referenced in the root solution automatically
-
-Simply use the dotnet cli or the `.NET: Add Existing Project...` vscode command to link the new projects to the root solution.
-
-### Infinite nx graph calculation when running `nx migrate --run-migrations`
-
-This is somehow due to the `@nx-dotnet/core` plugin in `nx.json`. By temporarily removing that plugin, you can run migrations successfully.
-
-### Incorrect package versions pulled during `dotnet restore` in CI
-
-The .NET solution uses Central Package Management to enforce consistent package versions, defined in `Directory.Packages.props`. The file must be named exactly `Directory.Packages.props` (with a capital "P" in "Packages") due to case-sensitivity on Linux-based CI environments like GitHub Actions. Incorrect casing (e.g., `Directory.packages.props`) causes NuGet to ignore the file, disabling central package management and pulling outdated, incompatible package versions (e.g., AutoMapper 1.1.0 instead of 13.0.1), resulting in build errors like NU1701 and NU1604. This issue does not occur on Windows due to its case-insensitive file system.
-
-**Solution**: Ensure the file is named `Directory.Packages.props` in the repository. Verify the casing before committing changes.
-
-> **Source:** https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management
+- EF migrations run via the `db-migrator` one-shot service in Compose before the API starts.
+- HTTPS/prod hardening is out of scope; adjust compose/nginx as needed.
