@@ -5,16 +5,23 @@
     <mat-card-subtitle>{{ titleLabel() }}</mat-card-subtitle>
   </mat-card-header>
   <mat-card-content>
-    @if(showLogin()) {
-    <button matButton="filled" (click)="loginClicked.emit()">
-      {{ loginButtonLabel() }}
-    </button>
-    } @if(showLogin() && showSignup()) {
-    <hr />
-    } @if(showSignup()) {
-    <button matButton="outlined" (click)="signupClicked.emit()">
-      {{ signupButtonLabel() }}
-    </button>
+    @if (showLogin()) {
+      <button matButton="filled" (click)="loginClicked.emit()">
+        {{ loginButtonLabel() }}
+      </button>
+    }
+    @if (showLogin() && (showSignup() || showLogout())) {
+      <hr />
+    }
+    @if (showSignup()) {
+      <button matButton="outlined" (click)="signupClicked.emit()">
+        {{ signupButtonLabel() }}
+      </button>
+    }
+    @if (showLogout()) {
+      <button matButton="outlined" color="warn" (click)="logoutClicked.emit()">
+        {{ logoutButtonLabel() }}
+      </button>
     }
   </mat-card-content>
 </mat-card>

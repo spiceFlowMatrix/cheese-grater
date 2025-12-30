@@ -1,0 +1,85 @@
+{
+  "folders": [
+    {
+      "name": "root",
+      "path": "."
+    },
+    {
+      "name": "apps • todo",
+      "path": "apps/todo"
+    },
+    {
+      "name": "apps • todo-e2e",
+      "path": "apps/todo-e2e"
+    },
+    {
+      "name": "apps • dotnet web",
+      "path": "apps/dotnet/web"
+    },
+    {
+      "name": "apps • dotnet web-test",
+      "path": "apps/dotnet/web-test"
+    },
+    {
+      "name": "apps • dotnet rpg game",
+      "path": "apps/dotnet/rpg-game"
+    },
+    {
+      "name": "apps • dotnet rpg game server",
+      "path": "apps/dotnet/rpg-game-server"
+    },
+    {
+      "name": "apps • dotnet rpg api test",
+      "path": "apps/dotnet/rpg-api-test"
+    },
+    {
+      "name": "libs • angular shared",
+      "path": "libs/angular/shared"
+    },
+    {
+      "name": "libs • angular todos",
+      "path": "libs/angular/todos"
+    },
+    {
+      "name": "libs • dotnet application",
+      "path": "libs/dotnet/application"
+    },
+    {
+      "name": "libs • dotnet core",
+      "path": "libs/dotnet/core"
+    },
+    {
+      "name": "libs • dotnet infrastructure",
+      "path": "libs/dotnet/infrastructure"
+    },
+    {
+      "name": "libs • dotnet services",
+      "path": "libs/dotnet/services"
+    },
+    {
+      "name": "libs • dotnet packages aggregate",
+      "path": "libs/dotnet-packages-aggregate"
+    },
+    {
+      "name": "libs • generated",
+      "path": "libs/generated"
+    },
+    {
+      "name": "libs • grid",
+      "path": "libs/grid"
+    }
+  ],
+  "settings": {
+    "nxConsole.generateAiAgentRules": true
+  },
+  "extensions": {
+    "recommendations": [
+      "nrwl.angular-console",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "angular.ng-template",
+      "ms-dotnettools.csharp"
+    ],
+    "unwantedRecommendations": ["firsttris.vscode-jest-runner"]
+  }
+}
